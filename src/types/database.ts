@@ -96,3 +96,45 @@ export interface PrintDevice {
   last_error: string | null;
   created_at: string;
 }
+
+export interface Order {
+  id: string;
+  order_number: string;
+  order_type: OrderType;
+  status: OrderStatus;
+  table_id: string | null;
+  table_label_snapshot: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  customer_address: string | null;
+  location_url: string | null;
+  pickup_time: string | null;
+  notes: string | null;
+  subtotal: number;
+  delivery_fee: number;
+  total: number;
+  cancellation_reason: string | null;
+  submit_token: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  product_id: string | null;
+  product_name_snapshot: string;
+  unit_price_snapshot: number;
+  quantity: number;
+  line_total: number;
+  notes: string | null;
+}
+
+export interface OrderItemAddOn {
+  id: string;
+  order_item_id: string;
+  add_on_id: string | null;
+  name_snapshot: string;
+  price_snapshot: number;
+}

@@ -41,6 +41,7 @@ export const trustedOrderPayloadSchema = z.object({
   subtotal: z.number().int().min(0),
   delivery_fee: z.number().int().min(0),
   total: z.number().int().min(0),
+  created_by: z.string().uuid().nullable().optional(),
   items: z.array(trustedItemSchema).min(1),
 });
 
@@ -60,35 +61,58 @@ export const createOrderRpcResultSchema = z.object({
 export type CreateOrderRpcResult = z.infer<typeof createOrderRpcResultSchema>;
 
 export function buildTrustedOrderPayload(params: {
-  input: CreateOrderInput;
+  submit_token: string;
+  order_type: CreateOrderInput["order_type"];
   status: TrustedOrderPayload["status"];
   tableId: string | null;
   tableLabelSnapshot: string | null;
+  customerName?: string | null;
+  customerPhone?: string | null;
+  customerAddress?: string | null;
+  locationUrl?: string | null;
+  pickupTime?: string | null;
+  notes?: string | null;
   lines: ResolvedLineSnapshot[];
   subtotal: number;
   deliveryFee: number;
   total: number;
+  createdBy?: string | null;
 }): TrustedOrderPayload {
-  const { input, status, tableId, tableLabelSnapshot, lines, subtotal, deliveryFee, total } =
-    params;
+  const {
+    submit_token,
+    order_type,
+    status,
+    tableId,
+    tableLabelSnapshot,
+    customerName = null,
+    customerPhone = null,
+    customerAddress = null,
+    locationUrl = null,
+    pickupTime = null,
+    notes = null,
+    lines,
+    subtotal,
+    deliveryFee,
+    total,
+    createdBy = null,
+  } = params;
 
   const payload: TrustedOrderPayload = {
-    submit_token: input.submit_token,
-    order_type: input.order_type,
+    submit_token,
+    order_type,
     status,
     table_id: tableId,
     table_label_snapshot: tableLabelSnapshot,
-    customer_name: input.order_type !== "DINE_IN" ? input.customer_name : null,
-    customer_phone: input.order_type !== "DINE_IN" ? input.customer_phone : null,
-    customer_address:
-      input.order_type === "DELIVERY" ? input.customer_address : null,
-    location_url:
-      input.order_type === "DELIVERY" ? input.location_url ?? null : null,
-    pickup_time: input.order_type === "PICKUP" ? input.pickup_time ?? null : null,
-    notes: input.notes ?? null,
+    customer_name: order_type !== "DINE_IN" ? customerName : null,
+    customer_phone: order_type !== "DINE_IN" ? customerPhone : null,
+    customer_address: order_type === "DELIVERY" ? customerAddress : null,
+    location_url: order_type === "DELIVERY" ? locationUrl : null,
+    pickup_time: order_type === "PICKUP" ? pickupTime : null,
+    notes,
     subtotal,
     delivery_fee: deliveryFee,
     total,
+    created_by: createdBy,
     items: lines.map((line) => ({
       product_id: line.product_id,
       product_name_snapshot: line.product_name_snapshot,
@@ -105,6 +129,41 @@ export function buildTrustedOrderPayload(params: {
   };
 
   return trustedOrderPayloadSchema.parse(payload);
+}
+
+/** @deprecated Use buildTrustedOrderPayload with explicit fields */
+export function buildTrustedOrderPayloadFromCustomerInput(params: {
+  input: CreateOrderInput;
+  status: TrustedOrderPayload["status"];
+  tableId: string | null;
+  tableLabelSnapshot: string | null;
+  lines: ResolvedLineSnapshot[];
+  subtotal: number;
+  deliveryFee: number;
+  total: number;
+}): TrustedOrderPayload {
+  const { input, status, tableId, tableLabelSnapshot, lines, subtotal, deliveryFee, total } =
+    params;
+
+  return buildTrustedOrderPayload({
+    submit_token: input.submit_token,
+    order_type: input.order_type,
+    status,
+    tableId,
+    tableLabelSnapshot,
+    customerName: input.order_type !== "DINE_IN" ? input.customer_name : null,
+    customerPhone: input.order_type !== "DINE_IN" ? input.customer_phone : null,
+    customerAddress:
+      input.order_type === "DELIVERY" ? input.customer_address : null,
+    locationUrl:
+      input.order_type === "DELIVERY" ? input.location_url ?? null : null,
+    pickupTime: input.order_type === "PICKUP" ? input.pickup_time ?? null : null,
+    notes: input.notes ?? null,
+    lines,
+    subtotal,
+    deliveryFee,
+    total,
+  });
 }
 
 export function parseCreateOrderRpcResult(data: unknown): CreateOrderRpcResult {

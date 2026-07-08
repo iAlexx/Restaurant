@@ -215,13 +215,14 @@ export function PrintDeviceSection({ devices }: { devices: PrintDeviceListItem[]
               <th className="px-3 py-2 text-start">الاسم</th>
               <th className="px-3 py-2 text-start">الحالة</th>
               <th className="px-3 py-2 text-start">آخر نبضة</th>
+              <th className="px-3 py-2 text-start">آخر خطأ</th>
               <th className="px-3 py-2 text-start">إجراء</th>
             </tr>
           </thead>
           <tbody>
             {devices.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-3 py-4 text-center text-stone-500">
+                <td colSpan={5} className="px-3 py-4 text-center text-stone-500">
                   لا توجد أجهزة مسجلة
                 </td>
               </tr>
@@ -234,6 +235,9 @@ export function PrintDeviceSection({ devices }: { devices: PrintDeviceListItem[]
                     {device.last_heartbeat_at
                       ? new Date(device.last_heartbeat_at).toLocaleString("ar-SY")
                       : "—"}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-red-600">
+                    {device.last_error ?? "—"}
                   </td>
                   <td className="px-3 py-2">
                     {device.is_active ? (

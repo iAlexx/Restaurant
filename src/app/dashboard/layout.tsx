@@ -9,7 +9,7 @@ const navItems: { href: string; label: string; roles: UserRole[] }[] = [
   { href: "/dashboard/products", label: "المنتجات", roles: ["ADMIN"] },
   { href: "/dashboard/add-ons", label: "الإضافات", roles: ["ADMIN"] },
   { href: "/dashboard/tables", label: "الطاولات", roles: ["ADMIN"] },
-  { href: "/dashboard/reports", label: "التقرير اليومي", roles: ["ADMIN"] },
+  { href: "/dashboard/reports", label: "التقرير اليومي", roles: ["ADMIN", "CASHIER"] },
   { href: "/dashboard/settings", label: "الإعدادات", roles: ["ADMIN"] },
 ];
 

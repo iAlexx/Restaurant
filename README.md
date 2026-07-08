@@ -73,7 +73,37 @@ npm run dev
 
 Apply migration: `supabase/migrations/20260708140000_order_number_function.sql`
 
+## Phase 4 (complete)
+
+- Cashier orders dashboard with polling and filters
+- Order detail, status transitions, cancel with reason
+- Manual order creation (dine-in / delivery / pickup)
+- Reprint creates new PENDING print job
+- Basic daily report (Asia/Damascus timezone)
+- Cashier permissions (orders + reports only)
+
+Apply migrations:
+- `supabase/migrations/20260708150000_create_customer_order_rpc.sql`
+- `supabase/migrations/20260708160000_phase4_staff_order_rpc.sql`
+
+## Phase 5 (complete)
+
+- Print Agent API (`/api/print-agent/*`) with device token auth
+- Atomic claim PENDING → PRINTING, stale recovery (2 min)
+- Receipt payload from database snapshots only
+- Windows Print Agent package (`/print-agent`)
+- WindowsSpoolerProvider (primary) + EscPosLanProvider (fallback)
+- DPAPI secure token storage
+- Admin device token generate/revoke with heartbeat + last error
+
+Apply migration: `supabase/migrations/20260708170000_print_agent_rpc.sql`
+
+See:
+- `print-agent/README.md` — agent usage
+- `docs/PHASE5_WINDOWS_SETUP.md` — PowerShell + Task Scheduler
+- `docs/PHASE5_DEPLOYMENT.md` — Vercel deployment + smoke test
+
 ## Security
 
-- `SUPABASE_SERVICE_ROLE_KEY` is server-only (image upload, print agent API later).
+- `SUPABASE_SERVICE_ROLE_KEY` is server-only (image upload, print agent API).
 - Never embed service role key in Windows Print Agent distributable; use device tokens.

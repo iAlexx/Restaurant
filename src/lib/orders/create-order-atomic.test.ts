@@ -307,18 +307,8 @@ describe("atomic order transaction harness", () => {
 describe("trusted RPC payload", () => {
   it("builds server-side snapshots without trusting client totals", () => {
     const payload = buildTrustedOrderPayload({
-      input: {
-        submit_token: "00000000-0000-4000-8000-000000000099",
-        order_type: "DINE_IN",
-        table_token: "a".repeat(32),
-        items: [
-          {
-            product_id: "00000000-0000-4000-8000-000000000001",
-            quantity: 2,
-            add_on_ids: [],
-          },
-        ],
-      },
+      submit_token: "00000000-0000-4000-8000-000000000099",
+      order_type: "DINE_IN",
       status: "NEW",
       tableId: "00000000-0000-4000-8000-000000000010",
       tableLabelSnapshot: "طاولة 1",

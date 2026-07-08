@@ -6,7 +6,7 @@ import {
   type ResolvedLineSnapshot,
 } from "@/lib/orders/calculations";
 import {
-  buildTrustedOrderPayload,
+  buildTrustedOrderPayloadFromCustomerInput,
   type TrustedOrderPayload,
 } from "@/lib/orders/rpc-payload";
 
@@ -190,7 +190,7 @@ export async function validateAndBuildTrustedPayload(
 
   const status = getInitialOrderStatus(input.order_type);
 
-  const trustedPayload = buildTrustedOrderPayload({
+  const trustedPayload = buildTrustedOrderPayloadFromCustomerInput({
     input,
     status,
     tableId,

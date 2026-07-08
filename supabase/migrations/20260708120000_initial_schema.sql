@@ -27,7 +27,19 @@ CREATE TYPE print_job_status AS ENUM (
 );
 
 -- ---------------------------------------------------------------------------
--- Helper: staff check
+-- profiles
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE public.profiles (
+  id uuid PRIMARY KEY REFERENCES auth.users (id) ON DELETE CASCADE,
+  role user_role NOT NULL,
+  display_name text NOT NULL,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- ---------------------------------------------------------------------------
+-- Helper: staff check (must come after public.profiles)
 -- ---------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION public.is_staff()
@@ -59,18 +71,6 @@ AS $$
       AND role = 'ADMIN'
   );
 $$;
-
--- ---------------------------------------------------------------------------
--- profiles
--- ---------------------------------------------------------------------------
-
-CREATE TABLE public.profiles (
-  id uuid PRIMARY KEY REFERENCES auth.users (id) ON DELETE CASCADE,
-  role user_role NOT NULL,
-  display_name text NOT NULL,
-  is_active boolean NOT NULL DEFAULT true,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
 
 -- ---------------------------------------------------------------------------
 -- restaurant_settings (singleton)
