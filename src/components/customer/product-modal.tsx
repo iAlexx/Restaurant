@@ -5,6 +5,7 @@ import { useCart } from "@/contexts/cart-context";
 import type { AddOn, Product } from "@/types/database";
 import { formatPrice } from "@/lib/money";
 import { QuantityStepper } from "@/components/customer/quantity-stepper";
+import { ProductImage } from "@/components/customer/product-image";
 
 interface ProductModalProps {
   product: Product;
@@ -83,11 +84,10 @@ export function ProductModal({
       >
         <div className="relative">
           {product.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <ProductImage
               src={product.image_url}
-              alt=""
-              className="h-52 w-full object-cover"
+              variant="hero"
+              priority
             />
           ) : (
             <div className="flex h-32 w-full items-center justify-center bg-stone-100 text-4xl text-stone-300">

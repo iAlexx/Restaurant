@@ -7,13 +7,13 @@ import {
   type ProductWithAddOns,
 } from "@/lib/actions/products";
 import type { ActionResult } from "@/lib/actions/types";
-import { uploadMenuImage } from "@/lib/actions/upload";
 import {
   FormAlert,
   buttonPrimaryClassName,
   inputClassName,
   labelClassName,
 } from "@/components/dashboard/form-ui";
+import { ProductImageUpload } from "@/components/dashboard/product-image-upload";
 import type { AddOn, Category } from "@/types/database";
 
 const initial: ActionResult = {};
@@ -30,26 +30,7 @@ export function ProductForm({ categories, addOns, product }: ProductFormProps) {
     : createProduct;
   const [state, formAction, pending] = useActionState(action, initial);
   const [imageUrl, setImageUrl] = useState(product?.image_url ?? "");
-  const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-
-  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    setUploadError(null);
-    const formData = new FormData();
-    formData.append("file", file);
-    const result = await uploadMenuImage(formData, "products");
-    setUploading(false);
-
-    if (result.error) {
-      setUploadError(result.error);
-      return;
-    }
-    if (result.url) setImageUrl(result.url);
-  }
 
   return (
     <form action={formAction} className="space-y-3 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
@@ -58,7 +39,6 @@ export function ProductForm({ categories, addOns, product }: ProductFormProps) {
       </h2>
       <FormAlert message={state.error} type="error" />
       <FormAlert message={state.success} type="success" />
-      <FormAlert message={uploadError ?? undefined} type="error" />
 
       <input type="hidden" name="image_url" value={imageUrl} />
 
@@ -140,15 +120,12 @@ export function ProductForm({ categories, addOns, product }: ProductFormProps) {
         />
       </div>
 
-      <div>
-        <label className={labelClassName()}>صورة المنتج</label>
-        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} />
-        {uploading ? <p className="text-xs text-stone-500">جاري الرفع...</p> : null}
-        {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt="" className="mt-2 h-24 w-24 rounded-lg object-cover" />
-        ) : null}
-      </div>
+      <ProductImageUpload
+        value={imageUrl}
+        onChange={setImageUrl}
+        onBusyChange={setUploading}
+        disabled={pending}
+      />
 
       {addOns.length > 0 ? (
         <fieldset>

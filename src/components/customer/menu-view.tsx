@@ -5,6 +5,7 @@ import type { PublicMenu } from "@/lib/menu/public-menu";
 import type { Product } from "@/types/database";
 import { formatPrice } from "@/lib/money";
 import { ProductModal } from "@/components/customer/product-modal";
+import { ProductImage } from "@/components/customer/product-image";
 import { CategoryNav } from "@/components/customer/category-nav";
 import { EmptyState } from "@/components/dashboard/form-ui";
 
@@ -56,12 +57,7 @@ export function MenuView({ menu }: { menu: PublicMenu }) {
                   className="flex w-full gap-3 rounded-2xl border border-stone-200 bg-white p-3 text-start shadow-sm transition hover:border-amber-300 hover:shadow-md active:scale-[0.99]"
                 >
                   {product.image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={product.image_url}
-                      alt=""
-                      className="h-24 w-24 shrink-0 rounded-xl object-cover"
-                    />
+                    <ProductImage src={product.image_url} variant="thumb" />
                   ) : (
                     <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-xl bg-stone-100 text-2xl text-stone-300">
                       🍽

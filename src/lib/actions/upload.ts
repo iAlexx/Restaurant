@@ -3,8 +3,10 @@
 import { requireAdminSession } from "@/lib/auth/session";
 import { createServiceClient } from "@/lib/supabase/service";
 
-const MAX_BYTES = 512 * 1024;
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+import {
+  PRODUCT_IMAGE_HARD_LIMIT_BYTES,
+  isAllowedProductImageType,
+} from "@/lib/images/product-image";
 
 export async function uploadMenuImage(
   formData: FormData,
@@ -17,11 +19,11 @@ export async function uploadMenuImage(
     return { error: "لم يتم اختيار ملف" };
   }
 
-  if (file.size > MAX_BYTES) {
+  if (file.size > PRODUCT_IMAGE_HARD_LIMIT_BYTES) {
     return { error: "حجم الصورة يجب ألا يتجاوز 500 كيلوبايت" };
   }
 
-  if (!ALLOWED_TYPES.includes(file.type)) {
+  if (!isAllowedProductImageType(file.type)) {
     return { error: "نوع الملف غير مدعوم. استخدم JPEG أو PNG أو WebP" };
   }
 
