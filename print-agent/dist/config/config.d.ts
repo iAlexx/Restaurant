@@ -7,6 +7,7 @@ export declare const agentConfigSchema: z.ZodObject<{
     pollIntervalMs: z.ZodDefault<z.ZodNumber>;
     lanHost: z.ZodDefault<z.ZodOptional<z.ZodString>>;
     lanPort: z.ZodDefault<z.ZodNumber>;
+    receiptWidthPx: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
     apiBaseUrl: string;
     windowsPrinterName: string;
@@ -14,6 +15,7 @@ export declare const agentConfigSchema: z.ZodObject<{
     pollIntervalMs: number;
     lanHost: string;
     lanPort: number;
+    receiptWidthPx: number;
 }, {
     apiBaseUrl: string;
     windowsPrinterName: string;
@@ -21,6 +23,7 @@ export declare const agentConfigSchema: z.ZodObject<{
     pollIntervalMs?: number | undefined;
     lanHost?: string | undefined;
     lanPort?: number | undefined;
+    receiptWidthPx?: number | undefined;
 }>;
 export type AgentConfig = z.infer<typeof agentConfigSchema>;
 export type PrintMode = z.infer<typeof printModeSchema>;

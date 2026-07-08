@@ -1,15 +1,57 @@
 import { execFile, spawn } from "node:child_process";
-import { mkdtemp, writeFile, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import { buildTestReceipt, formatReceiptText } from "../receipt/format.js";
+import { buildTestReceipt } from "../receipt/format.js";
+import { renderReceiptPng } from "../receipt/render.js";
 import type { PrintProvider, PrinterStatus, ReceiptPayload } from "./types.js";
 
 const execFileAsync = promisify(execFile);
 
+// Prints an image at full printable width with zero margins via the Windows
+// spooler (System.Drawing.Printing). The driver's end-of-document behavior
+// keeps auto-cut working. Printer name + image path are passed through the
+// environment to avoid any string interpolation issues.
+const PRINT_IMAGE_SCRIPT = `
+$ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName System.Drawing
+$printerName = $env:RPA_PRINTER_NAME
+$imgPath = $env:RPA_IMAGE_PATH
+$img = [System.Drawing.Image]::FromFile($imgPath)
+try {
+  $doc = New-Object System.Drawing.Printing.PrintDocument
+  $doc.PrinterSettings.PrinterName = $printerName
+  if (-not $doc.PrinterSettings.IsValid) { throw "printer not valid: $printerName" }
+  $doc.DocumentName = 'Receipt'
+  $doc.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(0,0,0,0)
+  $doc.OriginAtMargins = $true
+  $handler = {
+    param($sender, $e)
+    $areaW = $e.PageSettings.PrintableArea.Width
+    if ($areaW -le 0) { $areaW = $e.MarginBounds.Width }
+    if ($areaW -le 0) { $areaW = $e.PageBounds.Width }
+    $scale = $areaW / $img.Width
+    $targetW = [int]$areaW
+    $targetH = [int][math]::Round($img.Height * $scale)
+    $e.Graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $e.Graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+    $rect = New-Object System.Drawing.Rectangle 0, 0, $targetW, $targetH
+    $e.Graphics.DrawImage($img, $rect)
+    $e.HasMorePages = $false
+  }
+  $doc.add_PrintPage($handler)
+  $doc.Print()
+} finally {
+  $img.Dispose()
+}
+`;
+
 export class WindowsSpoolerProvider implements PrintProvider {
-  constructor(private readonly printerName: string) {}
+  constructor(
+    private readonly printerName: string,
+    private readonly receiptWidthPx: number = 576
+  ) {}
 
   async checkStatus(): Promise<PrinterStatus> {
     if (process.platform !== "win32") {
@@ -17,13 +59,12 @@ export class WindowsSpoolerProvider implements PrintProvider {
     }
 
     try {
-      const script = `Get-Printer -Name '${this.printerName.replace(/'/g, "''")}' | Select-Object -ExpandProperty PrinterStatus`;
-      await execFileAsync("powershell.exe", [
-        "-NoProfile",
-        "-NonInteractive",
-        "-Command",
-        script,
-      ]);
+      const script = `Get-Printer -Name $env:RPA_PRINTER_NAME | Select-Object -ExpandProperty PrinterStatus`;
+      await execFileAsync(
+        "powershell.exe",
+        ["-NoProfile", "-NonInteractive", "-Command", script],
+        { env: { ...process.env, RPA_PRINTER_NAME: this.printerName } }
+      );
       return "ready";
     } catch {
       return "offline";
@@ -31,38 +72,36 @@ export class WindowsSpoolerProvider implements PrintProvider {
   }
 
   async print(receiptPayload: ReceiptPayload): Promise<void> {
-    const text = formatReceiptText(receiptPayload);
-    await this.printRawText(text);
+    const png = renderReceiptPng(receiptPayload, this.receiptWidthPx);
+    await this.printImage(png);
   }
 
   async testPrint(): Promise<void> {
     await this.print(buildTestReceipt());
   }
 
-  private async printRawText(text: string): Promise<void> {
+  private async printImage(png: Buffer): Promise<void> {
     if (process.platform !== "win32") {
       throw new Error("طباعة Windows متاحة على Windows فقط");
     }
 
     const dir = await mkdtemp(join(tmpdir(), "restaurant-print-"));
-    const filePath = join(dir, "receipt.txt");
+    const imagePath = join(dir, "receipt.png");
 
     try {
-      const bom = "\uFEFF";
-      await writeFile(filePath, bom + text, "utf8");
+      await writeFile(imagePath, png);
 
-      const script = `
-$printer = '${this.printerName.replace(/'/g, "''")}'
-$path = '${filePath.replace(/'/g, "''")}'
-Get-Content -LiteralPath $path -Encoding UTF8 | Out-Printer -Name $printer
-`;
-
-      await execFileAsync("powershell.exe", [
-        "-NoProfile",
-        "-NonInteractive",
-        "-Command",
-        script,
-      ]);
+      await execFileAsync(
+        "powershell.exe",
+        ["-NoProfile", "-NonInteractive", "-Command", PRINT_IMAGE_SCRIPT],
+        {
+          env: {
+            ...process.env,
+            RPA_PRINTER_NAME: this.printerName,
+            RPA_IMAGE_PATH: imagePath,
+          },
+        }
+      );
     } finally {
       await rm(dir, { recursive: true, force: true });
     }

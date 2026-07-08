@@ -1,121 +1,124 @@
 import { execFile } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 import { promisify } from "node:util";
 import { getConfigDir } from "./config.js";
 const execFileAsync = promisify(execFile);
 const TOKEN_FILE = "device-token.dpapi";
-const CREDENTIAL_TARGET = "RestaurantPrintAgent/DeviceToken";
-function tokenFilePath() {
+export function tokenFilePath() {
     return `${getConfigDir()}\\${TOKEN_FILE}`;
-}
-async function ensureConfigDir() {
-    await mkdir(getConfigDir(), { recursive: true });
 }
 function isWindows() {
     return process.platform === "win32";
 }
-async function storeWithDpapiFile(token) {
-    await ensureConfigDir();
-    const script = `
-$bytes = [System.Text.Encoding]::UTF8.GetBytes('${token.replace(/'/g, "''")}')
-$encrypted = [System.Security.Cryptography.ProtectedData]::Protect($bytes, $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser)
-[Convert]::ToBase64String($encrypted) | Set-Content -Path '${tokenFilePath().replace(/'/g, "''")}' -Encoding ASCII
+const DPAPI_ENCRYPT_SCRIPT = `
+$ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName System.Security
+$plain = $env:RPA_TOKEN_PLAINTEXT
+if ([string]::IsNullOrEmpty($plain)) { throw 'empty token' }
+$bytes = [System.Text.Encoding]::UTF8.GetBytes($plain)
+$enc = [System.Security.Cryptography.ProtectedData]::Protect($bytes, $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser)
+[Convert]::ToBase64String($enc)
 `;
-    await execFileAsync("powershell.exe", [
-        "-NoProfile",
-        "-NonInteractive",
-        "-Command",
-        script,
-    ]);
-}
-async function readWithDpapiFile() {
-    try {
-        const script = `
-$path = '${tokenFilePath().replace(/'/g, "''")}'
-if (-not (Test-Path $path)) { exit 2 }
-$encrypted = [Convert]::FromBase64String((Get-Content -Path $path -Raw))
-$bytes = [System.Security.Cryptography.ProtectedData]::Unprotect($encrypted, $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser)
+const DPAPI_DECRYPT_SCRIPT = `
+$ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName System.Security
+$b64 = $env:RPA_TOKEN_CIPHERTEXT
+$enc = [Convert]::FromBase64String($b64)
+$bytes = [System.Security.Cryptography.ProtectedData]::Unprotect($enc, $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser)
 [System.Text.Encoding]::UTF8.GetString($bytes)
 `;
-        const { stdout } = await execFileAsync("powershell.exe", [
-            "-NoProfile",
-            "-NonInteractive",
-            "-Command",
-            script,
-        ]);
-        const token = stdout.trim();
-        return token.length > 0 ? token : null;
+export function createDpapiCipher() {
+    return {
+        async encrypt(plaintext) {
+            const { stdout } = await execFileAsync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", DPAPI_ENCRYPT_SCRIPT], { env: { ...process.env, RPA_TOKEN_PLAINTEXT: plaintext } });
+            const encoded = stdout.trim();
+            if (!encoded) {
+                throw new Error("تعذر تشفير رمز الجهاز عبر DPAPI");
+            }
+            return encoded;
+        },
+        async decrypt(ciphertext) {
+            const { stdout } = await execFileAsync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", DPAPI_DECRYPT_SCRIPT], { env: { ...process.env, RPA_TOKEN_CIPHERTEXT: ciphertext } });
+            return stdout.replace(/\r?\n$/, "");
+        },
+    };
+}
+export class DeviceTokenStore {
+    filePath;
+    cipher;
+    constructor(filePath, cipher) {
+        this.filePath = filePath;
+        this.cipher = cipher;
     }
-    catch (error) {
-        const err = error;
-        if (err.code === 2)
+    async store(token) {
+        const trimmed = token?.trim() ?? "";
+        if (trimmed.length === 0) {
+            throw new Error("رمز الجهاز فارغ — لن يتم حفظ أي ملف");
+        }
+        await mkdir(dirname(this.filePath), { recursive: true });
+        const ciphertext = await this.cipher.encrypt(trimmed);
+        await writeFile(this.filePath, ciphertext, "ascii");
+    }
+    async read() {
+        let raw;
+        try {
+            raw = await readFile(this.filePath, "ascii");
+        }
+        catch (error) {
+            if (error.code === "ENOENT") {
+                return null;
+            }
+            throw error;
+        }
+        const ciphertext = raw.trim();
+        if (ciphertext.length === 0) {
             return null;
-        throw error;
+        }
+        try {
+            const token = (await this.cipher.decrypt(ciphertext)).trim();
+            return token.length > 0 ? token : null;
+        }
+        catch {
+            throw new Error("تعذر فك تشفير رمز الجهاز — الملف تالف أو أُنشئ بحساب مستخدم مختلف. أعد الإعداد.");
+        }
+    }
+    async has() {
+        try {
+            return Boolean(await this.read());
+        }
+        catch {
+            return false;
+        }
     }
 }
-async function storeWithCredentialManager(token) {
-    const script = `
-cmdkey /generic:"${CREDENTIAL_TARGET}" /user:device /pass:"${token.replace(/"/g, '`"')}"
-`;
-    await execFileAsync("powershell.exe", [
-        "-NoProfile",
-        "-NonInteractive",
-        "-Command",
-        script,
-    ]);
-}
-async function readWithCredentialManager() {
-    const script = `
-$cred = cmdkey /list | Select-String -Pattern '${CREDENTIAL_TARGET}'
-if (-not $cred) { exit 2 }
-# cmdkey does not expose password retrieval; DPAPI file is primary store.
-exit 2
-`;
-    try {
-        await execFileAsync("powershell.exe", [
-            "-NoProfile",
-            "-NonInteractive",
-            "-Command",
-            script,
-        ]);
-        return null;
-    }
-    catch {
-        return null;
-    }
+function defaultStore() {
+    return new DeviceTokenStore(tokenFilePath(), createDpapiCipher());
 }
 export async function storeDeviceToken(token) {
+    const trimmed = token?.trim() ?? "";
+    if (trimmed.length === 0) {
+        throw new Error("رمز الجهاز فارغ — لن يتم حفظ أي ملف");
+    }
     if (!isWindows()) {
         throw new Error("تخزين الرمز آمن متاح على Windows فقط");
     }
-    await storeWithDpapiFile(token);
-    try {
-        await storeWithCredentialManager(token);
-    }
-    catch {
-        // DPAPI file is the primary secure store.
-    }
+    await defaultStore().store(trimmed);
 }
 export async function readDeviceToken() {
     if (!isWindows()) {
         return null;
     }
-    const fromDpapi = await readWithDpapiFile();
-    if (fromDpapi)
-        return fromDpapi;
-    return readWithCredentialManager();
+    return defaultStore().read();
 }
 export async function hasDeviceToken() {
-    try {
-        const token = await readDeviceToken();
-        return Boolean(token);
-    }
-    catch {
+    if (!isWindows()) {
         return false;
     }
+    return defaultStore().has();
 }
 export async function writePlainConfigFile(configJson) {
-    await ensureConfigDir();
+    await mkdir(getConfigDir(), { recursive: true });
     await writeFile(`${getConfigDir()}\\config.json`, configJson, "utf8");
 }
 export async function readPlainConfigFile() {

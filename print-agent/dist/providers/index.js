@@ -7,5 +7,5 @@ export function createPrintProvider(config) {
         }
         return new EscPosLanProvider(config.lanHost, config.lanPort);
     }
-    return new WindowsSpoolerProvider(config.windowsPrinterName);
+    return new WindowsSpoolerProvider(config.windowsPrinterName, config.receiptWidthPx);
 }

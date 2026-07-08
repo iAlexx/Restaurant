@@ -11,5 +11,8 @@ export function createPrintProvider(config: AgentConfig): PrintProvider {
     return new EscPosLanProvider(config.lanHost, config.lanPort);
   }
 
-  return new WindowsSpoolerProvider(config.windowsPrinterName);
+  return new WindowsSpoolerProvider(
+    config.windowsPrinterName,
+    config.receiptWidthPx
+  );
 }

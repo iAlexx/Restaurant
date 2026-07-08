@@ -17,6 +17,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@napi-rs/canvas": "^0.1.100",
     "zod": "^3.25.28"
   },
   "devDependencies": {

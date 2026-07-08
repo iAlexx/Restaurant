@@ -14,9 +14,26 @@ describe("config validation", () => {
       pollIntervalMs: 4000,
       lanHost: "",
       lanPort: 9100,
+      receiptWidthPx: 576,
     });
 
     expect(config.apiBaseUrl).toBe("https://alnkha.site");
+    expect(config.receiptWidthPx).toBe(576);
+  });
+
+  it("defaults receipt width to 576px", () => {
+    const config = validateConfig({
+      apiBaseUrl: "https://alnkha.site",
+      windowsPrinterName: "POSPrinter POS80",
+      printMode: "windows",
+      pollIntervalMs: 4000,
+    });
+    expect(config.receiptWidthPx).toBe(576);
+  });
+
+  it("accepts fallback receipt widths", () => {
+    expect(validateConfig({ ...DEFAULT_CONFIG, receiptWidthPx: 512 }).receiptWidthPx).toBe(512);
+    expect(validateConfig({ ...DEFAULT_CONFIG, receiptWidthPx: 384 }).receiptWidthPx).toBe(384);
   });
 
   it("rejects invalid api url", () => {
@@ -43,6 +60,7 @@ describe("provider selection", () => {
     const provider = createPrintProvider({
       ...DEFAULT_CONFIG,
       printMode: "windows",
+      receiptWidthPx: 576,
     });
     expect(provider).toBeInstanceOf(WindowsSpoolerProvider);
   });

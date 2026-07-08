@@ -23,8 +23,11 @@ npm run build
 # إعداد أول مرة (يحفظ config.json + الرمز بشكل آمن)
 node dist/cli.js setup
 
-# طباعة اختبار
+# طباعة اختبار 80mm (صورة bitmap عبر spooler)
 node dist/cli.js test-print
+
+# معاينة PNG بدون طباعة
+node dist/cli.js render-sample receipt-preview.png
 
 # عرض الحالة
 node dist/cli.js status
@@ -45,9 +48,12 @@ node dist/cli.js start
   "printMode": "windows",
   "pollIntervalMs": 4000,
   "lanHost": "",
-  "lanPort": 9100
+  "lanPort": 9100,
+  "receiptWidthPx": 576
 }
 ```
+
+- `receiptWidthPx`: printable width in pixels (default **576** = 80mm @ 203 DPI). Try **512** or **384** if the driver clips edges.
 
 **رمز الجهاز:** يُخزَّن مشفّراً عبر Windows DPAPI في:
 `%USERPROFILE%\.restaurant-print\device-token.dpapi`

@@ -9,6 +9,9 @@ export const agentConfigSchema = z.object({
   pollIntervalMs: z.number().int().min(3000).max(10000).default(4000),
   lanHost: z.string().optional().default(""),
   lanPort: z.number().int().min(1).max(65535).default(9100),
+  // Printable width in pixels for 80mm thermal paper.
+  // 576 px = 80mm @ 203 DPI (full width). Fallbacks: 512 or 384.
+  receiptWidthPx: z.number().int().min(256).max(1024).default(576),
 });
 
 export type AgentConfig = z.infer<typeof agentConfigSchema>;
@@ -21,6 +24,7 @@ export const DEFAULT_CONFIG: AgentConfig = {
   pollIntervalMs: 4000,
   lanHost: "",
   lanPort: 9100,
+  receiptWidthPx: 576,
 };
 
 export function getConfigDir(): string {

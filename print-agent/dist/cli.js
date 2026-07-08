@@ -1,7 +1,10 @@
 #!/usr/bin/env node
+import { writeFile } from "node:fs/promises";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { PrintAgent } from "./agent/agent.js";
+import { buildTestReceipt } from "./receipt/format.js";
+import { renderReceiptPng } from "./receipt/render.js";
 import { DEFAULT_CONFIG, getConfigPath, validateConfig, } from "./config/config.js";
 import { hasDeviceToken, readDeviceToken, readPlainConfigFile, storeDeviceToken, writePlainConfigFile, } from "./config/credential-store.js";
 import { createPrintProvider } from "./providers/index.js";
@@ -70,7 +73,14 @@ async function cmdTestPrint() {
     const config = await loadConfig();
     const provider = createPrintProvider(config);
     await provider.testPrint();
-    console.log("تم إرسال صفحة الاختبار إلى الطابعة");
+    console.log(`تم إرسال صفحة اختبار 80mm (عرض ${config.receiptWidthPx}px) إلى الطابعة`);
+}
+async function cmdRenderSample() {
+    const config = await loadConfig();
+    const outPath = process.argv[3] ?? "receipt-sample.png";
+    const png = renderReceiptPng(buildTestReceipt(), config.receiptWidthPx);
+    await writeFile(outPath, png);
+    console.log(`تم إنشاء معاينة الإيصال (${config.receiptWidthPx}px): ${outPath}`);
 }
 async function cmdStatus() {
     const config = await loadConfig();
@@ -81,6 +91,7 @@ async function cmdStatus() {
     console.log(`API: ${config.apiBaseUrl}`);
     console.log(`الوضع: ${config.printMode}`);
     console.log(`الطابعة: ${config.windowsPrinterName}`);
+    console.log(`عرض الإيصال: ${config.receiptWidthPx}px`);
     console.log(`الاستطلاع: ${config.pollIntervalMs}ms`);
     console.log(`الرمز المحفوظ: ${tokenStored ? "نعم" : "لا"}`);
     console.log(`حالة الطابعة: ${printerStatus}`);
@@ -109,15 +120,19 @@ async function main() {
         case "test-print":
             await cmdTestPrint();
             break;
+        case "render-sample":
+            await cmdRenderSample();
+            break;
         case "status":
             await cmdStatus();
             break;
         default:
             console.log(`الأوامر المتاحة:
-  setup       إعداد الإعدادات وحفظ الرمز
-  start       تشغيل وكيل الطباعة
-  test-print  طباعة صفحة اختبار
-  status      عرض الحالة`);
+  setup          إعداد الإعدادات وحفظ الرمز
+  start          تشغيل وكيل الطباعة
+  test-print     طباعة صفحة اختبار 80mm (صورة)
+  render-sample  إنشاء معاينة PNG للإيصال بدون طباعة [المسار]
+  status         عرض الحالة`);
     }
 }
 main().catch((error) => {
