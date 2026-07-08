@@ -1,0 +1,112 @@
+import { z } from "zod";
+import type { CreateOrderInput } from "@/lib/validations/order";
+import type { ResolvedLineSnapshot } from "@/lib/orders/calculations";
+
+const trustedAddOnSchema = z.object({
+  add_on_id: z.string().uuid(),
+  name_snapshot: z.string().min(1),
+  price_snapshot: z.number().int().min(0),
+});
+
+const trustedItemSchema = z.object({
+  product_id: z.string().uuid(),
+  product_name_snapshot: z.string().min(1),
+  unit_price_snapshot: z.number().int().min(0),
+  quantity: z.number().int().min(1).max(99),
+  line_total: z.number().int().min(0),
+  notes: z.string().max(200).nullable(),
+  add_ons: z.array(trustedAddOnSchema),
+});
+
+export const trustedOrderPayloadSchema = z.object({
+  submit_token: z.string().uuid(),
+  order_type: z.enum(["DINE_IN", "DELIVERY", "PICKUP"]),
+  status: z.enum([
+    "NEW",
+    "WAITING_WHATSAPP_CONFIRMATION",
+    "CONFIRMED",
+    "PREPARING",
+    "READY",
+    "COMPLETED",
+    "CANCELLED",
+  ]),
+  table_id: z.string().uuid().nullable(),
+  table_label_snapshot: z.string().nullable(),
+  customer_name: z.string().nullable(),
+  customer_phone: z.string().nullable(),
+  customer_address: z.string().nullable(),
+  location_url: z.string().nullable(),
+  pickup_time: z.string().nullable(),
+  notes: z.string().nullable(),
+  subtotal: z.number().int().min(0),
+  delivery_fee: z.number().int().min(0),
+  total: z.number().int().min(0),
+  items: z.array(trustedItemSchema).min(1),
+});
+
+export type TrustedOrderPayload = z.infer<typeof trustedOrderPayloadSchema>;
+
+export const createOrderRpcResultSchema = z.object({
+  id: z.string().uuid(),
+  order_number: z.string().min(1),
+  order_type: z.enum(["DINE_IN", "DELIVERY", "PICKUP"]),
+  status: z.string(),
+  subtotal: z.number().int(),
+  delivery_fee: z.number().int(),
+  total: z.number().int(),
+  existing: z.boolean(),
+});
+
+export type CreateOrderRpcResult = z.infer<typeof createOrderRpcResultSchema>;
+
+export function buildTrustedOrderPayload(params: {
+  input: CreateOrderInput;
+  status: TrustedOrderPayload["status"];
+  tableId: string | null;
+  tableLabelSnapshot: string | null;
+  lines: ResolvedLineSnapshot[];
+  subtotal: number;
+  deliveryFee: number;
+  total: number;
+}): TrustedOrderPayload {
+  const { input, status, tableId, tableLabelSnapshot, lines, subtotal, deliveryFee, total } =
+    params;
+
+  const payload: TrustedOrderPayload = {
+    submit_token: input.submit_token,
+    order_type: input.order_type,
+    status,
+    table_id: tableId,
+    table_label_snapshot: tableLabelSnapshot,
+    customer_name: input.order_type !== "DINE_IN" ? input.customer_name : null,
+    customer_phone: input.order_type !== "DINE_IN" ? input.customer_phone : null,
+    customer_address:
+      input.order_type === "DELIVERY" ? input.customer_address : null,
+    location_url:
+      input.order_type === "DELIVERY" ? input.location_url ?? null : null,
+    pickup_time: input.order_type === "PICKUP" ? input.pickup_time ?? null : null,
+    notes: input.notes ?? null,
+    subtotal,
+    delivery_fee: deliveryFee,
+    total,
+    items: lines.map((line) => ({
+      product_id: line.product_id,
+      product_name_snapshot: line.product_name_snapshot,
+      unit_price_snapshot: line.unit_price_snapshot,
+      quantity: line.quantity,
+      line_total: line.line_total,
+      notes: line.notes,
+      add_ons: line.add_ons.map((a) => ({
+        add_on_id: a.add_on_id,
+        name_snapshot: a.name_snapshot,
+        price_snapshot: a.price_snapshot,
+      })),
+    })),
+  };
+
+  return trustedOrderPayloadSchema.parse(payload);
+}
+
+export function parseCreateOrderRpcResult(data: unknown): CreateOrderRpcResult {
+  return createOrderRpcResultSchema.parse(data);
+}
