@@ -1,29 +1,56 @@
-import type { OrderStatus } from "@/types/database";
+import type {
+  OrderStatus,
+  OrderType,
+  PrintJobStatus,
+} from "@/types/database";
 import {
   ORDER_STATUS_LABELS,
+  ORDER_TYPE_LABELS,
   PRINT_STATUS_LABELS,
 } from "@/lib/orders/status-transitions";
-import type { PrintJobStatus } from "@/types/database";
+import { Badge, type BadgeTone } from "@/components/dashboard/form-ui";
 
-const statusColors: Record<OrderStatus, string> = {
-  NEW: "bg-blue-100 text-blue-800",
-  WAITING_WHATSAPP_CONFIRMATION: "bg-amber-100 text-amber-800",
-  CONFIRMED: "bg-teal-100 text-teal-800",
-  PREPARING: "bg-orange-100 text-orange-800",
-  READY: "bg-green-100 text-green-800",
-  COMPLETED: "bg-stone-200 text-stone-700",
-  CANCELLED: "bg-red-100 text-red-800",
+const statusTones: Record<OrderStatus, BadgeTone> = {
+  NEW: "blue",
+  WAITING_WHATSAPP_CONFIRMATION: "amber",
+  CONFIRMED: "teal",
+  PREPARING: "orange",
+  READY: "green",
+  COMPLETED: "stone",
+  CANCELLED: "red",
 };
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {
+  return <Badge tone={statusTones[status]}>{ORDER_STATUS_LABELS[status]}</Badge>;
+}
+
+const typeTones: Record<OrderType, BadgeTone> = {
+  DINE_IN: "teal",
+  DELIVERY: "amber",
+  PICKUP: "blue",
+};
+
+const typeIcons: Record<OrderType, string> = {
+  DINE_IN: "🍽",
+  DELIVERY: "🛵",
+  PICKUP: "🏪",
+};
+
+export function OrderTypeBadge({ type }: { type: OrderType }) {
   return (
-    <span
-      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors[status]}`}
-    >
-      {ORDER_STATUS_LABELS[status]}
-    </span>
+    <Badge tone={typeTones[type]}>
+      <span className="me-1">{typeIcons[type]}</span>
+      {ORDER_TYPE_LABELS[type]}
+    </Badge>
   );
 }
+
+const printTones: Record<PrintJobStatus, BadgeTone> = {
+  PENDING: "amber",
+  PRINTING: "blue",
+  PRINTED: "green",
+  FAILED: "red",
+};
 
 export function PrintStatusBadge({
   status,
@@ -31,14 +58,8 @@ export function PrintStatusBadge({
   status: PrintJobStatus | null;
 }) {
   if (!status) {
-    return (
-      <span className="text-xs text-stone-400">لا يوجد</span>
-    );
+    return <span className="text-xs text-stone-400">لا يوجد</span>;
   }
 
-  return (
-    <span className="inline-flex rounded-full bg-stone-100 px-2.5 py-0.5 text-xs text-stone-700">
-      {PRINT_STATUS_LABELS[status]}
-    </span>
-  );
+  return <Badge tone={printTones[status]}>{PRINT_STATUS_LABELS[status]}</Badge>;
 }

@@ -4,6 +4,7 @@ import {
   listPrintDevices,
 } from "@/lib/actions/settings";
 import { PrintDeviceSection, SettingsForm } from "@/components/dashboard/settings-form";
+import { PageHeader } from "@/components/dashboard/form-ui";
 
 export default async function SettingsPage() {
   await requireAdminPage();
@@ -14,12 +15,10 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-stone-900">الإعدادات</h1>
-        <p className="mt-1 text-sm text-stone-600">
-          إعدادات المطعم وأجهزة الطباعة
-        </p>
-      </div>
+      <PageHeader
+        title="الإعدادات"
+        description="إعدادات المطعم وأجهزة الطباعة"
+      />
 
       <SettingsForm settings={settings} />
       <PrintDeviceSection devices={devices} />

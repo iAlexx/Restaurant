@@ -21,6 +21,19 @@ export async function listTables(): Promise<Table[]> {
   return (data ?? []) as Table[];
 }
 
+export async function getTableById(id: string): Promise<Table | null> {
+  await requireAdminSession();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("tables")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) return null;
+  return (data as Table) ?? null;
+}
+
 export async function createTable(
   _prev: ActionResult,
   formData: FormData

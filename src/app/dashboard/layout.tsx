@@ -1,6 +1,10 @@
-import Link from "next/link";
 import { logoutAction } from "@/app/login/actions";
 import { getStaffSession, isAdmin } from "@/lib/auth/session";
+import {
+  DashboardBottomNav,
+  DashboardSidebarNav,
+} from "@/components/dashboard/dashboard-nav";
+import { Badge } from "@/components/dashboard/form-ui";
 import type { UserRole } from "@/types/database";
 
 const navItems: { href: string; label: string; roles: UserRole[] }[] = [
@@ -9,7 +13,11 @@ const navItems: { href: string; label: string; roles: UserRole[] }[] = [
   { href: "/dashboard/products", label: "المنتجات", roles: ["ADMIN"] },
   { href: "/dashboard/add-ons", label: "الإضافات", roles: ["ADMIN"] },
   { href: "/dashboard/tables", label: "الطاولات", roles: ["ADMIN"] },
-  { href: "/dashboard/reports", label: "التقرير اليومي", roles: ["ADMIN", "CASHIER"] },
+  {
+    href: "/dashboard/reports",
+    label: "التقرير اليومي",
+    roles: ["ADMIN", "CASHIER"],
+  },
   { href: "/dashboard/settings", label: "الإعدادات", roles: ["ADMIN"] },
 ];
 
@@ -24,25 +32,35 @@ export default async function DashboardLayout({
     return null;
   }
 
-  const visibleNav = navItems.filter((item) =>
-    item.roles.includes(session.profile.role)
-  );
+  const admin = isAdmin(session.profile.role);
+  const visibleNav = navItems
+    .filter((item) => item.roles.includes(session.profile.role))
+    .map(({ href, label }) => ({ href, label }));
 
   return (
     <div className="min-h-screen bg-stone-100">
-      <header className="border-b border-stone-200 bg-white">
+      <header className="sticky top-0 z-30 border-b border-stone-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          <div>
-            <p className="text-lg font-bold text-stone-900">لوحة المطعم</p>
-            <p className="text-sm text-stone-500">
-              {session.profile.display_name} —{" "}
-              {isAdmin(session.profile.role) ? "مدير" : "كاشير"}
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-600 text-lg text-white">
+              🍽
+            </div>
+            <div>
+              <p className="text-base font-bold leading-tight text-stone-900">
+                لوحة المطعم
+              </p>
+              <p className="flex items-center gap-1.5 text-xs text-stone-500">
+                {session.profile.display_name}
+                <Badge tone={admin ? "amber" : "blue"}>
+                  {admin ? "مدير" : "كاشير"}
+                </Badge>
+              </p>
+            </div>
           </div>
           <form action={logoutAction}>
             <button
               type="submit"
-              className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm text-stone-700 hover:bg-stone-50"
+              className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 hover:bg-stone-50"
             >
               خروج
             </button>
@@ -51,40 +69,18 @@ export default async function DashboardLayout({
       </header>
 
       <div className="mx-auto flex max-w-6xl gap-6 px-4 py-6">
-        <nav className="hidden w-48 shrink-0 md:block">
-          <ul className="space-y-1">
-            {visibleNav.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="block rounded-lg px-3 py-2 text-sm text-stone-700 hover:bg-white hover:text-amber-700"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <aside className="hidden w-52 shrink-0 md:block">
+          <div className="sticky top-20">
+            <DashboardSidebarNav items={visibleNav} />
+          </div>
+        </aside>
 
-        <main className="min-w-0 flex-1 rounded-2xl bg-white p-6 shadow-sm">
+        <main className="min-w-0 flex-1 rounded-2xl bg-white p-4 pb-24 shadow-sm sm:p-6 md:pb-6">
           {children}
         </main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-white md:hidden">
-        <ul className="flex overflow-x-auto">
-          {visibleNav.map((item) => (
-            <li key={item.href} className="shrink-0">
-              <Link
-                href={item.href}
-                className="block px-4 py-3 text-xs text-stone-700"
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <DashboardBottomNav items={visibleNav} />
     </div>
   );
 }

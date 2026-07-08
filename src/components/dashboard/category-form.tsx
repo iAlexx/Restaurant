@@ -23,7 +23,7 @@ export function CategoryForm({ category }: { category?: Category }) {
   const [state, formAction, pending] = useActionState(action, initial);
 
   return (
-    <form action={formAction} className="space-y-3 rounded-xl border border-stone-200 p-4">
+    <form action={formAction} className="space-y-3 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
       <h2 className="font-semibold text-stone-900">
         {category ? "تعديل القسم" : "قسم جديد"}
       </h2>

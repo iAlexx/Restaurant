@@ -20,6 +20,7 @@ import type { AddOn, Product } from "@/types/database";
 
 interface CartContextValue {
   cart: CartState;
+  hydrated: boolean;
   addLine: (line: Omit<CartLine, "key">) => void;
   updateQuantity: (key: string, quantity: number) => void;
   removeLine: (key: string) => void;
@@ -145,6 +146,7 @@ export function CartProvider({
   const value = useMemo(
     () => ({
       cart,
+      hydrated,
       addLine,
       updateQuantity,
       removeLine,
@@ -156,6 +158,7 @@ export function CartProvider({
     }),
     [
       cart,
+      hydrated,
       addLine,
       updateQuantity,
       removeLine,
@@ -166,10 +169,6 @@ export function CartProvider({
       resetSubmitToken,
     ]
   );
-
-  if (!hydrated) {
-    return null;
-  }
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

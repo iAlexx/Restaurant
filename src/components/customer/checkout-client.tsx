@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCart } from "@/contexts/cart-context";
+import { useCart, estimateCartTotal } from "@/contexts/cart-context";
 import type { PublicMenu } from "@/lib/menu/public-menu";
 import type { CreateOrderInput } from "@/lib/validations/order";
 import { formatPrice } from "@/lib/money";
@@ -31,6 +31,16 @@ export function CheckoutClient({
   const [locationUrl, setLocationUrl] = useState("");
   const [pickupTime, setPickupTime] = useState("");
   const [orderNotes, setOrderNotes] = useState(cart.orderNotes);
+
+  const currency = menu.settings.currency_label;
+  const subtotal = estimateCartTotal(cart.lines, menu.products, menu.addOns);
+  const deliveryFee =
+    orderType === "DELIVERY" ? menu.settings.default_delivery_fee : 0;
+  const total = subtotal + deliveryFee;
+
+  const minDelivery = menu.settings.min_delivery_order;
+  const belowMinimum =
+    orderType === "DELIVERY" && minDelivery > 0 && subtotal < minDelivery;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -104,78 +114,142 @@ export function CheckoutClient({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 pb-8">
+    <form onSubmit={handleSubmit} className="space-y-5 pb-8">
       {error ? (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+        <p
+          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+          role="alert"
+        >
           {error}
         </p>
       ) : null}
 
-      {orderType === "DELIVERY" ? (
-        <>
-          <Field label="الاسم" value={customerName} onChange={setCustomerName} required />
-          <Field label="رقم الهاتف" value={customerPhone} onChange={setCustomerPhone} required dir="ltr" />
-          <Field label="العنوان" value={customerAddress} onChange={setCustomerAddress} required />
-          <Field
-            label="رابط الموقع (اختياري)"
-            value={locationUrl}
-            onChange={setLocationUrl}
-            dir="ltr"
-            placeholder="https://maps.google.com/..."
-          />
-        </>
-      ) : null}
-
-      {orderType === "PICKUP" ? (
-        <>
-          <Field label="الاسم" value={customerName} onChange={setCustomerName} required />
-          <Field label="رقم الهاتف" value={customerPhone} onChange={setCustomerPhone} required dir="ltr" />
-          <Field
-            label="وقت الاستلام (اختياري)"
-            value={pickupTime}
-            onChange={setPickupTime}
-            placeholder="مثال: 19:30"
-          />
-        </>
-      ) : null}
-
       {orderType === "DINE_IN" ? (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          سيتم إرسال الطلب إلى طاولتك تلقائياً.
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          سيتم إرسال الطلب إلى طاولتك مباشرة. لا حاجة لإدخال بيانات إضافية.
         </p>
       ) : null}
 
+      {orderType !== "DINE_IN" ? (
+        <div className="space-y-4 rounded-2xl border border-stone-200 bg-white p-4">
+          <p className="text-sm font-bold text-stone-900">بيانات العميل</p>
+          <Field
+            label="الاسم"
+            value={customerName}
+            onChange={setCustomerName}
+            required
+          />
+          <Field
+            label="رقم الهاتف"
+            value={customerPhone}
+            onChange={setCustomerPhone}
+            required
+            dir="ltr"
+            placeholder="09XXXXXXXX"
+            inputMode="tel"
+          />
+          {orderType === "DELIVERY" ? (
+            <>
+              <Field
+                label="العنوان"
+                value={customerAddress}
+                onChange={setCustomerAddress}
+                required
+              />
+              <Field
+                label="رابط الموقع (اختياري)"
+                value={locationUrl}
+                onChange={setLocationUrl}
+                dir="ltr"
+                placeholder="https://maps.google.com/..."
+              />
+            </>
+          ) : (
+            <Field
+              label="وقت الاستلام (اختياري)"
+              value={pickupTime}
+              onChange={setPickupTime}
+              placeholder="مثال: 19:30"
+            />
+          )}
+        </div>
+      ) : null}
+
       <div>
-        <label className="mb-1 block text-sm font-medium text-stone-800">
+        <label
+          htmlFor="order-notes"
+          className="mb-1.5 block text-sm font-semibold text-stone-800"
+        >
           ملاحظات الطلب (اختياري)
         </label>
         <textarea
+          id="order-notes"
           value={orderNotes}
           onChange={(e) => setOrderNotes(e.target.value)}
           maxLength={500}
           rows={3}
-          className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
+          placeholder="أي تعليمات خاصة بالطلب"
+          className="w-full rounded-xl border border-stone-300 px-3 py-2.5 text-sm focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-200"
         />
       </div>
 
-      {orderType === "DELIVERY" && menu.settings.default_delivery_fee > 0 ? (
-        <p className="text-sm text-stone-600">
-          رسوم التوصيل:{" "}
-          {formatPrice(
-            menu.settings.default_delivery_fee,
-            menu.settings.currency_label
-          )}
+      <div className="space-y-2 rounded-2xl border border-stone-200 bg-stone-50 p-4">
+        <SummaryRow label="المجموع الفرعي" value={formatPrice(subtotal, currency)} />
+        {deliveryFee > 0 ? (
+          <SummaryRow
+            label="رسوم التوصيل"
+            value={formatPrice(deliveryFee, currency)}
+          />
+        ) : null}
+        <div className="border-t border-stone-200 pt-2">
+          <SummaryRow
+            label="الإجمالي التقديري"
+            value={formatPrice(total, currency)}
+            strong
+          />
+        </div>
+      </div>
+
+      {belowMinimum ? (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          الحد الأدنى لطلب التوصيل هو {formatPrice(minDelivery, currency)}. أضف
+          المزيد من الأصناف للمتابعة.
         </p>
       ) : null}
 
       <button
         type="submit"
-        disabled={submitting || cart.lines.length === 0}
-        className="w-full rounded-xl bg-amber-600 py-3 font-medium text-white disabled:opacity-60"
+        disabled={submitting || cart.lines.length === 0 || belowMinimum}
+        className="w-full rounded-2xl bg-amber-600 py-3.5 font-bold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {submitting ? "جاري الإرسال..." : "تأكيد الطلب"}
       </button>
     </form>
+  );
+}
+
+function SummaryRow({
+  label,
+  value,
+  strong,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className={strong ? "font-bold text-stone-900" : "text-stone-600"}>
+        {label}
+      </span>
+      <span
+        className={`tabular-nums ${
+          strong ? "text-lg font-bold text-stone-900" : "text-stone-700"
+        }`}
+      >
+        {value}
+      </span>
+    </div>
   );
 }
 
@@ -186,6 +260,7 @@ function Field({
   required,
   dir,
   placeholder,
+  inputMode,
 }: {
   label: string;
   value: string;
@@ -193,17 +268,21 @@ function Field({
   required?: boolean;
   dir?: "ltr" | "rtl";
   placeholder?: string;
+  inputMode?: "tel" | "text";
 }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-stone-800">{label}</label>
+      <label className="mb-1.5 block text-sm font-semibold text-stone-800">
+        {label}
+      </label>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
         dir={dir}
+        inputMode={inputMode}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
+        className="w-full rounded-xl border border-stone-300 px-3 py-2.5 text-sm focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-200"
       />
     </div>
   );

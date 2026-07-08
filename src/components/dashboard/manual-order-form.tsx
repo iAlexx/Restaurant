@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createManualOrderAction } from "@/lib/actions/orders";
 import type { PublicMenu } from "@/lib/menu/public-menu";
 import { formatPrice } from "@/lib/money";
@@ -107,27 +108,38 @@ export function ManualOrderForm({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold text-stone-900">طلب يدوي</h1>
+      <div>
+        <Link
+          href="/dashboard/orders"
+          className="text-sm font-medium text-amber-700 hover:underline"
+        >
+          ← العودة للطلبات
+        </Link>
+        <h1 className="mt-2 text-xl font-bold text-stone-900">طلب يدوي</h1>
+        <p className="mt-1 text-sm text-stone-500">
+          أنشئ طلباً نيابة عن الزبون من لوحة الكاشير.
+        </p>
+      </div>
 
       <FormAlert message={state.error} type="error" />
       <FormAlert message={state.success} type="success" />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-3 gap-2 rounded-xl bg-stone-100 p-1">
         {(
           [
-            ["DINE_IN", "داخل المطعم"],
-            ["DELIVERY", "توصيل"],
-            ["PICKUP", "استلام"],
+            ["DINE_IN", "🍽 داخل المطعم"],
+            ["DELIVERY", "🛵 توصيل"],
+            ["PICKUP", "🏪 استلام"],
           ] as const
         ).map(([type, label]) => (
           <button
             key={type}
             type="button"
             onClick={() => setOrderType(type)}
-            className={`rounded-lg px-4 py-2 text-sm ${
+            className={`rounded-lg px-2 py-2.5 text-sm font-semibold transition ${
               orderType === type
-                ? "bg-amber-600 text-white"
-                : "bg-stone-100 text-stone-700"
+                ? "bg-white text-amber-700 shadow-sm"
+                : "text-stone-600 hover:text-stone-900"
             }`}
           >
             {label}
@@ -278,8 +290,8 @@ export function ManualOrderForm({
           />
         </div>
 
-        <section className="rounded-xl border border-stone-200 p-4">
-          <h2 className="font-semibold">إضافة منتجات</h2>
+        <section className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
+          <h2 className="font-semibold text-stone-900">إضافة منتجات</h2>
           <div className="mt-3 grid gap-4 md:grid-cols-2">
             <div>
               <label className={labelClassName()}>المنتج</label>
@@ -363,43 +375,68 @@ export function ManualOrderForm({
           </button>
         </section>
 
-        <section className="rounded-xl border border-stone-200 p-4">
-          <h2 className="font-semibold">السلة ({lines.length})</h2>
+        <section className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
+          <h2 className="font-semibold text-stone-900">
+            السلة ({lines.length})
+          </h2>
           {lines.length === 0 ? (
-            <p className="mt-2 text-sm text-stone-500">أضف منتجاً واحداً على الأقل</p>
+            <p className="mt-2 text-sm text-stone-500">
+              أضف منتجاً واحداً على الأقل
+            </p>
           ) : (
             <ul className="mt-3 divide-y divide-stone-100">
               {lines.map((line, index) => {
-                const product = menu.products.find((p) => p.id === line.product_id);
+                const product = menu.products.find(
+                  (p) => p.id === line.product_id
+                );
+                const addOnTotal = (line.add_on_ids ?? []).reduce((s, id) => {
+                  const a = menu.addOns.find((x) => x.id === id);
+                  return s + (a?.extra_price ?? 0);
+                }, 0);
+                const lineTotal =
+                  ((product?.price ?? 0) + addOnTotal) * line.quantity;
                 return (
                   <li
                     key={`${line.product_id}-${index}`}
-                    className="flex items-center justify-between py-2 text-sm"
+                    className="flex items-center justify-between gap-3 py-2.5 text-sm"
                   >
-                    <span>
-                      {product?.name_ar} × {line.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeLine(index)}
-                      className="text-red-600 hover:underline"
-                    >
-                      حذف
-                    </button>
+                    <div className="min-w-0">
+                      <p className="font-medium text-stone-800">
+                        {product?.name_ar} × {line.quantity}
+                      </p>
+                      {line.notes ? (
+                        <p className="text-xs text-stone-500">{line.notes}</p>
+                      ) : null}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-medium tabular-nums text-stone-700">
+                        {formatPrice(lineTotal, menu.settings.currency_label)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeLine(index)}
+                        className="rounded-lg px-2 py-1 font-medium text-red-600 hover:bg-red-50"
+                      >
+                        حذف
+                      </button>
+                    </div>
                   </li>
                 );
               })}
             </ul>
           )}
-          <p className="mt-3 text-sm text-stone-600">
-            المجموع التقريبي: {formatPrice(cartSubtotal, menu.settings.currency_label)}
-          </p>
+          <div className="mt-3 flex items-center justify-between border-t border-stone-200 pt-3">
+            <span className="text-sm text-stone-600">المجموع التقريبي</span>
+            <span className="text-lg font-bold tabular-nums text-stone-900">
+              {formatPrice(cartSubtotal, menu.settings.currency_label)}
+            </span>
+          </div>
         </section>
 
         <button
           type="submit"
           disabled={pending || lines.length === 0}
-          className={buttonPrimaryClassName()}
+          className={`w-full sm:w-auto ${buttonPrimaryClassName()}`}
         >
           {pending ? "جاري الإنشاء..." : "إنشاء الطلب"}
         </button>

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import QRCode from "qrcode";
 import { requireAdminSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { getSiteUrl } from "@/lib/env";
+import { buildTableUrl } from "@/lib/env";
 import type { Table } from "@/types/database";
 
 export async function GET(
@@ -28,11 +28,13 @@ export async function GET(
   }
 
   const table = data as Pick<Table, "label" | "public_token">;
-  const url = `${getSiteUrl()}/t/${table.public_token}`;
+  const url = buildTableUrl(table.public_token);
   const pngBuffer = await QRCode.toBuffer(url, {
     type: "png",
-    width: 400,
+    width: 1024,
     margin: 2,
+    errorCorrectionLevel: "Q",
+    color: { dark: "#1c1917", light: "#ffffff" },
   });
 
   const filename = `table-${table.label.replace(/\s+/g, "-")}-qr.png`;

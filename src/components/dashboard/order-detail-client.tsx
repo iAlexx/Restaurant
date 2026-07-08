@@ -12,14 +12,18 @@ import {
   getAllowedNextStatuses,
   isTerminalStatus,
   ORDER_STATUS_LABELS,
-  ORDER_TYPE_LABELS,
-  PRINT_STATUS_LABELS,
 } from "@/lib/orders/status-transitions";
 import { formatRestaurantDateTime } from "@/lib/time/restaurant-date";
 import { formatPrice } from "@/lib/money";
-import { OrderStatusBadge } from "@/components/dashboard/order-status-badge";
+import {
+  OrderStatusBadge,
+  OrderTypeBadge,
+  PrintStatusBadge,
+} from "@/components/dashboard/order-status-badge";
 import {
   FormAlert,
+  Card,
+  buttonDangerClassName,
   buttonPrimaryClassName,
   buttonSecondaryClassName,
   inputClassName,
@@ -124,12 +128,14 @@ export function OrderDetailClient({
       <FormAlert message={reprintState.success} type="success" />
 
       <section className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-xl border border-stone-200 p-4">
+        <Card>
           <h2 className="font-semibold text-stone-900">معلومات الطلب</h2>
           <dl className="mt-3 space-y-2 text-sm">
-            <div className="flex justify-between gap-4">
+            <div className="flex items-center justify-between gap-4">
               <dt className="text-stone-500">النوع</dt>
-              <dd>{ORDER_TYPE_LABELS[order.order_type]}</dd>
+              <dd>
+                <OrderTypeBadge type={order.order_type} />
+              </dd>
             </div>
             {order.table_label_snapshot && (
               <div className="flex justify-between gap-4">
@@ -191,9 +197,9 @@ export function OrderDetailClient({
               </div>
             )}
           </dl>
-        </div>
+        </Card>
 
-        <div className="rounded-xl border border-stone-200 p-4">
+        <Card>
           <h2 className="font-semibold text-stone-900">الإجراءات</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {nextStatuses.map((status) => (
@@ -219,7 +225,7 @@ export function OrderDetailClient({
               <button
                 type="button"
                 onClick={() => setShowCancel((v) => !v)}
-                className="rounded-lg border border-red-300 px-4 py-2 text-sm text-red-700 hover:bg-red-50"
+                className="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
               >
                 إلغاء الطلب
               </button>
@@ -263,16 +269,16 @@ export function OrderDetailClient({
               <button
                 type="submit"
                 disabled={cancelPending}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-60"
+                className={buttonDangerClassName()}
               >
                 تأكيد الإلغاء
               </button>
             </form>
           )}
-        </div>
+        </Card>
       </section>
 
-      <section className="rounded-xl border border-stone-200 p-4">
+      <Card>
         <h2 className="font-semibold text-stone-900">الأصناف</h2>
         <ul className="mt-3 divide-y divide-stone-100">
           {items.map((item) => (
@@ -311,12 +317,14 @@ export function OrderDetailClient({
           )}
           <div className="flex justify-between text-base font-bold">
             <dt>الإجمالي</dt>
-            <dd>{formatPrice(order.total, currency_label)}</dd>
+            <dd className="tabular-nums">
+              {formatPrice(order.total, currency_label)}
+            </dd>
           </div>
         </dl>
-      </section>
+      </Card>
 
-      <section className="rounded-xl border border-stone-200 p-4">
+      <Card>
         <h2 className="font-semibold text-stone-900">سجل الطباعة</h2>
         {printJobs.length === 0 ? (
           <p className="mt-2 text-sm text-stone-500">لا يوجد سجل طباعة</p>
@@ -327,9 +335,13 @@ export function OrderDetailClient({
                 key={job.id}
                 className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-stone-50 px-3 py-2"
               >
-                <span>
-                  {PRINT_STATUS_LABELS[job.status]}
-                  {job.is_reprint ? " (إعادة طباعة)" : ""}
+                <span className="flex items-center gap-2">
+                  <PrintStatusBadge status={job.status} />
+                  {job.is_reprint ? (
+                    <span className="text-xs text-stone-500">
+                      (إعادة طباعة)
+                    </span>
+                  ) : null}
                 </span>
                 <span className="text-stone-500">
                   {formatRestaurantDateTime(job.created_at)}
@@ -338,7 +350,7 @@ export function OrderDetailClient({
             ))}
           </ul>
         )}
-      </section>
+      </Card>
     </div>
   );
 }

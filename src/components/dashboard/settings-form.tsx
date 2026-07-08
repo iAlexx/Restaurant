@@ -11,11 +11,13 @@ import type { ActionResult, ActionResultWithToken } from "@/lib/actions/types";
 import { uploadMenuImage } from "@/lib/actions/upload";
 import {
   FormAlert,
+  Badge,
   buttonPrimaryClassName,
   buttonSecondaryClassName,
   inputClassName,
   labelClassName,
 } from "@/components/dashboard/form-ui";
+import { ConfirmDialog } from "@/components/dashboard/confirm-dialog";
 import type { RestaurantSettings } from "@/types/database";
 import { formatPrice } from "@/lib/money";
 import { useTransition } from "react";
@@ -47,7 +49,7 @@ export function SettingsForm({ settings }: { settings: RestaurantSettings }) {
   }
 
   return (
-    <form action={formAction} className="space-y-4 rounded-xl border border-stone-200 p-4">
+    <form action={formAction} className="space-y-4 rounded-xl border border-stone-200 bg-white p-4 shadow-sm sm:p-6">
       <h2 className="font-semibold text-stone-900">إعدادات المطعم</h2>
       <FormAlert message={state.error} type="error" />
       <FormAlert message={state.success} type="success" />
@@ -178,9 +180,13 @@ export function SettingsForm({ settings }: { settings: RestaurantSettings }) {
 export function PrintDeviceSection({ devices }: { devices: PrintDeviceListItem[] }) {
   const [state, formAction, pending] = useActionState(createPrintDevice, initial as ActionResultWithToken);
   const [revokePending, startRevoke] = useTransition();
+  const [confirmDevice, setConfirmDevice] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   return (
-    <div className="space-y-4 rounded-xl border border-stone-200 p-4">
+    <div className="space-y-4 rounded-xl border border-stone-200 bg-white p-4 shadow-sm sm:p-6">
       <h2 className="font-semibold text-stone-900">أجهزة الطباعة</h2>
       <p className="text-sm text-stone-600">
         أنشئ رمزاً لجهاز Windows Print Agent. يُعرض الرمز مرة واحدة فقط.
@@ -229,8 +235,14 @@ export function PrintDeviceSection({ devices }: { devices: PrintDeviceListItem[]
             ) : (
               devices.map((device) => (
                 <tr key={device.id} className="border-t border-stone-100">
-                  <td className="px-3 py-2">{device.name}</td>
-                  <td className="px-3 py-2">{device.is_active ? "نشط" : "ملغى"}</td>
+                  <td className="px-3 py-2 font-medium text-stone-800">
+                    {device.name}
+                  </td>
+                  <td className="px-3 py-2">
+                    <Badge tone={device.is_active ? "green" : "stone"}>
+                      {device.is_active ? "نشط" : "ملغى"}
+                    </Badge>
+                  </td>
                   <td className="px-3 py-2 text-xs text-stone-500">
                     {device.last_heartbeat_at
                       ? new Date(device.last_heartbeat_at).toLocaleString("ar-SY")
@@ -246,8 +258,9 @@ export function PrintDeviceSection({ devices }: { devices: PrintDeviceListItem[]
                         disabled={revokePending}
                         className={buttonSecondaryClassName()}
                         onClick={() =>
-                          startRevoke(async () => {
-                            await revokePrintDevice(device.id);
+                          setConfirmDevice({
+                            id: device.id,
+                            name: device.name,
                           })
                         }
                       >
@@ -261,6 +274,28 @@ export function PrintDeviceSection({ devices }: { devices: PrintDeviceListItem[]
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        open={confirmDevice !== null}
+        title="إلغاء رمز الجهاز؟"
+        description={
+          confirmDevice
+            ? `سيتوقف الجهاز "${confirmDevice.name}" عن الطباعة فوراً ولن يعمل رمزه مجدداً. هذا الإجراء لا يمكن التراجع عنه.`
+            : undefined
+        }
+        confirmLabel="إلغاء الرمز"
+        tone="danger"
+        pending={revokePending}
+        onCancel={() => setConfirmDevice(null)}
+        onConfirm={() => {
+          const id = confirmDevice?.id;
+          setConfirmDevice(null);
+          if (!id) return;
+          startRevoke(async () => {
+            await revokePrintDevice(id);
+          });
+        }}
+      />
     </div>
   );
 }

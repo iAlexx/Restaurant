@@ -4,11 +4,18 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { OrderListRow } from "@/lib/orders/dashboard";
 import type { OrderListFilter } from "@/lib/validations/order-status";
-import { ORDER_TYPE_LABELS } from "@/lib/orders/status-transitions";
 import { formatRestaurantDateTime } from "@/lib/time/restaurant-date";
 import { formatPrice } from "@/lib/money";
-import { OrderStatusBadge, PrintStatusBadge } from "@/components/dashboard/order-status-badge";
-import { buttonPrimaryClassName } from "@/components/dashboard/form-ui";
+import {
+  OrderStatusBadge,
+  OrderTypeBadge,
+  PrintStatusBadge,
+} from "@/components/dashboard/order-status-badge";
+import {
+  buttonPrimaryClassName,
+  EmptyState,
+  PageHeader,
+} from "@/components/dashboard/form-ui";
 
 const FILTERS: { value: OrderListFilter; label: string }[] = [
   { value: "all", label: "الكل" },
@@ -25,6 +32,10 @@ const FILTERS: { value: OrderListFilter; label: string }[] = [
 ];
 
 const POLL_MS = 8000;
+
+function isUrgent(status: OrderListRow["status"]) {
+  return status === "NEW" || status === "WAITING_WHATSAPP_CONFIRMATION";
+}
 
 export function OrdersDashboard({
   initialOrders,
@@ -61,30 +72,41 @@ export function OrdersDashboard({
   }, [fetchOrders]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-stone-900">الطلبات</h1>
-          <p className="text-sm text-stone-500">
-            آخر تحديث: {formatRestaurantDateTime(lastUpdated.toISOString())}
-            {loading ? " — جاري التحديث..." : ""}
-          </p>
-        </div>
-        <Link href="/dashboard/orders/new" className={buttonPrimaryClassName()}>
-          طلب يدوي
-        </Link>
+    <div className="space-y-5">
+      <PageHeader
+        title="الطلبات"
+        description={`آخر تحديث: ${formatRestaurantDateTime(
+          lastUpdated.toISOString()
+        )}`}
+        actions={
+          <Link
+            href="/dashboard/orders/new"
+            className={buttonPrimaryClassName()}
+          >
+            + طلب يدوي
+          </Link>
+        }
+      />
+
+      <div className="flex items-center gap-2 text-xs text-stone-500">
+        <span
+          className={`inline-block h-2 w-2 rounded-full ${
+            loading ? "bg-amber-500" : "bg-green-500"
+          }`}
+        />
+        {loading ? "جاري التحديث..." : "تحديث تلقائي كل ٨ ثوانٍ"}
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
         {FILTERS.map((f) => (
           <button
             key={f.value}
             type="button"
             onClick={() => setFilter(f.value)}
-            className={`rounded-full px-3 py-1 text-xs ${
+            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
               filter === f.value
                 ? "bg-amber-600 text-white"
-                : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
             }`}
           >
             {f.label}
@@ -93,66 +115,88 @@ export function OrdersDashboard({
       </div>
 
       {orders.length === 0 ? (
-        <p className="py-8 text-center text-stone-500">لا توجد طلبات</p>
+        <EmptyState
+          title="لا توجد طلبات"
+          description="ستظهر الطلبات الجديدة هنا تلقائياً فور استلامها."
+        />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm">
-            <thead>
-              <tr className="border-b border-stone-200 text-stone-500">
-                <th className="px-2 py-2 text-right font-medium">الرقم</th>
-                <th className="px-2 py-2 text-right font-medium">النوع</th>
-                <th className="px-2 py-2 text-right font-medium">العميل / الطاولة</th>
-                <th className="px-2 py-2 text-right font-medium">الوقت</th>
-                <th className="px-2 py-2 text-right font-medium">الحالة</th>
-                <th className="px-2 py-2 text-right font-medium">الطباعة</th>
-                <th className="px-2 py-2 text-right font-medium">المجموع</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((order) => (
-                <tr
-                  key={order.id}
-                  className="border-b border-stone-100 hover:bg-stone-50"
-                >
-                  <td className="px-2 py-3">
-                    <Link
-                      href={`/dashboard/orders/${order.id}`}
-                      className="font-medium text-amber-700 hover:underline"
-                    >
-                      {order.order_number}
-                    </Link>
-                  </td>
-                  <td className="px-2 py-3">
-                    {ORDER_TYPE_LABELS[order.order_type]}
-                  </td>
-                  <td className="px-2 py-3 text-stone-700">
-                    {order.order_type === "DINE_IN"
-                      ? order.table_label_snapshot ?? "—"
-                      : (
-                        <span>
-                          {order.customer_name ?? "—"}
-                          {order.customer_phone
-                            ? ` (${order.customer_phone})`
-                            : ""}
-                        </span>
-                      )}
-                  </td>
-                  <td className="px-2 py-3 text-stone-600">
-                    {formatRestaurantDateTime(order.created_at)}
-                  </td>
-                  <td className="px-2 py-3">
-                    <OrderStatusBadge status={order.status} />
-                  </td>
-                  <td className="px-2 py-3">
-                    <PrintStatusBadge status={order.latest_print_status} />
-                  </td>
-                  <td className="px-2 py-3 font-medium">
-                    {formatPrice(order.total, currencyLabel)}
-                  </td>
+        <div className="overflow-hidden rounded-xl border border-stone-200">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-sm">
+              <thead>
+                <tr className="bg-stone-50 text-stone-500">
+                  <th className="px-3 py-2.5 text-start font-semibold">الرقم</th>
+                  <th className="px-3 py-2.5 text-start font-semibold">النوع</th>
+                  <th className="px-3 py-2.5 text-start font-semibold">
+                    العميل / الطاولة
+                  </th>
+                  <th className="px-3 py-2.5 text-start font-semibold">الوقت</th>
+                  <th className="px-3 py-2.5 text-start font-semibold">الحالة</th>
+                  <th className="px-3 py-2.5 text-start font-semibold">
+                    الطباعة
+                  </th>
+                  <th className="px-3 py-2.5 text-start font-semibold">
+                    المجموع
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {orders.map((order) => {
+                  const urgent = isUrgent(order.status);
+                  return (
+                    <tr
+                      key={order.id}
+                      className={`border-t border-stone-100 transition hover:bg-stone-50 ${
+                        urgent ? "bg-amber-50/50" : ""
+                      }`}
+                    >
+                      <td className="px-3 py-3">
+                        <Link
+                          href={`/dashboard/orders/${order.id}`}
+                          className="flex items-center gap-2 font-bold text-amber-700 hover:underline"
+                        >
+                          {urgent ? (
+                            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-500" />
+                          ) : null}
+                          {order.order_number}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-3">
+                        <OrderTypeBadge type={order.order_type} />
+                      </td>
+                      <td className="px-3 py-3 text-stone-700">
+                        {order.order_type === "DINE_IN" ? (
+                          order.table_label_snapshot ?? "—"
+                        ) : (
+                          <span>
+                            {order.customer_name ?? "—"}
+                            {order.customer_phone ? (
+                              <span className="text-stone-400" dir="ltr">
+                                {" "}
+                                {order.customer_phone}
+                              </span>
+                            ) : null}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-3 py-3 text-stone-600">
+                        {formatRestaurantDateTime(order.created_at)}
+                      </td>
+                      <td className="px-3 py-3">
+                        <OrderStatusBadge status={order.status} />
+                      </td>
+                      <td className="px-3 py-3">
+                        <PrintStatusBadge status={order.latest_print_status} />
+                      </td>
+                      <td className="px-3 py-3 font-bold tabular-nums text-stone-900">
+                        {formatPrice(order.total, currencyLabel)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

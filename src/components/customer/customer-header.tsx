@@ -11,19 +11,23 @@ export function CustomerHeader({
   itemCount: number;
 }) {
   return (
-    <header className="sticky top-0 z-10 border-b border-stone-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 py-3">
+    <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/95 backdrop-blur">
+      <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 py-2.5">
         <div className="flex min-w-0 items-center gap-3">
           {settings.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={settings.logo_url}
               alt=""
-              className="h-10 w-10 shrink-0 rounded-full object-cover"
+              className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-stone-200"
             />
-          ) : null}
+          ) : (
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-lg">
+              🍽
+            </div>
+          )}
           <div className="min-w-0">
-            <h1 className="truncate text-lg font-bold text-stone-900">
+            <h1 className="truncate text-base font-bold text-stone-900">
               {settings.name}
             </h1>
             {settings.opening_hours ? (
@@ -35,11 +39,26 @@ export function CustomerHeader({
         </div>
         <Link
           href={cartHref}
-          className="relative rounded-full bg-amber-600 px-4 py-2 text-sm font-medium text-white"
+          aria-label="السلة"
+          className="relative flex h-11 w-11 items-center justify-center rounded-full bg-amber-600 text-white transition hover:bg-amber-700"
         >
-          السلة
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="9" cy="21" r="1" />
+            <circle cx="20" cy="21" r="1" />
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+          </svg>
           {itemCount > 0 ? (
-            <span className="absolute -left-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-stone-900 text-xs text-white">
+            <span className="absolute -top-1 start-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-stone-900 px-1 text-xs font-bold text-white">
               {itemCount}
             </span>
           ) : null}
