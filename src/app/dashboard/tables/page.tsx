@@ -1,5 +1,5 @@
 import { requireAdminPage } from "@/lib/auth/admin-page";
-import { listTables, toggleTableActive } from "@/lib/actions/tables";
+import { listTables, toggleTableActiveForm } from "@/lib/actions/tables";
 import { TableForm } from "@/components/dashboard/table-form";
 import { TableQrActions } from "@/components/dashboard/table-qr-actions";
 import { ToggleActiveButton } from "@/components/dashboard/toggle-active-button";
@@ -52,8 +52,9 @@ export default async function TablesPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <TableQrActions tableId={table.id} />
                       <ToggleActiveButton
+                        action={toggleTableActiveForm}
+                        entityId={table.id}
                         isActive={table.is_active}
-                        onToggle={(next) => toggleTableActive(table.id, next)}
                       />
                     </div>
                   </td>

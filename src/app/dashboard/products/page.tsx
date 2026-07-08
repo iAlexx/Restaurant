@@ -1,7 +1,7 @@
 import { requireAdminPage } from "@/lib/auth/admin-page";
 import { listCategories } from "@/lib/actions/categories";
 import { listAddOns } from "@/lib/actions/add-ons";
-import { listProducts, toggleProductAvailable } from "@/lib/actions/products";
+import { listProducts, toggleProductAvailableForm } from "@/lib/actions/products";
 import { ProductForm } from "@/components/dashboard/product-form";
 import { ToggleActiveButton } from "@/components/dashboard/toggle-active-button";
 import { formatPrice } from "@/lib/money";
@@ -68,8 +68,9 @@ export default async function ProductsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <ToggleActiveButton
+                      action={toggleProductAvailableForm}
+                      entityId={product.id}
                       isActive={product.is_available}
-                      onToggle={(next) => toggleProductAvailable(product.id, next)}
                       activeLabel="إيقاف"
                       inactiveLabel="تفعيل"
                     />

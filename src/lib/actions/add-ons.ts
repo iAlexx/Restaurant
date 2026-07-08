@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { addOnSchema } from "@/lib/validations/menu";
 import type { AddOn } from "@/types/database";
 import type { ActionResult } from "@/lib/actions/types";
+import { parseToggleForm } from "@/lib/actions/toggle-form";
 
 export async function listAddOns(): Promise<AddOn[]> {
   await requireAdminSession();
@@ -92,4 +93,12 @@ export async function toggleAddOnAvailable(
 
   revalidatePath("/dashboard/add-ons");
   return { success: isAvailable ? "تم تفعيل الإضافة" : "تم إيقاف الإضافة" };
+}
+
+export async function toggleAddOnAvailableForm(
+  formData: FormData
+): Promise<void> {
+  const values = parseToggleForm(formData);
+  if (!values) return;
+  await toggleAddOnAvailable(values.id, values.next);
 }

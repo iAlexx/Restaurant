@@ -1,35 +1,55 @@
 "use client";
 
-import { useTransition } from "react";
+import { useFormStatus } from "react-dom";
 import { buttonSecondaryClassName } from "@/components/dashboard/form-ui";
 
 interface ToggleActiveButtonProps {
+  /** Server Action (form-shaped). Passed as a reference, never a closure. */
+  action: (formData: FormData) => void | Promise<void>;
+  entityId: string;
   isActive: boolean;
-  onToggle: (next: boolean) => Promise<{ error?: string; success?: string }>;
   activeLabel?: string;
   inactiveLabel?: string;
 }
 
-export function ToggleActiveButton({
+function ToggleSubmit({
   isActive,
-  onToggle,
-  activeLabel = "إيقاف",
-  inactiveLabel = "تفعيل",
-}: ToggleActiveButtonProps) {
-  const [pending, startTransition] = useTransition();
+  activeLabel,
+  inactiveLabel,
+}: {
+  isActive: boolean;
+  activeLabel: string;
+  inactiveLabel: string;
+}) {
+  const { pending } = useFormStatus();
 
   return (
     <button
-      type="button"
+      type="submit"
       disabled={pending}
       className={buttonSecondaryClassName()}
-      onClick={() =>
-        startTransition(async () => {
-          await onToggle(!isActive);
-        })
-      }
     >
       {pending ? "..." : isActive ? activeLabel : inactiveLabel}
     </button>
+  );
+}
+
+export function ToggleActiveButton({
+  action,
+  entityId,
+  isActive,
+  activeLabel = "إيقاف",
+  inactiveLabel = "تفعيل",
+}: ToggleActiveButtonProps) {
+  return (
+    <form action={action}>
+      <input type="hidden" name="id" value={entityId} />
+      <input type="hidden" name="next" value={(!isActive).toString()} />
+      <ToggleSubmit
+        isActive={isActive}
+        activeLabel={activeLabel}
+        inactiveLabel={inactiveLabel}
+      />
+    </form>
   );
 }

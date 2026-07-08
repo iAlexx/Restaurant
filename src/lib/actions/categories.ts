@@ -7,6 +7,7 @@ import { categorySchema } from "@/lib/validations/menu";
 import type { Category } from "@/types/database";
 
 import type { ActionResult } from "@/lib/actions/types";
+import { parseToggleForm } from "@/lib/actions/toggle-form";
 
 export type { ActionResult } from "@/lib/actions/types";
 
@@ -89,4 +90,12 @@ export async function toggleCategoryActive(
 
   revalidatePath("/dashboard/categories");
   return { success: isActive ? "تم تفعيل القسم" : "تم إيقاف القسم" };
+}
+
+export async function toggleCategoryActiveForm(
+  formData: FormData
+): Promise<void> {
+  const values = parseToggleForm(formData);
+  if (!values) return;
+  await toggleCategoryActive(values.id, values.next);
 }

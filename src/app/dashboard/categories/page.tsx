@@ -1,5 +1,5 @@
 import { requireAdminPage } from "@/lib/auth/admin-page";
-import { listCategories, toggleCategoryActive } from "@/lib/actions/categories";
+import { listCategories, toggleCategoryActiveForm } from "@/lib/actions/categories";
 import { CategoryForm } from "@/components/dashboard/category-form";
 import { ToggleActiveButton } from "@/components/dashboard/toggle-active-button";
 
@@ -43,8 +43,9 @@ export default async function CategoriesPage() {
                   </td>
                   <td className="px-4 py-3">
                     <ToggleActiveButton
+                      action={toggleCategoryActiveForm}
+                      entityId={category.id}
                       isActive={category.is_active}
-                      onToggle={(next) => toggleCategoryActive(category.id, next)}
                     />
                   </td>
                 </tr>

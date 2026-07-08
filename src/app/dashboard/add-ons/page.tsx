@@ -1,5 +1,5 @@
 import { requireAdminPage } from "@/lib/auth/admin-page";
-import { listAddOns, toggleAddOnAvailable } from "@/lib/actions/add-ons";
+import { listAddOns, toggleAddOnAvailableForm } from "@/lib/actions/add-ons";
 import { AddOnForm } from "@/components/dashboard/add-on-form";
 import { ToggleActiveButton } from "@/components/dashboard/toggle-active-button";
 import { formatPrice } from "@/lib/money";
@@ -44,8 +44,9 @@ export default async function AddOnsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <ToggleActiveButton
+                      action={toggleAddOnAvailableForm}
+                      entityId={addOn.id}
                       isActive={addOn.is_available}
-                      onToggle={(next) => toggleAddOnAvailable(addOn.id, next)}
                       activeLabel="إيقاف"
                       inactiveLabel="تفعيل"
                     />

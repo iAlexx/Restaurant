@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { productSchema } from "@/lib/validations/menu";
 import type { Product } from "@/types/database";
 import type { ActionResult } from "@/lib/actions/types";
+import { parseToggleForm } from "@/lib/actions/toggle-form";
 
 export interface ProductWithAddOns extends Product {
   add_on_ids: string[];
@@ -155,4 +156,12 @@ export async function toggleProductAvailable(
 
   revalidatePath("/dashboard/products");
   return { success: isAvailable ? "تم تفعيل المنتج" : "تم إيقاف المنتج" };
+}
+
+export async function toggleProductAvailableForm(
+  formData: FormData
+): Promise<void> {
+  const values = parseToggleForm(formData);
+  if (!values) return;
+  await toggleProductAvailable(values.id, values.next);
 }

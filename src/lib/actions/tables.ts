@@ -7,6 +7,7 @@ import { generateSecureToken } from "@/lib/tokens";
 import { tableSchema } from "@/lib/validations/tables";
 import type { Table } from "@/types/database";
 import type { ActionResult } from "@/lib/actions/types";
+import { parseToggleForm } from "@/lib/actions/toggle-form";
 
 export async function listTables(): Promise<Table[]> {
   await requireAdminSession();
@@ -104,4 +105,10 @@ export async function toggleTableActive(
 
   revalidatePath("/dashboard/tables");
   return { success: isActive ? "تم تفعيل الطاولة" : "تم إيقاف الطاولة" };
+}
+
+export async function toggleTableActiveForm(formData: FormData): Promise<void> {
+  const values = parseToggleForm(formData);
+  if (!values) return;
+  await toggleTableActive(values.id, values.next);
 }
