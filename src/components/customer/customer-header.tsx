@@ -5,10 +5,12 @@ export function CustomerHeader({
   settings,
   cartHref,
   itemCount,
+  tableLabel,
 }: {
   settings: PublicRestaurantSettings;
   cartHref: string;
   itemCount: number;
+  tableLabel?: string;
 }) {
   return (
     <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/95 backdrop-blur">
@@ -30,7 +32,11 @@ export function CustomerHeader({
             <h1 className="truncate text-base font-bold text-stone-900">
               {settings.name}
             </h1>
-            {settings.opening_hours ? (
+            {tableLabel ? (
+              <p className="truncate text-xs font-semibold text-amber-700">
+                طاولة {tableLabel}
+              </p>
+            ) : settings.opening_hours ? (
               <p className="truncate text-xs text-stone-500">
                 {settings.opening_hours}
               </p>

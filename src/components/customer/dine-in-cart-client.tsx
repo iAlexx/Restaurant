@@ -5,30 +5,48 @@ import { CartProvider, useCart } from "@/contexts/cart-context";
 import { CustomerHeader } from "@/components/customer/customer-header";
 import { CartView } from "@/components/customer/cart-view";
 import { CheckoutClient } from "@/components/customer/checkout-client";
+import { DineInTableBanner } from "@/components/customer/dine-in-table-banner";
+import { DineInTableCacheSync } from "@/components/customer/dine-in-table-cache-sync";
 import type { PublicMenu } from "@/lib/menu/public-menu";
+import {
+  type DineInContext,
+  dineInCartHref,
+  dineInCheckoutHref,
+  dineInMenuHref,
+  dineInSuccessPath,
+} from "@/lib/dine-in/paths";
 
 function DineInCartInner({
   menu,
-  tableToken,
+  ctx,
 }: {
   menu: PublicMenu;
-  tableToken: string;
+  ctx: DineInContext;
 }) {
   const { itemCount } = useCart();
 
   return (
     <div className="min-h-screen bg-stone-50">
+      <DineInTableCacheSync
+        tableToken={ctx.tableToken}
+        tableLabel={ctx.tableLabel}
+      />
       <CustomerHeader
         settings={menu.settings}
-        cartHref={`/t/${tableToken}/cart`}
+        cartHref={dineInCartHref(ctx)}
         itemCount={itemCount}
+        tableLabel={ctx.tableLabel}
       />
       <main className="mx-auto max-w-lg px-4 py-4">
+        <div className="mb-4">
+          <DineInTableBanner ctx={ctx} />
+        </div>
         <h1 className="mb-4 text-xl font-bold">السلة</h1>
         <CartView
           menu={menu}
-          checkoutHref={`/t/${tableToken}/checkout`}
-          backHref={`/t/${tableToken}`}
+          checkoutHref={dineInCheckoutHref(ctx)}
+          backHref={dineInMenuHref(ctx)}
+          tableLabel={ctx.tableLabel}
         />
       </main>
     </div>
@@ -37,44 +55,62 @@ function DineInCartInner({
 
 export function DineInCartClient({
   menu,
-  tableToken,
+  ctx,
 }: {
   menu: PublicMenu;
-  tableToken: string;
+  ctx: DineInContext;
 }) {
   return (
-    <CartProvider mode="dine_in" tableToken={tableToken}>
-      <DineInCartInner menu={menu} tableToken={tableToken} />
+    <CartProvider mode="dine_in" tableToken={ctx.tableToken}>
+      <DineInCartInner menu={menu} ctx={ctx} />
     </CartProvider>
   );
 }
 
 function DineInCheckoutInner({
   menu,
-  tableToken,
+  ctx,
 }: {
   menu: PublicMenu;
-  tableToken: string;
+  ctx: DineInContext;
 }) {
   const { itemCount } = useCart();
+  const successBasePath =
+    ctx.flow === "unified"
+      ? `/dine-in/success`
+      : `/t/${ctx.tableToken}/success`;
 
   return (
     <div className="min-h-screen bg-stone-50">
+      <DineInTableCacheSync
+        tableToken={ctx.tableToken}
+        tableLabel={ctx.tableLabel}
+      />
       <CustomerHeader
         settings={menu.settings}
-        cartHref={`/t/${tableToken}/cart`}
+        cartHref={dineInCartHref(ctx)}
         itemCount={itemCount}
+        tableLabel={ctx.tableLabel}
       />
       <main className="mx-auto max-w-lg px-4 py-4">
+        <div className="mb-4">
+          <DineInTableBanner ctx={ctx} />
+        </div>
         <h1 className="mb-4 text-xl font-bold">تأكيد الطلب</h1>
         <CheckoutClient
           menu={menu}
           orderType="DINE_IN"
-          tableToken={tableToken}
-          successBasePath={`/t/${tableToken}/success`}
+          tableToken={ctx.tableToken}
+          tableLabel={ctx.tableLabel}
+          successBasePath={successBasePath}
+          unifiedSuccessPath={
+            ctx.flow === "unified"
+              ? (orderId) => dineInSuccessPath(ctx, orderId)
+              : undefined
+          }
         />
         <Link
-          href={`/t/${tableToken}/cart`}
+          href={dineInCartHref(ctx)}
           className="mt-4 block text-center text-sm text-stone-500 underline"
         >
           العودة إلى السلة
@@ -86,14 +122,14 @@ function DineInCheckoutInner({
 
 export function DineInCheckoutClient({
   menu,
-  tableToken,
+  ctx,
 }: {
   menu: PublicMenu;
-  tableToken: string;
+  ctx: DineInContext;
 }) {
   return (
-    <CartProvider mode="dine_in" tableToken={tableToken}>
-      <DineInCheckoutInner menu={menu} tableToken={tableToken} />
+    <CartProvider mode="dine_in" tableToken={ctx.tableToken}>
+      <DineInCheckoutInner menu={menu} ctx={ctx} />
     </CartProvider>
   );
 }

@@ -3,20 +3,41 @@ import { listTables, toggleTableActiveForm } from "@/lib/actions/tables";
 import { TableForm } from "@/components/dashboard/table-form";
 import { TableQrActions } from "@/components/dashboard/table-qr-actions";
 import { ToggleActiveButton } from "@/components/dashboard/toggle-active-button";
-import { Badge, EmptyState, PageHeader } from "@/components/dashboard/form-ui";
-import { getSiteUrl } from "@/lib/env";
+import { Badge, EmptyState, PageHeader, buttonPrimaryClassName } from "@/components/dashboard/form-ui";
+import { buildDineInUrl, getSiteUrl } from "@/lib/env";
+import Link from "next/link";
 
 export default async function TablesPage() {
   await requireAdminPage();
   const tables = await listTables();
   const siteUrl = getSiteUrl();
+  const dineInUrl = buildDineInUrl();
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="الطاولات"
         description="إدارة الطاولات ورموز QR للطلب داخل المطعم"
+        actions={
+          <Link
+            href="/dashboard/tables/unified-qr-card"
+            className={buttonPrimaryClassName()}
+          >
+            بطاقة QR موحّدة
+          </Link>
+        }
       />
+
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <p className="font-semibold">الرابط الموحّد للطلب داخل المطعم</p>
+        <p className="mt-1" dir="ltr">
+          {dineInUrl}
+        </p>
+        <p className="mt-1 text-xs text-amber-800">
+          رمز QR واحد للمطعم — الزبون يختار الطاولة بعد المسح. رموز الطاولات
+          الفردية ما زالت متاحة كاحتياط.
+        </p>
+      </div>
 
       <TableForm />
 

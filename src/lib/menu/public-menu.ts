@@ -76,7 +76,14 @@ export async function fetchPublicMenu(): Promise<PublicMenu> {
   };
 }
 
-export async function fetchTableByToken(token: string) {
+export interface PublicTable {
+  id: string;
+  label: string;
+  public_token: string;
+  is_active: boolean;
+}
+
+export async function fetchTableByToken(token: string): Promise<PublicTable | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("tables")
@@ -85,5 +92,20 @@ export async function fetchTableByToken(token: string) {
     .maybeSingle();
 
   if (error) return null;
-  return data as { id: string; label: string; public_token: string; is_active: boolean } | null;
+  return (data as PublicTable) ?? null;
+}
+
+/** Active tables for the unified dine-in table picker (RLS: is_active = true). */
+export async function fetchActiveTables(): Promise<
+  Pick<PublicTable, "id" | "label" | "public_token">[]
+> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("tables")
+    .select("id, label, public_token")
+    .eq("is_active", true)
+    .order("label", { ascending: true });
+
+  if (error) return [];
+  return (data ?? []) as Pick<PublicTable, "id" | "label" | "public_token">[];
 }

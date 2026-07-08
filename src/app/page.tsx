@@ -9,8 +9,14 @@ export default function HomePage() {
         امسح رمز QR على طاولتك للطلب مباشرة، أو اطلب توصيل أو استلام من المطعم.
       </p>
       <a
+        href="/dine-in"
+        className="mt-4 w-full max-w-xs rounded-2xl border border-stone-300 px-6 py-3.5 font-semibold text-stone-700 transition hover:bg-stone-100"
+      >
+        طلب من الطاولة (QR موحّد)
+      </a>
+      <a
         href="/order"
-        className="mt-8 w-full max-w-xs rounded-2xl bg-amber-600 px-6 py-3.5 font-bold text-white transition hover:bg-amber-700"
+        className="mt-3 w-full max-w-xs rounded-2xl bg-amber-600 px-6 py-3.5 font-bold text-white transition hover:bg-amber-700"
       >
         طلب توصيل أو استلام
       </a>

@@ -15,5 +15,14 @@ export default async function DineInCartPage({ params }: PageProps) {
   }
 
   const menu = await fetchPublicMenu();
-  return <DineInCartClient menu={menu} tableToken={token} />;
+  return (
+    <DineInCartClient
+      menu={menu}
+      ctx={{
+        flow: "legacy",
+        tableToken: token,
+        tableLabel: table.label,
+      }}
+    />
+  );
 }

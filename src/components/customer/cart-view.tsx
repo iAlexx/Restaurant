@@ -11,10 +11,12 @@ export function CartView({
   menu,
   checkoutHref,
   backHref,
+  tableLabel,
 }: {
   menu: PublicMenu;
   checkoutHref: string;
   backHref: string;
+  tableLabel?: string;
 }) {
   const { cart, hydrated, updateQuantity, removeLine } = useCart();
 
@@ -55,6 +57,11 @@ export function CartView({
 
   return (
     <>
+      {tableLabel ? (
+        <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
+          طلبك للطاولة <strong>{tableLabel}</strong>
+        </p>
+      ) : null}
       <div className="space-y-3 pb-40">
         {cart.lines.map((line) => {
           const product = productMap.get(line.productId);

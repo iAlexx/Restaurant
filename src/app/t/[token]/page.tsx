@@ -21,8 +21,11 @@ export default async function DineInPage({ params }: PageProps) {
   return (
     <DineInMenuClient
       menu={menu}
-      tableToken={token}
-      tableLabel={table.label}
+      ctx={{
+        flow: "legacy",
+        tableToken: token,
+        tableLabel: table.label,
+      }}
     />
   );
 }

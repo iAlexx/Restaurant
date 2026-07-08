@@ -15,3 +15,8 @@ export function getSiteUrl(): string {
 export function buildTableUrl(publicToken: string): string {
   return `${getSiteUrl()}/t/${publicToken}`;
 }
+
+/** Canonical unified dine-in entry URL (one QR for the whole restaurant). */
+export function buildDineInUrl(): string {
+  return `${getSiteUrl()}/dine-in`;
+}

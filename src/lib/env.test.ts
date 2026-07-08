@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { buildTableUrl, getSiteUrl } from "@/lib/env";
+import { buildDineInUrl, buildTableUrl, getSiteUrl } from "@/lib/env";
 import { generateSecureToken } from "@/lib/tokens";
 
 const ORIGINAL_ENV = { ...process.env };
@@ -35,6 +35,13 @@ describe("getSiteUrl", () => {
   it("uses VERCEL_URL only when NEXT_PUBLIC_SITE_URL is absent", () => {
     process.env.VERCEL_URL = "restaurant-preview.vercel.app";
     expect(getSiteUrl()).toBe("https://restaurant-preview.vercel.app");
+  });
+});
+
+describe("buildDineInUrl", () => {
+  it("produces the canonical unified dine-in entry URL", () => {
+    process.env.NEXT_PUBLIC_SITE_URL = "https://alnkha.site";
+    expect(buildDineInUrl()).toBe("https://alnkha.site/dine-in");
   });
 });
 

@@ -6,24 +6,31 @@ import { useCart, estimateCartTotal } from "@/contexts/cart-context";
 import type { PublicMenu } from "@/lib/menu/public-menu";
 import type { CreateOrderInput } from "@/lib/validations/order";
 import { formatPrice } from "@/lib/money";
+import { ConfirmDialog } from "@/components/dashboard/confirm-dialog";
 
 interface CheckoutClientProps {
   menu: PublicMenu;
   orderType: "DINE_IN" | "DELIVERY" | "PICKUP";
   tableToken?: string;
+  tableLabel?: string;
   successBasePath: string;
+  /** Full success URL for unified flow (includes ?table= query). */
+  unifiedSuccessPath?: (orderId: string) => string;
 }
 
 export function CheckoutClient({
   menu,
   orderType,
   tableToken,
+  tableLabel,
   successBasePath,
+  unifiedSuccessPath,
 }: CheckoutClientProps) {
   const router = useRouter();
   const { cart, getSubmitToken, clearCart, resetSubmitToken } = useCart();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -42,8 +49,7 @@ export function CheckoutClient({
   const belowMinimum =
     orderType === "DELIVERY" && minDelivery > 0 && subtotal < minDelivery;
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submitOrder() {
     setError(null);
     setSubmitting(true);
 
@@ -106,11 +112,23 @@ export function CheckoutClient({
 
       clearCart();
       resetSubmitToken();
-      router.push(`${successBasePath}/${data.id}`);
+      const successHref = unifiedSuccessPath
+        ? unifiedSuccessPath(data.id)
+        : `${successBasePath}/${data.id}`;
+      router.push(successHref);
     } catch {
       setError("تعذر الاتصال بالخادم");
       setSubmitting(false);
     }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (orderType === "DINE_IN" && tableLabel) {
+      setConfirmOpen(true);
+      return;
+    }
+    void submitOrder();
   }
 
   return (
@@ -125,9 +143,16 @@ export function CheckoutClient({
       ) : null}
 
       {orderType === "DINE_IN" ? (
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          سيتم إرسال الطلب إلى طاولتك مباشرة. لا حاجة لإدخال بيانات إضافية.
-        </p>
+        <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p>
+            سيتم إرسال الطلب إلى طاولتك مباشرة. لا حاجة لإدخال بيانات إضافية.
+          </p>
+          {tableLabel ? (
+            <p className="font-bold">
+              الطاولة المختارة: {tableLabel}
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       {orderType !== "DINE_IN" ? (
@@ -224,6 +249,22 @@ export function CheckoutClient({
       >
         {submitting ? "جاري الإرسال..." : "تأكيد الطلب"}
       </button>
+
+      {orderType === "DINE_IN" && tableLabel ? (
+        <ConfirmDialog
+          open={confirmOpen}
+          title="تأكيد الطاولة"
+          description={`أنت تطلب للطاولة ${tableLabel} — هل الرقم صحيح؟`}
+          confirmLabel="نعم، إرسال الطلب"
+          cancelLabel="رجوع"
+          pending={submitting}
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={() => {
+            setConfirmOpen(false);
+            void submitOrder();
+          }}
+        />
+      ) : null}
     </form>
   );
 }
