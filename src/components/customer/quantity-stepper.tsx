@@ -22,17 +22,17 @@ export function QuantityStepper({
   const num = size === "md" ? "w-10 text-lg" : "w-8 text-base";
 
   return (
-    <div className="inline-flex items-center gap-1 rounded-full border border-stone-200 bg-stone-50 p-1">
+    <div className="inline-flex items-center gap-1 rounded-full border border-brand-border bg-brand-cream p-1">
       <button
         type="button"
         aria-label="إنقاص الكمية"
         disabled={value <= min}
         onClick={() => onChange(Math.max(min, value - 1))}
-        className={`${btn} flex items-center justify-center rounded-full bg-white font-bold text-stone-700 shadow-sm transition hover:text-amber-700 disabled:opacity-40`}
+        className={`${btn} flex items-center justify-center rounded-full bg-brand-surface font-bold text-brand-chocolate shadow-sm transition hover:text-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/30 disabled:opacity-40`}
       >
         −
       </button>
-      <span className={`${num} text-center font-bold tabular-nums text-stone-900`}>
+      <span className={`${num} text-center font-bold tabular-nums text-brand-chocolate`}>
         {value}
       </span>
       <button
@@ -40,7 +40,7 @@ export function QuantityStepper({
         aria-label="زيادة الكمية"
         disabled={value >= max}
         onClick={() => onChange(Math.min(max, value + 1))}
-        className={`${btn} flex items-center justify-center rounded-full bg-white font-bold text-stone-700 shadow-sm transition hover:text-amber-700 disabled:opacity-40`}
+        className={`${btn} flex items-center justify-center rounded-full bg-brand-surface font-bold text-brand-chocolate shadow-sm transition hover:text-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/30 disabled:opacity-40`}
       >
         +
       </button>

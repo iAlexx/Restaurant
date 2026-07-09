@@ -2,7 +2,9 @@ import Link from "next/link";
 import { fetchTableByToken } from "@/lib/menu/public-menu";
 import { fetchOrderForWhatsApp } from "@/lib/orders/create-order";
 import { InvalidTablePage } from "@/components/customer/dine-in-shell";
-import { formatPrice } from "@/lib/money";
+import { buildOrderSummaryLines } from "@/lib/orders/order-summary";
+import { OrderSuccessScreen } from "@/components/customer/order-success-screen";
+import { buttonSecondaryClassName } from "@/components/dashboard/form-ui";
 
 interface PageProps {
   params: Promise<{ token: string; orderId: string }>;
@@ -20,63 +22,55 @@ export default async function DineInSuccessPage({ params }: PageProps) {
 
   if (!data) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <p className="text-stone-600">الطلب غير موجود</p>
+      <div className="flex min-h-screen items-center justify-center bg-brand-cream px-4">
+        <p className="text-brand-muted">الطلب غير موجود</p>
       </div>
     );
   }
 
   const order = data.order as {
     order_number: string;
+    order_type: "DINE_IN";
+    subtotal: number;
+    delivery_fee: number;
     total: number;
     table_label_snapshot: string | null;
+    notes: string | null;
   };
   const currencyLabel = data.settings?.currency_label ?? "ل.س";
+  const tableLabel = order.table_label_snapshot ?? table.label;
+  const lines = buildOrderSummaryLines(
+    data.items as Parameters<typeof buildOrderSummaryLines>[0],
+    data.addOns as Parameters<typeof buildOrderSummaryLines>[1]
+  );
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-stone-50 px-4 py-8">
-      <div className="w-full max-w-md rounded-3xl border border-stone-200 bg-white p-8 text-center shadow-sm">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl text-green-700">
-          ✓
-        </div>
-        <h1 className="text-2xl font-extrabold text-stone-900">تم إرسال طلبك</h1>
-        <p className="mt-4 text-sm text-stone-500">رقم الطلب</p>
-        <p className="text-3xl font-extrabold tracking-tight text-amber-700">
-          {order.order_number}
-        </p>
-
-        <div className="mt-6 flex items-center justify-center gap-3 rounded-2xl bg-stone-50 py-4">
-          {order.table_label_snapshot ? (
-            <>
-              <div className="text-center">
-                <p className="text-xs text-stone-500">الطاولة</p>
-                <p className="font-bold text-stone-900">
-                  {order.table_label_snapshot}
-                </p>
-              </div>
-              <span className="h-8 w-px bg-stone-200" />
-            </>
-          ) : null}
-          <div className="text-center">
-            <p className="text-xs text-stone-500">الإجمالي</p>
-            <p className="font-bold text-stone-900">
-              {formatPrice(order.total, currencyLabel)}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <p className="font-semibold">طلبك في المطبخ الآن 👨‍🍳</p>
-          <p className="mt-1">سيتم تحضيره وتقديمه على طاولتك قريباً. شكراً لك!</p>
-        </div>
-
+    <OrderSuccessScreen
+      title="تم إرسال طلبك"
+      currencyLabel={currencyLabel}
+      orderNumber={order.order_number}
+      orderType="DINE_IN"
+      lines={lines}
+      subtotal={order.subtotal}
+      deliveryFee={order.delivery_fee}
+      total={order.total}
+      tableLabel={tableLabel}
+      orderNotes={order.notes}
+      footer={
         <Link
           href={`/t/${token}`}
-          className="mt-6 inline-flex rounded-xl border border-stone-300 px-5 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50"
+          className={`${buttonSecondaryClassName()} w-full rounded-xl`}
         >
           طلب المزيد
         </Link>
+      }
+    >
+      <div className="rounded-2xl border border-brand-gold/45 bg-brand-gold-soft px-4 py-3 text-sm text-brand-chocolate">
+        <p className="font-semibold">طلبك في المطبخ الآن</p>
+        <p className="mt-1">
+          سيتم تحضيره وتقديمه على طاولتك قريباً. شكراً لك!
+        </p>
       </div>
-    </div>
+    </OrderSuccessScreen>
   );
 }

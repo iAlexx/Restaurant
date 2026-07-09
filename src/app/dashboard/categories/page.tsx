@@ -27,10 +27,10 @@ export default async function CategoriesPage() {
           description="أضف أول قسم لتنظيم أصناف قائمتك."
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-stone-200">
+        <div className="overflow-hidden rounded-xl border border-brand-border">
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="bg-stone-50 text-stone-500">
+              <thead className="bg-brand-cream text-brand-muted">
                 <tr>
                   <th className="px-4 py-2.5 text-start font-semibold">الاسم</th>
                   <th className="px-4 py-2.5 text-start font-semibold">
@@ -46,15 +46,15 @@ export default async function CategoriesPage() {
               </thead>
               <tbody>
                 {categories.map((category) => (
-                  <tr key={category.id} className="border-t border-stone-100">
-                    <td className="px-4 py-3 font-medium text-stone-900">
+                  <tr key={category.id} className="border-t border-brand-border">
+                    <td className="px-4 py-3 font-medium text-brand-chocolate">
                       {category.name_ar}
                     </td>
-                    <td className="px-4 py-3 text-stone-600">
+                    <td className="px-4 py-3 text-brand-muted">
                       {category.sort_order}
                     </td>
                     <td className="px-4 py-3">
-                      <Badge tone={category.is_active ? "green" : "stone"}>
+                      <Badge tone={category.is_active ? "green" : "muted"}>
                         {category.is_active ? "نشط" : "موقوف"}
                       </Badge>
                     </td>
@@ -75,7 +75,7 @@ export default async function CategoriesPage() {
 
       {categories.length > 0 ? (
         <div className="space-y-4">
-          <h2 className="font-semibold text-stone-900">تعديل الأقسام</h2>
+          <h2 className="font-semibold text-brand-chocolate">تعديل الأقسام</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {categories.map((category) => (
               <CategoryForm key={category.id} category={category} />

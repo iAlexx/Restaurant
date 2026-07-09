@@ -116,17 +116,17 @@ export function OrdersDashboard({
 
       <OrdersSummaryStrip summary={summary} currencyLabel={currencyLabel} />
 
-      <div className="flex flex-wrap items-center gap-3 text-xs text-stone-500">
+      <div className="flex flex-wrap items-center gap-3 text-xs text-brand-muted">
         <span className="flex items-center gap-2">
           <span
             className={`inline-block h-2 w-2 rounded-full ${
-              loading ? "bg-amber-500" : "bg-green-500"
+              loading ? "bg-brand-orange" : "bg-brand-green"
             }`}
           />
           {loading ? "جاري التحديث..." : "تحديث تلقائي كل ٨ ثوانٍ"}
         </span>
         {urgentCount > 0 ? (
-          <span className="rounded-full bg-amber-100 px-2.5 py-1 font-semibold text-amber-800">
+          <span className="rounded-full bg-brand-gold-soft px-2.5 py-1 font-semibold text-brand-orange">
             {urgentCount} طلب عاجل
           </span>
         ) : null}
@@ -140,8 +140,8 @@ export function OrdersDashboard({
             onClick={() => setFilter(f.value)}
             className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
               filter === f.value
-                ? "bg-amber-600 text-white"
-                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                ? "bg-brand-orange text-white"
+                : "bg-brand-cream text-brand-muted hover:bg-brand-gold/25"
             }`}
           >
             {f.label}
@@ -155,11 +155,11 @@ export function OrdersDashboard({
           description="ستظهر الطلبات الجديدة هنا تلقائياً فور استلامها."
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-stone-200">
+        <div className="overflow-hidden rounded-xl border border-brand-border">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-sm">
               <thead>
-                <tr className="bg-stone-50 text-stone-500">
+                <tr className="bg-brand-cream text-brand-muted">
                   <th className="px-3 py-2.5 text-start font-semibold">الرقم</th>
                   <th className="px-3 py-2.5 text-start font-semibold">النوع</th>
                   <th className="px-3 py-2.5 text-start font-semibold">
@@ -181,17 +181,17 @@ export function OrdersDashboard({
                   return (
                     <tr
                       key={order.id}
-                      className={`border-t border-stone-100 transition hover:bg-stone-50 ${
-                        urgent ? "bg-amber-50/70 ring-1 ring-inset ring-amber-200/60" : ""
+                      className={`border-t border-brand-border transition hover:bg-brand-cream ${
+                        urgent ? "bg-brand-orange-soft ring-1 ring-inset ring-brand-gold/50" : ""
                       }`}
                     >
                       <td className="px-3 py-3">
                         <Link
                           href={`/dashboard/orders/${order.id}`}
-                          className="flex items-center gap-2 font-bold text-amber-700 hover:underline"
+                          className="flex items-center gap-2 font-bold text-brand-orange hover:underline"
                         >
                           {urgent ? (
-                            <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.8)]" />
+                            <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-brand-orange-soft0 shadow-[0_0_6px_rgba(245,158,11,0.8)]" />
                           ) : null}
                           {order.order_number}
                         </Link>
@@ -199,14 +199,14 @@ export function OrdersDashboard({
                       <td className="px-3 py-3">
                         <OrderTypeBadge type={order.order_type} />
                       </td>
-                      <td className="px-3 py-3 text-stone-700">
+                      <td className="px-3 py-3 text-brand-chocolate">
                         {order.order_type === "DINE_IN" ? (
                           order.table_label_snapshot ?? "—"
                         ) : (
                           <span>
                             {order.customer_name ?? "—"}
                             {order.customer_phone ? (
-                              <span className="text-stone-400" dir="ltr">
+                              <span className="text-brand-muted" dir="ltr">
                                 {" "}
                                 {order.customer_phone}
                               </span>
@@ -214,7 +214,7 @@ export function OrdersDashboard({
                           </span>
                         )}
                       </td>
-                      <td className="px-3 py-3 text-stone-600">
+                      <td className="px-3 py-3 text-brand-muted">
                         {formatRestaurantDateTime(order.created_at)}
                       </td>
                       <td className="px-3 py-3">
@@ -223,7 +223,7 @@ export function OrdersDashboard({
                       <td className="px-3 py-3">
                         <PrintStatusBadge status={order.latest_print_status} />
                       </td>
-                      <td className="px-3 py-3 font-bold tabular-nums text-stone-900">
+                      <td className="px-3 py-3 font-bold tabular-nums text-brand-chocolate">
                         {formatPrice(order.total, currencyLabel)}
                       </td>
                     </tr>

@@ -6,6 +6,7 @@ import type { AddOn, Product } from "@/types/database";
 import { formatPrice } from "@/lib/money";
 import { QuantityStepper } from "@/components/customer/quantity-stepper";
 import { ProductImage } from "@/components/customer/product-image";
+import { buttonPrimaryClassName } from "@/components/dashboard/form-ui";
 
 interface ProductModalProps {
   product: Product;
@@ -70,7 +71,7 @@ export function ProductModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-brand-chocolate/50 p-0 sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label={product.name_ar}
@@ -80,7 +81,7 @@ export function ProductModal({
         ref={dialogRef}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white shadow-xl outline-none sm:rounded-3xl"
+        className="motion-modal-up max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-brand-surface shadow-xl outline-none sm:rounded-3xl"
       >
         <div className="relative">
           {product.image_url ? (
@@ -90,7 +91,7 @@ export function ProductModal({
               priority
             />
           ) : (
-            <div className="flex h-32 w-full items-center justify-center bg-stone-100 text-4xl text-stone-300">
+            <div className="flex h-32 w-full items-center justify-center bg-brand-cream text-4xl text-brand-muted">
               🍽
             </div>
           )}
@@ -98,26 +99,28 @@ export function ProductModal({
             type="button"
             onClick={onClose}
             aria-label="إغلاق"
-            className="absolute end-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-lg font-bold text-stone-700 shadow-sm"
+            className="absolute end-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-brand-surface/95 text-lg font-bold text-brand-chocolate shadow-sm ring-1 ring-brand-border"
           >
             ✕
           </button>
         </div>
 
         <div className="p-5">
-          <h2 className="text-xl font-bold text-stone-900">{product.name_ar}</h2>
+          <h2 className="text-xl font-bold text-brand-chocolate">
+            {product.name_ar}
+          </h2>
           {product.description_ar ? (
-            <p className="mt-2 text-sm leading-relaxed text-stone-600">
+            <p className="mt-2 text-sm leading-relaxed text-brand-muted">
               {product.description_ar}
             </p>
           ) : null}
-          <p className="mt-3 text-lg font-bold text-amber-700">
+          <p className="mt-3 text-lg font-bold text-brand-orange">
             {formatPrice(product.price, currencyLabel)}
           </p>
 
           {availableAddOns.length > 0 ? (
             <div className="mt-5">
-              <p className="mb-2 text-sm font-semibold text-stone-800">
+              <p className="mb-2 text-sm font-semibold text-brand-chocolate">
                 الإضافات
               </p>
               <div className="space-y-2">
@@ -128,8 +131,8 @@ export function ProductModal({
                       key={addOn.id}
                       className={`flex cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-3 text-sm transition ${
                         checked
-                          ? "border-amber-400 bg-amber-50"
-                          : "border-stone-200 bg-white"
+                          ? "border-brand-orange/50 bg-brand-orange-soft"
+                          : "border-brand-border bg-brand-surface"
                       }`}
                     >
                       <span className="flex items-center gap-3">
@@ -137,14 +140,14 @@ export function ProductModal({
                           type="checkbox"
                           checked={checked}
                           onChange={() => toggleAddOn(addOn.id)}
-                          className="h-5 w-5 accent-amber-600"
+                          className="h-5 w-5 accent-brand-orange"
                         />
-                        <span className="font-medium text-stone-800">
+                        <span className="font-medium text-brand-chocolate">
                           {addOn.name_ar}
                         </span>
                       </span>
                       {addOn.extra_price > 0 ? (
-                        <span className="font-medium text-stone-500">
+                        <span className="font-medium text-brand-muted">
                           +{formatPrice(addOn.extra_price, currencyLabel)}
                         </span>
                       ) : null}
@@ -158,7 +161,7 @@ export function ProductModal({
           <div className="mt-5">
             <label
               htmlFor="product-notes"
-              className="mb-1.5 block text-sm font-semibold text-stone-800"
+              className="mb-1.5 block text-sm font-semibold text-brand-chocolate"
             >
               ملاحظات (اختياري)
             </label>
@@ -168,15 +171,15 @@ export function ProductModal({
               onChange={(e) => setNotes(e.target.value)}
               maxLength={200}
               placeholder="مثال: بدون بصل"
-              className="w-full rounded-xl border border-stone-300 px-3 py-2.5 text-sm focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-200"
+              className="w-full rounded-xl border border-brand-border bg-brand-surface px-3 py-2.5 text-sm text-brand-chocolate focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
             />
           </div>
 
           <div className="mt-6 flex items-center justify-between">
             <QuantityStepper value={quantity} onChange={setQuantity} />
-            <p className="text-sm text-stone-500">
+            <p className="text-sm text-brand-muted">
               الإجمالي:{" "}
-              <span className="font-bold text-stone-900">
+              <span className="font-bold text-brand-chocolate">
                 {formatPrice(unitTotal * quantity, currencyLabel)}
               </span>
             </p>
@@ -185,7 +188,7 @@ export function ProductModal({
           <button
             type="button"
             onClick={handleAdd}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-amber-600 py-3.5 text-base font-bold text-white transition hover:bg-amber-700"
+            className={`${buttonPrimaryClassName()} mt-5 w-full rounded-2xl py-3.5 text-base`}
           >
             أضف إلى السلة
             <span className="tabular-nums">

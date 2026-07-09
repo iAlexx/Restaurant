@@ -13,7 +13,7 @@ export default async function ExternalCheckoutPage({ searchParams }: PageProps) 
   if (params.type !== "DELIVERY" && params.type !== "PICKUP") {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
-        <Link href="/order" className="text-amber-700 underline">
+        <Link href="/order" className="text-brand-orange underline">
           اختر نوع الطلب
         </Link>
       </div>
@@ -34,8 +34,8 @@ function Disabled({ message }: { message: string }) {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="text-center">
-        <p className="text-stone-600">{message}</p>
-        <Link href="/order" className="mt-4 inline-block text-amber-700 underline">
+        <p className="text-brand-muted">{message}</p>
+        <Link href="/order" className="mt-4 inline-block text-brand-orange underline">
           العودة
         </Link>
       </div>

@@ -11,12 +11,12 @@ import {
 import { Badge, type BadgeTone } from "@/components/dashboard/form-ui";
 
 const statusTones: Record<OrderStatus, BadgeTone> = {
-  NEW: "blue",
-  WAITING_WHATSAPP_CONFIRMATION: "amber",
-  CONFIRMED: "teal",
-  PREPARING: "orange",
+  NEW: "urgent",
+  WAITING_WHATSAPP_CONFIRMATION: "urgent",
+  CONFIRMED: "gold",
+  PREPARING: "preparing",
   READY: "green",
-  COMPLETED: "stone",
+  COMPLETED: "green",
   CANCELLED: "red",
 };
 
@@ -25,9 +25,9 @@ export function OrderStatusBadge({ status }: { status: OrderStatus }) {
 }
 
 const typeTones: Record<OrderType, BadgeTone> = {
-  DINE_IN: "teal",
-  DELIVERY: "amber",
-  PICKUP: "blue",
+  DINE_IN: "dine_in",
+  DELIVERY: "delivery",
+  PICKUP: "pickup",
 };
 
 const typeIcons: Record<OrderType, string> = {
@@ -46,10 +46,10 @@ export function OrderTypeBadge({ type }: { type: OrderType }) {
 }
 
 const printTones: Record<PrintJobStatus, BadgeTone> = {
-  PENDING: "amber",
-  PRINTING: "blue",
-  PRINTED: "green",
-  FAILED: "red",
+  PENDING: "print_pending",
+  PRINTING: "gold",
+  PRINTED: "print_ok",
+  FAILED: "print_fail",
 };
 
 export function PrintStatusBadge({
@@ -58,7 +58,7 @@ export function PrintStatusBadge({
   status: PrintJobStatus | null;
 }) {
   if (!status) {
-    return <span className="text-xs text-stone-400">لا يوجد</span>;
+    return <span className="text-xs text-brand-muted">لا يوجد</span>;
   }
 
   return <Badge tone={printTones[status]}>{PRINT_STATUS_LABELS[status]}</Badge>;

@@ -12,14 +12,14 @@ export default async function UnifiedQrCardPage() {
     <div className="space-y-6">
       <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-stone-900">
+          <h1 className="text-xl font-bold text-brand-chocolate">
             بطاقة QR موحّدة للمطعم
           </h1>
-          <p className="mt-1 text-sm text-stone-600">
+          <p className="mt-1 text-sm text-brand-muted">
             رمز واحد على مدخل المطعم أو على كل طاولة — الزبون يختار رقم طاولته
             بعد المسح.
           </p>
-          <p className="mt-2 text-xs text-stone-400" dir="ltr">
+          <p className="mt-2 text-xs text-brand-muted" dir="ltr">
             {dineInUrl}
           </p>
         </div>
@@ -28,7 +28,7 @@ export default async function UnifiedQrCardPage() {
 
       <div className="flex justify-center">
         <div className="print-area w-full max-w-sm">
-          <div className="mx-auto flex flex-col items-center gap-5 rounded-3xl border border-stone-200 bg-white px-8 py-10 text-center shadow-sm">
+          <div className="mx-auto flex flex-col items-center gap-5 rounded-3xl border border-brand-border bg-brand-surface px-8 py-10 text-center shadow-sm">
             {settings.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -39,15 +39,15 @@ export default async function UnifiedQrCardPage() {
             ) : null}
 
             <div>
-              <p className="text-2xl font-extrabold tracking-tight text-stone-900">
+              <p className="text-2xl font-extrabold tracking-tight text-brand-chocolate">
                 {settings.name}
               </p>
-              <p className="mt-2 text-sm font-medium text-amber-800">
+              <p className="mt-2 text-sm font-medium text-brand-orange">
                 طلب من الطاولة
               </p>
             </div>
 
-            <div className="rounded-2xl border-4 border-stone-900 p-3">
+            <div className="rounded-2xl border-4 border-brand-chocolate p-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/api/admin/dine-in/qr"
@@ -59,17 +59,17 @@ export default async function UnifiedQrCardPage() {
             </div>
 
             <div className="space-y-1">
-              <p className="text-lg font-bold text-stone-900">
+              <p className="text-lg font-bold text-brand-chocolate">
                 امسح الرمز واختر طاولتك
               </p>
-              <p className="text-sm leading-relaxed text-stone-600">
+              <p className="text-sm leading-relaxed text-brand-muted">
                 وجّه كاميرا هاتفك نحو الرمز، اختر رقم طاولتك، ثم تصفّح القائمة
                 وأرسل طلبك.
               </p>
             </div>
 
             {settings.phone ? (
-              <p className="text-xs text-stone-400" dir="ltr">
+              <p className="text-xs text-brand-muted" dir="ltr">
                 {settings.phone}
               </p>
             ) : null}

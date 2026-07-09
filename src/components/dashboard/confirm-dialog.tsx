@@ -54,12 +54,12 @@ export function ConfirmDialog({
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
+        className="w-full max-w-sm rounded-2xl bg-brand-surface p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-bold text-stone-900">{title}</h2>
+        <h2 className="text-lg font-bold text-brand-chocolate">{title}</h2>
         {description ? (
-          <p className="mt-2 text-sm leading-relaxed text-stone-600">
+          <p className="mt-2 text-sm leading-relaxed text-brand-muted">
             {description}
           </p>
         ) : null}

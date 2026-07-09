@@ -126,7 +126,7 @@ export function ProductImageUpload({
 
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium text-stone-700">
+      <label className="block text-sm font-medium text-brand-chocolate">
         صورة المنتج
       </label>
 
@@ -136,29 +136,29 @@ export function ProductImageUpload({
         accept="image/jpeg,image/png,image/webp"
         disabled={disabled || busy}
         onChange={handleFileChange}
-        className="block w-full text-sm text-stone-600 file:me-3 file:rounded-lg file:border-0 file:bg-amber-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-amber-800 hover:file:bg-amber-100 disabled:opacity-60"
+        className="block w-full text-sm text-brand-muted file:me-3 file:rounded-lg file:border-0 file:bg-brand-orange-soft file:px-3 file:py-2 file:text-sm file:font-semibold file:text-brand-orange hover:file:bg-brand-gold-soft disabled:opacity-60"
       />
 
-      <p className="text-xs text-stone-500">
+      <p className="text-xs text-brand-muted">
         JPEG أو PNG أو WebP — يُضغط تلقائياً إلى WebP (حد أقصى 1200×1200،
         أقل من 500 ك.ب)
       </p>
 
       {fileName ? (
-        <p className="truncate text-sm text-stone-700">
-          <span className="font-medium text-stone-500">الملف: </span>
+        <p className="truncate text-sm text-brand-chocolate">
+          <span className="font-medium text-brand-muted">الملف: </span>
           {fileName}
         </p>
       ) : null}
 
       {originalSize !== null ? (
-        <p className="text-xs text-stone-600">
+        <p className="text-xs text-brand-muted">
           الحجم الأصلي: {formatFileSizeKb(originalSize)}
           {compressedSize !== null ? (
             <>
               {" "}
               ← بعد الضغط:{" "}
-              <span className="font-semibold text-green-700">
+              <span className="font-semibold text-brand-green">
                 {formatFileSizeKb(compressedSize)}
               </span>
             </>
@@ -168,15 +168,15 @@ export function ProductImageUpload({
 
       {busy ? (
         <div className="space-y-1">
-          <div className="flex justify-between text-xs text-stone-600">
+          <div className="flex justify-between text-xs text-brand-muted">
             <span>
               {phase === "compressing" ? "جاري الضغط..." : "جاري الرفع..."}
             </span>
             <span>{progress}%</span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-stone-200">
+          <div className="h-2 overflow-hidden rounded-full bg-brand-gold/25">
             <div
-              className="h-full rounded-full bg-amber-600 transition-all duration-300"
+              className="h-full rounded-full bg-brand-orange transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -194,13 +194,13 @@ export function ProductImageUpload({
             alt=""
             width={96}
             height={96}
-            className="h-24 w-24 shrink-0 rounded-lg border border-stone-200 object-cover"
+            className="h-24 w-24 shrink-0 rounded-lg border border-brand-border object-cover"
           />
           <button
             type="button"
             disabled={disabled || busy}
             onClick={handleRemove}
-            className="rounded-lg border border-stone-300 px-3 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-60"
+            className="rounded-lg border border-brand-border px-3 py-1.5 text-xs font-medium text-brand-muted hover:bg-brand-cream disabled:opacity-60"
           >
             إزالة الصورة
           </button>

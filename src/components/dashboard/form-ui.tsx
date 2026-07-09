@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 
 /* -------------------------------------------------------------------------- */
-/* Class helpers                                                              */
+/* Class helpers — brand tokens                                               */
 /* -------------------------------------------------------------------------- */
 
 export function inputClassName() {
-  return "w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-200 disabled:cursor-not-allowed disabled:bg-stone-50";
+  return "w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2.5 text-sm text-brand-chocolate placeholder:text-brand-muted focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/20 disabled:cursor-not-allowed disabled:bg-brand-cream";
 }
 
 export function selectClassName() {
@@ -13,19 +13,27 @@ export function selectClassName() {
 }
 
 export function labelClassName() {
-  return "mb-1.5 block text-sm font-medium text-stone-700";
+  return "mb-1.5 block text-sm font-medium text-brand-chocolate";
 }
 
 export function buttonPrimaryClassName() {
-  return "inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-300 disabled:cursor-not-allowed disabled:opacity-60";
+  return "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-brand-orange px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-hover focus:outline-none focus:ring-2 focus:ring-brand-orange/30 disabled:cursor-not-allowed disabled:opacity-60";
 }
 
 export function buttonSecondaryClassName() {
-  return "inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-stone-200 disabled:cursor-not-allowed disabled:opacity-60";
+  return "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-brand-border bg-brand-surface px-4 py-2 text-sm font-medium text-brand-chocolate transition-colors hover:bg-brand-gold-soft focus:outline-none focus:ring-2 focus:ring-brand-gold/40 disabled:cursor-not-allowed disabled:opacity-60";
 }
 
 export function buttonDangerClassName() {
-  return "inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:cursor-not-allowed disabled:opacity-60";
+  return "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:cursor-not-allowed disabled:opacity-60";
+}
+
+export function buttonWhatsAppClassName() {
+  return "inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl bg-brand-green px-4 py-3.5 text-base font-bold text-white transition-colors hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-brand-green/30 disabled:cursor-not-allowed disabled:opacity-60";
+}
+
+export function cardSurfaceClassName() {
+  return "rounded-xl border border-brand-border bg-brand-surface shadow-sm";
 }
 
 /* -------------------------------------------------------------------------- */
@@ -44,7 +52,7 @@ export function FormAlert({
   const styles =
     type === "error"
       ? "border-red-200 bg-red-50 text-red-700"
-      : "border-green-200 bg-green-50 text-green-700";
+      : "border-brand-green/30 bg-brand-green-soft text-brand-chocolate";
 
   return (
     <p
@@ -72,9 +80,9 @@ export function PageHeader({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h1 className="text-xl font-bold text-stone-900">{title}</h1>
+        <h1 className="text-xl font-bold text-brand-chocolate">{title}</h1>
         {description ? (
-          <p className="mt-1 text-sm text-stone-600">{description}</p>
+          <p className="mt-1 text-sm text-brand-muted">{description}</p>
         ) : null}
       </div>
       {actions ? (
@@ -96,9 +104,7 @@ export function Card({
   className?: string;
 }) {
   return (
-    <div
-      className={`rounded-xl border border-stone-200 bg-white p-4 shadow-sm ${className}`}
-    >
+    <div className={`${cardSurfaceClassName()} p-4 ${className}`}>
       {children}
     </div>
   );
@@ -110,23 +116,35 @@ export function Card({
 
 export type BadgeTone =
   | "neutral"
-  | "amber"
-  | "blue"
-  | "teal"
   | "orange"
+  | "gold"
   | "green"
   | "red"
-  | "stone";
+  | "muted"
+  | "urgent"
+  | "preparing"
+  | "dine_in"
+  | "delivery"
+  | "pickup"
+  | "print_pending"
+  | "print_ok"
+  | "print_fail";
 
 const badgeTones: Record<BadgeTone, string> = {
-  neutral: "bg-stone-100 text-stone-700",
-  amber: "bg-amber-100 text-amber-800",
-  blue: "bg-blue-100 text-blue-800",
-  teal: "bg-teal-100 text-teal-800",
-  orange: "bg-orange-100 text-orange-800",
-  green: "bg-green-100 text-green-800",
+  neutral: "bg-brand-cream text-brand-chocolate ring-1 ring-brand-border",
+  orange: "bg-brand-orange-soft text-brand-orange",
+  gold: "bg-brand-gold-soft text-brand-chocolate ring-1 ring-brand-gold/50",
+  green: "bg-brand-green-soft text-brand-chocolate",
   red: "bg-red-100 text-red-800",
-  stone: "bg-stone-200 text-stone-700",
+  muted: "bg-brand-cream text-brand-muted ring-1 ring-brand-border",
+  urgent: "bg-brand-orange text-white",
+  preparing: "bg-brand-orange-soft text-brand-orange",
+  dine_in: "bg-brand-gold-soft text-brand-chocolate ring-1 ring-brand-gold/40",
+  delivery: "bg-brand-orange-soft text-brand-orange",
+  pickup: "bg-brand-cream text-brand-chocolate ring-1 ring-brand-gold/50",
+  print_pending: "bg-brand-gold-soft text-brand-chocolate",
+  print_ok: "bg-brand-green-soft text-brand-chocolate",
+  print_fail: "bg-red-100 text-red-800",
 };
 
 export function Badge({
@@ -163,11 +181,11 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-stone-300 bg-stone-50/60 px-6 py-12 text-center">
-      {icon ? <div className="mb-3 text-stone-400">{icon}</div> : null}
-      <p className="font-semibold text-stone-800">{title}</p>
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-brand-gold/60 bg-brand-surface/80 px-6 py-12 text-center">
+      {icon ? <div className="mb-3 text-brand-muted">{icon}</div> : null}
+      <p className="font-semibold text-brand-chocolate">{title}</p>
       {description ? (
-        <p className="mt-1 max-w-sm text-sm text-stone-500">{description}</p>
+        <p className="mt-1 max-w-sm text-sm text-brand-muted">{description}</p>
       ) : null}
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
@@ -180,6 +198,8 @@ export function EmptyState({
 
 export function Skeleton({ className = "" }: { className?: string }) {
   return (
-    <div className={`animate-pulse rounded-md bg-stone-200/70 ${className}`} />
+    <div
+      className={`animate-pulse rounded-md bg-brand-gold/25 ${className}`}
+    />
   );
 }

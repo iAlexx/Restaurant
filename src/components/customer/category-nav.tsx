@@ -56,7 +56,7 @@ export function CategoryNav({ categories }: { categories: CategoryNavItem[] }) {
   if (categories.length <= 1) return null;
 
   return (
-    <div className="sticky top-[57px] z-10 -mx-4 border-b border-stone-200 bg-stone-50/95 px-4 py-2 backdrop-blur">
+    <div className="sticky top-[59px] z-10 -mx-4 border-b border-brand-gold/35 bg-brand-cream/95 px-4 py-2 backdrop-blur">
       <div ref={navRef} className="no-scrollbar flex gap-2 overflow-x-auto">
         {categories.map((cat) => {
           const isActive = cat.id === active;
@@ -66,10 +66,10 @@ export function CategoryNav({ categories }: { categories: CategoryNavItem[] }) {
               type="button"
               data-cat={cat.id}
               onClick={() => handleClick(cat.id)}
-              className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition ${
+              className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-orange/30 ${
                 isActive
-                  ? "bg-amber-600 text-white"
-                  : "bg-white text-stone-600 ring-1 ring-stone-200 hover:text-amber-700"
+                  ? "bg-brand-orange text-white"
+                  : "bg-brand-surface text-brand-chocolate ring-1 ring-brand-border hover:ring-brand-gold/60"
               }`}
             >
               {cat.name}

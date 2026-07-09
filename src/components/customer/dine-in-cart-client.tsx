@@ -26,7 +26,7 @@ function DineInCartInner({
   const { itemCount } = useCart();
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-brand-cream">
       <DineInTableCacheSync
         tableToken={ctx.tableToken}
         tableLabel={ctx.tableLabel}
@@ -81,7 +81,7 @@ function DineInCheckoutInner({
       : `/t/${ctx.tableToken}/success`;
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-brand-cream">
       <DineInTableCacheSync
         tableToken={ctx.tableToken}
         tableLabel={ctx.tableLabel}
@@ -111,7 +111,7 @@ function DineInCheckoutInner({
         />
         <Link
           href={dineInCartHref(ctx)}
-          className="mt-4 block text-center text-sm text-stone-500 underline"
+          className="mt-4 block text-center text-sm text-brand-muted underline"
         >
           العودة إلى السلة
         </Link>

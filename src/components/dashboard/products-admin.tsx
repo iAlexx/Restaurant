@@ -81,7 +81,7 @@ export function ProductsAdmin({
       <ProductForm categories={categories} addOns={addOns} />
 
       {products.length > 0 ? (
-        <div className="grid gap-3 rounded-xl border border-stone-200 bg-white p-4 sm:grid-cols-3">
+        <div className="grid gap-3 rounded-xl border border-brand-border bg-brand-surface p-4 sm:grid-cols-3">
           <div>
             <label className={labelClassName()} htmlFor="product-search">
               بحث بالاسم
@@ -137,7 +137,7 @@ export function ProductsAdmin({
       ) : null}
 
       {duplicateMessage ? (
-        <p className="rounded-lg bg-stone-50 px-3 py-2 text-sm text-stone-700">
+        <p className="rounded-lg bg-brand-cream px-3 py-2 text-sm text-brand-chocolate">
           {duplicateMessage}
         </p>
       ) : null}
@@ -153,10 +153,10 @@ export function ProductsAdmin({
           description="جرّب تغيير البحث أو الفلاتر."
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-stone-200">
+        <div className="overflow-hidden rounded-xl border border-brand-border">
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="bg-stone-50 text-stone-500">
+              <thead className="bg-brand-cream text-brand-muted">
                 <tr>
                   <th className="px-4 py-2.5 text-start font-semibold">
                     المنتج
@@ -173,7 +173,7 @@ export function ProductsAdmin({
               </thead>
               <tbody>
                 {filteredProducts.map((product) => (
-                  <tr key={product.id} className="border-t border-stone-100">
+                  <tr key={product.id} className="border-t border-brand-border">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {product.image_url ? (
@@ -184,23 +184,23 @@ export function ProductsAdmin({
                             className="h-10 w-10 rounded-lg object-cover"
                           />
                         ) : (
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-stone-100 text-stone-300">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-cream text-brand-muted">
                             🍽
                           </div>
                         )}
-                        <span className="font-medium text-stone-900">
+                        <span className="font-medium text-brand-chocolate">
                           {product.name_ar}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-stone-600">
+                    <td className="px-4 py-3 text-brand-muted">
                       {categoryMap.get(product.category_id) ?? "—"}
                     </td>
-                    <td className="px-4 py-3 tabular-nums text-stone-700">
+                    <td className="px-4 py-3 tabular-nums text-brand-chocolate">
                       {formatPrice(product.price)}
                     </td>
                     <td className="px-4 py-3">
-                      <Badge tone={product.is_available ? "green" : "stone"}>
+                      <Badge tone={product.is_available ? "green" : "muted"}>
                         {product.is_available ? "متاح" : "غير متاح"}
                       </Badge>
                     </td>
@@ -237,7 +237,7 @@ export function ProductsAdmin({
 
       {filteredProducts.length > 0 ? (
         <div className="space-y-4">
-          <h2 className="font-semibold text-stone-900">تعديل المنتجات</h2>
+          <h2 className="font-semibold text-brand-chocolate">تعديل المنتجات</h2>
           <div className="grid gap-4 lg:grid-cols-2">
             {filteredProducts.map((product) => (
               <ProductForm

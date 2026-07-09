@@ -61,12 +61,18 @@ export function DashboardSidebarNav({ items }: { items: DashboardNavItem[] }) {
             <Link
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+              className={`relative flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-orange/30 ${
                 active
-                  ? "bg-amber-600 text-white shadow-sm"
-                  : "text-stone-600 hover:bg-white hover:text-amber-700"
+                  ? "bg-brand-orange text-white shadow-sm"
+                  : "text-brand-muted hover:bg-brand-gold-soft hover:text-brand-chocolate"
               }`}
             >
+              {active ? (
+                <span
+                  className="absolute inset-y-2 start-0 w-1 rounded-full bg-brand-gold"
+                  aria-hidden="true"
+                />
+              ) : null}
               <Icon href={item.href} />
               {item.label}
             </Link>
@@ -80,7 +86,7 @@ export function DashboardSidebarNav({ items }: { items: DashboardNavItem[] }) {
 export function DashboardBottomNav({ items }: { items: DashboardNavItem[] }) {
   const pathname = usePathname();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-stone-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-brand-gold/40 bg-brand-surface pb-[env(safe-area-inset-bottom)] md:hidden">
       <ul className="no-scrollbar flex overflow-x-auto">
         {items.map((item) => {
           const active = isActive(pathname, item.href);
@@ -89,8 +95,8 @@ export function DashboardBottomNav({ items }: { items: DashboardNavItem[] }) {
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-w-[72px] flex-col items-center gap-1 px-3 py-2 text-[11px] font-medium transition ${
-                  active ? "text-amber-700" : "text-stone-500"
+                className={`flex min-h-[44px] min-w-[72px] flex-col items-center justify-center gap-1 px-3 py-2 text-[11px] font-medium transition ${
+                  active ? "text-brand-orange" : "text-brand-muted"
                 }`}
               >
                 <Icon href={item.href} />

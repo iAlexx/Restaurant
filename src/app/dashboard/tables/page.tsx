@@ -28,12 +28,12 @@ export default async function TablesPage() {
         }
       />
 
-      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+      <div className="rounded-xl border border-brand-gold/45 bg-brand-orange-soft px-4 py-3 text-sm text-brand-chocolate">
         <p className="font-semibold">الرابط الموحّد للطلب داخل المطعم</p>
         <p className="mt-1" dir="ltr">
           {dineInUrl}
         </p>
-        <p className="mt-1 text-xs text-amber-800">
+        <p className="mt-1 text-xs text-brand-orange">
           رمز QR واحد للمطعم — الزبون يختار الطاولة بعد المسح. رموز الطاولات
           الفردية ما زالت متاحة كاحتياط.
         </p>
@@ -47,10 +47,10 @@ export default async function TablesPage() {
           description="أضف طاولة لإنشاء رمز QR خاص بها يمكن للزبائن مسحه."
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-stone-200">
+        <div className="overflow-hidden rounded-xl border border-brand-border">
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="bg-stone-50 text-stone-500">
+              <thead className="bg-brand-cream text-brand-muted">
                 <tr>
                   <th className="px-4 py-2.5 text-start font-semibold">
                     الطاولة
@@ -68,17 +68,17 @@ export default async function TablesPage() {
               </thead>
               <tbody>
                 {tables.map((table) => (
-                  <tr key={table.id} className="border-t border-stone-100">
-                    <td className="px-4 py-3 font-medium text-stone-900">
+                  <tr key={table.id} className="border-t border-brand-border">
+                    <td className="px-4 py-3 font-medium text-brand-chocolate">
                       {table.label}
                     </td>
                     <td className="px-4 py-3">
-                      <Badge tone={table.is_active ? "green" : "stone"}>
+                      <Badge tone={table.is_active ? "green" : "muted"}>
                         {table.is_active ? "نشطة" : "موقوفة"}
                       </Badge>
                     </td>
                     <td
-                      className="max-w-xs truncate px-4 py-3 text-xs text-stone-400"
+                      className="max-w-xs truncate px-4 py-3 text-xs text-brand-muted"
                       dir="ltr"
                     >
                       {siteUrl}/t/{table.public_token.slice(0, 8)}…
@@ -103,7 +103,7 @@ export default async function TablesPage() {
 
       {tables.length > 0 ? (
         <div className="space-y-4">
-          <h2 className="font-semibold text-stone-900">تعديل الطاولات</h2>
+          <h2 className="font-semibold text-brand-chocolate">تعديل الطاولات</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {tables.map((table) => (
               <TableForm key={table.id} table={table} />

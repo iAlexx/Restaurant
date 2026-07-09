@@ -25,8 +25,8 @@ export default async function TableQrCardPage({ params }: PageProps) {
     <div className="space-y-6">
       <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-stone-900">بطاقة QR للطاولة</h1>
-          <p className="mt-1 text-sm text-stone-600">
+          <h1 className="text-xl font-bold text-brand-chocolate">بطاقة QR للطاولة</h1>
+          <p className="mt-1 text-sm text-brand-muted">
             اطبع هذه البطاقة وضعها على الطاولة ليتمكن الزبون من مسح الرمز والطلب.
           </p>
         </div>
@@ -35,7 +35,7 @@ export default async function TableQrCardPage({ params }: PageProps) {
 
       <div className="flex justify-center">
         <div className="print-area w-full max-w-sm">
-          <div className="mx-auto flex flex-col items-center gap-5 rounded-3xl border border-stone-200 bg-white px-8 py-10 text-center shadow-sm">
+          <div className="mx-auto flex flex-col items-center gap-5 rounded-3xl border border-brand-border bg-brand-surface px-8 py-10 text-center shadow-sm">
             {settings.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -46,15 +46,15 @@ export default async function TableQrCardPage({ params }: PageProps) {
             ) : null}
 
             <div>
-              <p className="text-2xl font-extrabold tracking-tight text-stone-900">
+              <p className="text-2xl font-extrabold tracking-tight text-brand-chocolate">
                 {settings.name}
               </p>
-              <p className="mt-2 inline-block rounded-full bg-amber-50 px-4 py-1 text-base font-bold text-amber-800">
+              <p className="mt-2 inline-block rounded-full bg-brand-orange-soft px-4 py-1 text-base font-bold text-brand-orange">
                 {table.label}
               </p>
             </div>
 
-            <div className="rounded-2xl border-4 border-stone-900 p-3">
+            <div className="rounded-2xl border-4 border-brand-chocolate p-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`/api/admin/tables/${table.id}/qr`}
@@ -66,17 +66,17 @@ export default async function TableQrCardPage({ params }: PageProps) {
             </div>
 
             <div className="space-y-1">
-              <p className="text-lg font-bold text-stone-900">
+              <p className="text-lg font-bold text-brand-chocolate">
                 امسح الرمز للطلب
               </p>
-              <p className="text-sm leading-relaxed text-stone-600">
+              <p className="text-sm leading-relaxed text-brand-muted">
                 وجّه كاميرا هاتفك نحو الرمز لعرض القائمة وإرسال طلبك مباشرة من
                 طاولتك.
               </p>
             </div>
 
             {settings.phone ? (
-              <p className="text-xs text-stone-400" dir="ltr">
+              <p className="text-xs text-brand-muted" dir="ltr">
                 {settings.phone}
               </p>
             ) : null}

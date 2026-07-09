@@ -44,8 +44,8 @@ export function MenuView({ menu }: { menu: PublicMenu }) {
             id={`category-${category.id}`}
             className="scroll-mt-24"
           >
-            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-stone-900">
-              <span className="h-5 w-1.5 rounded-full bg-amber-500" />
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-brand-chocolate">
+              <span className="h-5 w-1 rounded-full bg-brand-orange" />
               {category.name_ar}
             </h2>
             <div className="space-y-3">
@@ -54,30 +54,32 @@ export function MenuView({ menu }: { menu: PublicMenu }) {
                   key={product.id}
                   type="button"
                   onClick={() => setSelectedProduct(product)}
-                  className="flex w-full gap-3 rounded-2xl border border-stone-200 bg-white p-3 text-start shadow-sm transition hover:border-amber-300 hover:shadow-md active:scale-[0.99]"
+                  className="flex w-full gap-3 rounded-2xl border border-brand-border bg-brand-surface p-3 text-start shadow-sm transition hover:border-brand-gold/60 hover:shadow-md active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-brand-orange/25"
                 >
                   {product.image_url ? (
                     <ProductImage src={product.image_url} variant="thumb" />
                   ) : (
-                    <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-xl bg-stone-100 text-2xl text-stone-300">
+                    <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-xl bg-brand-cream text-2xl text-brand-muted">
                       🍽
                     </div>
                   )}
                   <div className="flex min-w-0 flex-1 flex-col">
-                    <p className="font-bold text-stone-900">{product.name_ar}</p>
+                    <p className="font-bold text-brand-chocolate">
+                      {product.name_ar}
+                    </p>
                     {product.description_ar ? (
-                      <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-stone-500">
+                      <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-brand-muted">
                         {product.description_ar}
                       </p>
                     ) : null}
                     <div className="mt-auto flex items-center justify-between pt-2">
-                      <p className="font-bold text-amber-700">
+                      <p className="font-bold text-brand-orange">
                         {formatPrice(
                           product.price,
                           menu.settings.currency_label
                         )}
                       </p>
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-50 text-lg font-bold text-amber-700">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-orange text-lg font-bold text-white">
                         +
                       </span>
                     </div>

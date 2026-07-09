@@ -6,7 +6,7 @@ import { RESTAURANT_TIMEZONE } from "@/lib/orders/status-transitions";
 import {
   buttonPrimaryClassName,
   buttonSecondaryClassName,
-  type BadgeTone,
+  cardSurfaceClassName,
 } from "@/components/dashboard/form-ui";
 
 export function ReportsDashboard({
@@ -19,57 +19,46 @@ export function ReportsDashboard({
   const cards: {
     label: string;
     value: string;
-    tone: BadgeTone;
+    ring: string;
     icon: string;
   }[] = [
     {
       label: "إجمالي الطلبات اليوم",
       value: String(report.total_orders),
-      tone: "amber",
+      ring: "bg-brand-orange-soft",
       icon: "🧾",
     },
     {
       label: "إجمالي قيمة الطلبات",
       value: formatPrice(report.total_value, currencyLabel),
-      tone: "green",
+      ring: "bg-brand-green-soft",
       icon: "💰",
     },
     {
       label: "داخل المطعم",
       value: String(report.dine_in_count),
-      tone: "teal",
+      ring: "bg-brand-gold-soft",
       icon: "🍽",
     },
     {
       label: "توصيل",
       value: String(report.delivery_count),
-      tone: "amber",
+      ring: "bg-brand-orange-soft",
       icon: "🛵",
     },
     {
       label: "استلام",
       value: String(report.pickup_count),
-      tone: "blue",
+      ring: "bg-brand-cream",
       icon: "🏪",
     },
     {
       label: "ملغاة",
       value: String(report.cancelled_count),
-      tone: "red",
+      ring: "bg-red-50",
       icon: "🚫",
     },
   ];
-
-  const toneRing: Record<BadgeTone, string> = {
-    neutral: "bg-stone-50",
-    amber: "bg-amber-50",
-    blue: "bg-blue-50",
-    teal: "bg-teal-50",
-    orange: "bg-orange-50",
-    green: "bg-green-50",
-    red: "bg-red-50",
-    stone: "bg-stone-50",
-  };
 
   return (
     <div className="space-y-6">
@@ -92,11 +81,11 @@ export function ReportsDashboard({
 
       <div className="print-area space-y-6">
         <div className="hidden print:block">
-          <h1 className="text-2xl font-bold text-stone-900">التقرير اليومي</h1>
-          <p className="mt-1 text-sm text-stone-600">
+          <h1 className="text-2xl font-bold text-brand-chocolate">التقرير اليومي</h1>
+          <p className="mt-1 text-sm text-brand-muted">
             تاريخ اليوم: {report.date} — بتوقيت {RESTAURANT_TIMEZONE} (UTC+3)
           </p>
-          <p className="mt-1 text-xs text-stone-500">
+          <p className="mt-1 text-xs text-brand-muted">
             الطلبات الملغاة لا تُحسب في الإجمالي أو القيمة.
           </p>
         </div>
@@ -105,16 +94,16 @@ export function ReportsDashboard({
           {cards.map((card) => (
             <div
               key={card.label}
-              className="flex items-center gap-4 rounded-xl border border-stone-200 bg-white p-4 shadow-sm"
+              className={`flex items-center gap-4 ${cardSurfaceClassName()} p-4`}
             >
               <div
-                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl ${toneRing[card.tone]}`}
+                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl ${card.ring}`}
               >
                 {card.icon}
               </div>
               <div className="min-w-0">
-                <p className="text-sm text-stone-500">{card.label}</p>
-                <p className="mt-0.5 text-2xl font-extrabold tabular-nums text-stone-900">
+                <p className="text-sm text-brand-muted">{card.label}</p>
+                <p className="mt-0.5 text-2xl font-extrabold tabular-nums text-brand-chocolate">
                   {card.value}
                 </p>
               </div>
@@ -122,7 +111,7 @@ export function ReportsDashboard({
           ))}
         </div>
 
-        <p className="hidden text-xs text-stone-400 print:block">
+        <p className="hidden text-xs text-brand-muted print:block">
           طُبع في {new Date().toLocaleString("ar-SY", { timeZone: RESTAURANT_TIMEZONE })}
         </p>
       </div>

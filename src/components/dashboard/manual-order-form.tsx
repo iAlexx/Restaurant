@@ -111,12 +111,12 @@ export function ManualOrderForm({
       <div>
         <Link
           href="/dashboard/orders"
-          className="text-sm font-medium text-amber-700 hover:underline"
+          className="text-sm font-medium text-brand-orange hover:underline"
         >
           ← العودة للطلبات
         </Link>
-        <h1 className="mt-2 text-xl font-bold text-stone-900">طلب يدوي</h1>
-        <p className="mt-1 text-sm text-stone-500">
+        <h1 className="mt-2 text-xl font-bold text-brand-chocolate">طلب يدوي</h1>
+        <p className="mt-1 text-sm text-brand-muted">
           أنشئ طلباً نيابة عن الزبون من لوحة الكاشير.
         </p>
       </div>
@@ -124,7 +124,7 @@ export function ManualOrderForm({
       <FormAlert message={state.error} type="error" />
       <FormAlert message={state.success} type="success" />
 
-      <div className="grid grid-cols-3 gap-2 rounded-xl bg-stone-100 p-1">
+      <div className="grid grid-cols-3 gap-2 rounded-xl bg-brand-cream p-1">
         {(
           [
             ["DINE_IN", "🍽 داخل المطعم"],
@@ -138,8 +138,8 @@ export function ManualOrderForm({
             onClick={() => setOrderType(type)}
             className={`rounded-lg px-2 py-2.5 text-sm font-semibold transition ${
               orderType === type
-                ? "bg-white text-amber-700 shadow-sm"
-                : "text-stone-600 hover:text-stone-900"
+                ? "bg-brand-surface text-brand-orange shadow-sm"
+                : "text-brand-muted hover:text-brand-chocolate"
             }`}
           >
             {label}
@@ -290,8 +290,8 @@ export function ManualOrderForm({
           />
         </div>
 
-        <section className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-          <h2 className="font-semibold text-stone-900">إضافة منتجات</h2>
+        <section className="rounded-xl border border-brand-border bg-brand-surface p-4 shadow-sm">
+          <h2 className="font-semibold text-brand-chocolate">إضافة منتجات</h2>
           <div className="mt-3 grid gap-4 md:grid-cols-2">
             <div>
               <label className={labelClassName()}>المنتج</label>
@@ -375,16 +375,16 @@ export function ManualOrderForm({
           </button>
         </section>
 
-        <section className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-          <h2 className="font-semibold text-stone-900">
+        <section className="rounded-xl border border-brand-border bg-brand-surface p-4 shadow-sm">
+          <h2 className="font-semibold text-brand-chocolate">
             السلة ({lines.length})
           </h2>
           {lines.length === 0 ? (
-            <p className="mt-2 text-sm text-stone-500">
+            <p className="mt-2 text-sm text-brand-muted">
               أضف منتجاً واحداً على الأقل
             </p>
           ) : (
-            <ul className="mt-3 divide-y divide-stone-100">
+            <ul className="mt-3 divide-y divide-brand-gold/35">
               {lines.map((line, index) => {
                 const product = menu.products.find(
                   (p) => p.id === line.product_id
@@ -401,15 +401,15 @@ export function ManualOrderForm({
                     className="flex items-center justify-between gap-3 py-2.5 text-sm"
                   >
                     <div className="min-w-0">
-                      <p className="font-medium text-stone-800">
+                      <p className="font-medium text-brand-chocolate">
                         {product?.name_ar} × {line.quantity}
                       </p>
                       {line.notes ? (
-                        <p className="text-xs text-stone-500">{line.notes}</p>
+                        <p className="text-xs text-brand-muted">{line.notes}</p>
                       ) : null}
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="font-medium tabular-nums text-stone-700">
+                      <span className="font-medium tabular-nums text-brand-chocolate">
                         {formatPrice(lineTotal, menu.settings.currency_label)}
                       </span>
                       <button
@@ -425,9 +425,9 @@ export function ManualOrderForm({
               })}
             </ul>
           )}
-          <div className="mt-3 flex items-center justify-between border-t border-stone-200 pt-3">
-            <span className="text-sm text-stone-600">المجموع التقريبي</span>
-            <span className="text-lg font-bold tabular-nums text-stone-900">
+          <div className="mt-3 flex items-center justify-between border-t border-brand-border pt-3">
+            <span className="text-sm text-brand-muted">المجموع التقريبي</span>
+            <span className="text-lg font-bold tabular-nums text-brand-chocolate">
               {formatPrice(cartSubtotal, menu.settings.currency_label)}
             </span>
           </div>

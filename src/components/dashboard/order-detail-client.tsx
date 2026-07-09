@@ -108,14 +108,14 @@ export function OrderDetailClient({
         <div>
           <Link
             href="/dashboard/orders"
-            className="text-sm text-amber-700 hover:underline"
+            className="text-sm text-brand-orange hover:underline"
           >
             ← العودة للطلبات
           </Link>
-          <h1 className="mt-2 text-xl font-bold text-stone-900">
+          <h1 className="mt-2 text-xl font-bold text-brand-chocolate">
             طلب {order.order_number}
           </h1>
-          <p className="mt-1 text-sm text-stone-500">
+          <p className="mt-1 text-sm text-brand-muted">
             {formatRestaurantDateTime(order.created_at)}
           </p>
         </div>
@@ -131,29 +131,29 @@ export function OrderDetailClient({
 
       <section className="grid gap-4 md:grid-cols-2">
         <Card>
-          <h2 className="font-semibold text-stone-900">معلومات الطلب</h2>
+          <h2 className="font-semibold text-brand-chocolate">معلومات الطلب</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex items-center justify-between gap-4">
-              <dt className="text-stone-500">النوع</dt>
+              <dt className="text-brand-muted">النوع</dt>
               <dd>
                 <OrderTypeBadge type={order.order_type} />
               </dd>
             </div>
             {order.table_label_snapshot && (
               <div className="flex justify-between gap-4">
-                <dt className="text-stone-500">الطاولة</dt>
+                <dt className="text-brand-muted">الطاولة</dt>
                 <dd>{order.table_label_snapshot}</dd>
               </div>
             )}
             {order.customer_name && (
               <div className="flex justify-between gap-4">
-                <dt className="text-stone-500">العميل</dt>
+                <dt className="text-brand-muted">العميل</dt>
                 <dd>{order.customer_name}</dd>
               </div>
             )}
             {order.customer_phone && (
               <div className="flex justify-between gap-4">
-                <dt className="text-stone-500">الهاتف</dt>
+                <dt className="text-brand-muted">الهاتف</dt>
                 <dd dir="ltr" className="text-left">
                   {order.customer_phone}
                 </dd>
@@ -161,19 +161,19 @@ export function OrderDetailClient({
             )}
             {order.customer_address && (
               <div className="flex justify-between gap-4">
-                <dt className="text-stone-500">العنوان</dt>
+                <dt className="text-brand-muted">العنوان</dt>
                 <dd className="text-left">{order.customer_address}</dd>
               </div>
             )}
             {order.location_url && (
               <div className="flex justify-between gap-4">
-                <dt className="text-stone-500">الموقع</dt>
+                <dt className="text-brand-muted">الموقع</dt>
                 <dd>
                   <a
                     href={order.location_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-amber-700 hover:underline"
+                    className="text-brand-orange hover:underline"
                   >
                     فتح الرابط
                   </a>
@@ -182,25 +182,25 @@ export function OrderDetailClient({
             )}
             {order.pickup_time && (
               <div className="flex justify-between gap-4">
-                <dt className="text-stone-500">وقت الاستلام</dt>
+                <dt className="text-brand-muted">وقت الاستلام</dt>
                 <dd>{order.pickup_time}</dd>
               </div>
             )}
             {order.notes && (
               <div>
-                <dt className="text-stone-500">ملاحظات</dt>
+                <dt className="text-brand-muted">ملاحظات</dt>
                 <dd className="mt-1">{order.notes}</dd>
               </div>
             )}
             {order.created_by && created_by_display_name && (
               <div className="flex justify-between gap-4">
-                <dt className="text-stone-500">أُنشئ يدوياً بواسطة</dt>
+                <dt className="text-brand-muted">أُنشئ يدوياً بواسطة</dt>
                 <dd>{created_by_display_name}</dd>
               </div>
             )}
             {order.cancellation_reason && (
               <div>
-                <dt className="text-stone-500">سبب الإلغاء</dt>
+                <dt className="text-brand-muted">سبب الإلغاء</dt>
                 <dd className="mt-1 text-red-700">{order.cancellation_reason}</dd>
               </div>
             )}
@@ -208,7 +208,7 @@ export function OrderDetailClient({
         </Card>
 
         <Card>
-          <h2 className="font-semibold text-stone-900">الإجراءات</h2>
+          <h2 className="font-semibold text-brand-chocolate">الإجراءات</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {nextStatuses.map((status) => (
               <form key={status} action={statusAction}>
@@ -287,8 +287,8 @@ export function OrderDetailClient({
       </section>
 
       <Card>
-        <h2 className="font-semibold text-stone-900">الأصناف</h2>
-        <ul className="mt-3 divide-y divide-stone-100">
+        <h2 className="font-semibold text-brand-chocolate">الأصناف</h2>
+        <ul className="mt-3 divide-y divide-brand-gold/35">
           {items.map((item) => (
             <li key={item.id} className="py-3">
               <div className="flex justify-between gap-4">
@@ -297,10 +297,10 @@ export function OrderDetailClient({
                     {item.product_name_snapshot} × {item.quantity}
                   </p>
                   {item.notes && (
-                    <p className="mt-1 text-sm text-stone-500">{item.notes}</p>
+                    <p className="mt-1 text-sm text-brand-muted">{item.notes}</p>
                   )}
                   {(addOnsByItem.get(item.id) ?? []).map((a) => (
-                    <p key={a.id} className="text-sm text-stone-600">
+                    <p key={a.id} className="text-sm text-brand-muted">
                       + {a.name_snapshot} ({formatPrice(a.price_snapshot, currency_label)})
                     </p>
                   ))}
@@ -312,14 +312,14 @@ export function OrderDetailClient({
             </li>
           ))}
         </ul>
-        <dl className="mt-4 space-y-1 border-t border-stone-200 pt-4 text-sm">
+        <dl className="mt-4 space-y-1 border-t border-brand-border pt-4 text-sm">
           <div className="flex justify-between">
-            <dt className="text-stone-500">المجموع الفرعي</dt>
+            <dt className="text-brand-muted">المجموع الفرعي</dt>
             <dd>{formatPrice(order.subtotal, currency_label)}</dd>
           </div>
           {order.delivery_fee > 0 && (
             <div className="flex justify-between">
-              <dt className="text-stone-500">رسوم التوصيل</dt>
+              <dt className="text-brand-muted">رسوم التوصيل</dt>
               <dd>{formatPrice(order.delivery_fee, currency_label)}</dd>
             </div>
           )}
@@ -333,25 +333,25 @@ export function OrderDetailClient({
       </Card>
 
       <Card>
-        <h2 className="font-semibold text-stone-900">سجل الطباعة</h2>
+        <h2 className="font-semibold text-brand-chocolate">سجل الطباعة</h2>
         {printJobs.length === 0 ? (
-          <p className="mt-2 text-sm text-stone-500">لا يوجد سجل طباعة</p>
+          <p className="mt-2 text-sm text-brand-muted">لا يوجد سجل طباعة</p>
         ) : (
           <ul className="mt-3 space-y-2 text-sm">
             {printJobs.map((job) => (
               <li
                 key={job.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-stone-50 px-3 py-2"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-brand-cream px-3 py-2"
               >
                 <span className="flex items-center gap-2">
                   <PrintStatusBadge status={job.status} />
                   {job.is_reprint ? (
-                    <span className="text-xs text-stone-500">
+                    <span className="text-xs text-brand-muted">
                       (إعادة طباعة)
                     </span>
                   ) : null}
                 </span>
-                <span className="text-stone-500">
+                <span className="text-brand-muted">
                   {formatRestaurantDateTime(job.created_at)}
                 </span>
               </li>

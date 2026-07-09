@@ -77,49 +77,51 @@ export function TableSelectionScreen({
   }
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      <header className="border-b border-stone-200 bg-white px-4 py-8 text-center">
+    <div className="min-h-screen bg-brand-cream">
+      <header className="motion-fade-up border-b border-brand-gold/40 bg-brand-surface px-4 py-8 text-center">
         {settings.logo_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={settings.logo_url}
             alt=""
-            className="mx-auto mb-3 h-16 w-16 rounded-full object-cover ring-1 ring-stone-200"
+            className="motion-scale-in mx-auto mb-3 h-16 w-16 rounded-full object-cover ring-2 ring-brand-gold/50"
           />
         ) : (
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-3xl">
+          <div className="motion-scale-in mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-brand-orange-soft text-3xl">
             🍽
           </div>
         )}
-        <h1 className="text-2xl font-extrabold text-stone-900">
+        <h1 className="text-2xl font-extrabold text-brand-chocolate">
           {settings.name}
         </h1>
-        <p className="mt-2 text-sm text-stone-600">
+        <p className="mt-2 text-sm text-brand-muted">
           اختر رقم طاولتك للمتابعة إلى القائمة
         </p>
       </header>
 
       <main className="mx-auto max-w-lg px-4 py-8">
         {tables.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-stone-300 bg-white px-6 py-12 text-center">
-            <p className="font-semibold text-stone-800">
+          <div className="rounded-2xl border border-dashed border-brand-gold/50 bg-brand-surface px-6 py-12 text-center">
+            <p className="font-semibold text-brand-chocolate">
               لا توجد طاولات متاحة حالياً
             </p>
-            <p className="mt-2 text-sm text-stone-500">
+            <p className="mt-2 text-sm text-brand-muted">
               يرجى التواصل مع موظف المطعم.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {tables.map((table) => (
+            {tables.map((table, index) => (
               <button
                 key={table.public_token}
                 type="button"
                 onClick={() => handleSelect(table.public_token, table.label)}
-                className="flex min-h-[88px] flex-col items-center justify-center rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-amber-400 hover:bg-amber-50 hover:shadow-md active:scale-[0.98]"
+                className={`motion-fade-up flex min-h-[88px] flex-col items-center justify-center rounded-2xl border border-brand-border bg-brand-surface p-4 shadow-sm transition hover:border-brand-gold/60 hover:shadow-md active:scale-[0.98] ${
+                  index < 3 ? `motion-stagger-${index + 1}` : ""
+                }`}
               >
                 <span className="text-2xl">🍽</span>
-                <span className="mt-2 text-base font-bold text-stone-900">
+                <span className="mt-2 text-base font-bold text-brand-chocolate">
                   {table.label}
                 </span>
               </button>

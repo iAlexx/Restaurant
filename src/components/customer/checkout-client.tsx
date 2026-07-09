@@ -1,12 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart, estimateCartTotal } from "@/contexts/cart-context";
 import type { PublicMenu } from "@/lib/menu/public-menu";
 import type { CreateOrderInput } from "@/lib/validations/order";
 import { formatPrice } from "@/lib/money";
 import { ConfirmDialog } from "@/components/dashboard/confirm-dialog";
+import { OrderSummaryCard } from "@/components/customer/order-summary-card";
+import {
+  buttonPrimaryClassName,
+  inputClassName,
+  labelClassName,
+} from "@/components/dashboard/form-ui";
 
 interface CheckoutClientProps {
   menu: PublicMenu;
@@ -14,7 +20,6 @@ interface CheckoutClientProps {
   tableToken?: string;
   tableLabel?: string;
   successBasePath: string;
-  /** Full success URL for unified flow (includes ?table= query). */
   unifiedSuccessPath?: (orderId: string) => string;
 }
 
@@ -40,6 +45,15 @@ export function CheckoutClient({
   const [orderNotes, setOrderNotes] = useState(cart.orderNotes);
 
   const currency = menu.settings.currency_label;
+  const productMap = useMemo(
+    () => new Map(menu.products.map((p) => [p.id, p])),
+    [menu.products]
+  );
+  const addOnMap = useMemo(
+    () => new Map(menu.addOns.map((a) => [a.id, a])),
+    [menu.addOns]
+  );
+
   const subtotal = estimateCartTotal(cart.lines, menu.products, menu.addOns);
   const deliveryFee =
     orderType === "DELIVERY" ? menu.settings.default_delivery_fee : 0;
@@ -48,6 +62,32 @@ export function CheckoutClient({
   const minDelivery = menu.settings.min_delivery_order;
   const belowMinimum =
     orderType === "DELIVERY" && minDelivery > 0 && subtotal < minDelivery;
+
+  const summaryLines = useMemo(
+    () =>
+      cart.lines
+        .map((line) => {
+          const product = productMap.get(line.productId);
+          if (!product) return null;
+          const addOnTotal = line.addOnIds.reduce(
+            (s, id) => s + (addOnMap.get(id)?.extra_price ?? 0),
+            0
+          );
+          return {
+            key: line.key,
+            name: product.name_ar,
+            quantity: line.quantity,
+            lineTotal: (product.price + addOnTotal) * line.quantity,
+            addOns: line.addOnIds.map((id) => ({
+              name: addOnMap.get(id)?.name_ar ?? "",
+              price: addOnMap.get(id)?.extra_price,
+            })),
+            notes: line.notes || null,
+          };
+        })
+        .filter((line): line is NonNullable<typeof line> => line !== null),
+    [cart.lines, productMap, addOnMap]
+  );
 
   async function submitOrder() {
     setError(null);
@@ -143,21 +183,19 @@ export function CheckoutClient({
       ) : null}
 
       {orderType === "DINE_IN" ? (
-        <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="space-y-2 rounded-xl border border-brand-gold/45 bg-brand-gold-soft px-4 py-3 text-sm text-brand-chocolate">
           <p>
             سيتم إرسال الطلب إلى طاولتك مباشرة. لا حاجة لإدخال بيانات إضافية.
           </p>
           {tableLabel ? (
-            <p className="font-bold">
-              الطاولة المختارة: {tableLabel}
-            </p>
+            <p className="font-bold">الطاولة المختارة: {tableLabel}</p>
           ) : null}
         </div>
       ) : null}
 
       {orderType !== "DINE_IN" ? (
-        <div className="space-y-4 rounded-2xl border border-stone-200 bg-white p-4">
-          <p className="text-sm font-bold text-stone-900">بيانات العميل</p>
+        <div className="space-y-4 rounded-2xl border border-brand-border bg-brand-surface p-4">
+          <p className="text-sm font-bold text-brand-chocolate">بيانات العميل</p>
           <Field
             label="الاسم"
             value={customerName}
@@ -201,10 +239,7 @@ export function CheckoutClient({
       ) : null}
 
       <div>
-        <label
-          htmlFor="order-notes"
-          className="mb-1.5 block text-sm font-semibold text-stone-800"
-        >
+        <label htmlFor="order-notes" className={labelClassName()}>
           ملاحظات الطلب (اختياري)
         </label>
         <textarea
@@ -214,29 +249,26 @@ export function CheckoutClient({
           maxLength={500}
           rows={3}
           placeholder="أي تعليمات خاصة بالطلب"
-          className="w-full rounded-xl border border-stone-300 px-3 py-2.5 text-sm focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-200"
+          className={inputClassName()}
         />
       </div>
 
-      <div className="space-y-2 rounded-2xl border border-stone-200 bg-stone-50 p-4">
-        <SummaryRow label="المجموع الفرعي" value={formatPrice(subtotal, currency)} />
-        {deliveryFee > 0 ? (
-          <SummaryRow
-            label="رسوم التوصيل"
-            value={formatPrice(deliveryFee, currency)}
-          />
-        ) : null}
-        <div className="border-t border-stone-200 pt-2">
-          <SummaryRow
-            label="الإجمالي التقديري"
-            value={formatPrice(total, currency)}
-            strong
-          />
-        </div>
-      </div>
+      <OrderSummaryCard
+        variant="checkout"
+        currencyLabel={currency}
+        lines={summaryLines}
+        subtotal={subtotal}
+        deliveryFee={deliveryFee}
+        total={total}
+        orderType={orderType}
+        tableLabel={tableLabel}
+        customerName={orderType !== "DINE_IN" ? customerName || null : null}
+        customerPhone={orderType !== "DINE_IN" ? customerPhone || null : null}
+        orderNotes={orderNotes || null}
+      />
 
       {belowMinimum ? (
-        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        <p className="rounded-lg border border-brand-gold/50 bg-brand-gold-soft px-3 py-2 text-sm text-brand-chocolate">
           الحد الأدنى لطلب التوصيل هو {formatPrice(minDelivery, currency)}. أضف
           المزيد من الأصناف للمتابعة.
         </p>
@@ -245,7 +277,7 @@ export function CheckoutClient({
       <button
         type="submit"
         disabled={submitting || cart.lines.length === 0 || belowMinimum}
-        className="w-full rounded-2xl bg-amber-600 py-3.5 font-bold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className={`${buttonPrimaryClassName()} w-full rounded-2xl py-3.5 text-base`}
       >
         {submitting ? "جاري الإرسال..." : "تأكيد الطلب"}
       </button>
@@ -269,31 +301,6 @@ export function CheckoutClient({
   );
 }
 
-function SummaryRow({
-  label,
-  value,
-  strong,
-}: {
-  label: string;
-  value: string;
-  strong?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <span className={strong ? "font-bold text-stone-900" : "text-stone-600"}>
-        {label}
-      </span>
-      <span
-        className={`tabular-nums ${
-          strong ? "text-lg font-bold text-stone-900" : "text-stone-700"
-        }`}
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
-
 function Field({
   label,
   value,
@@ -313,9 +320,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-semibold text-stone-800">
-        {label}
-      </label>
+      <label className={labelClassName()}>{label}</label>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -323,7 +328,7 @@ function Field({
         dir={dir}
         inputMode={inputMode}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-stone-300 px-3 py-2.5 text-sm focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-200"
+        className={inputClassName()}
       />
     </div>
   );

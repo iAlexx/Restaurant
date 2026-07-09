@@ -21,8 +21,8 @@ export function TableForm({ table }: { table?: Table }) {
   const [state, formAction, pending] = useActionState(action, initial);
 
   return (
-    <form action={formAction} className="space-y-3 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-      <h2 className="font-semibold text-stone-900">
+    <form action={formAction} className="space-y-3 rounded-xl border border-brand-border bg-brand-surface p-4 shadow-sm">
+      <h2 className="font-semibold text-brand-chocolate">
         {table ? "تعديل الطاولة" : "طاولة جديدة"}
       </h2>
       <FormAlert message={state.error} type="error" />
@@ -41,7 +41,7 @@ export function TableForm({ table }: { table?: Table }) {
         />
       </div>
 
-      <label className="flex items-center gap-2 text-sm text-stone-700">
+      <label className="flex items-center gap-2 text-sm text-brand-chocolate">
         <input
           type="checkbox"
           name="is_active"

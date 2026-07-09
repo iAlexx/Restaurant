@@ -23,10 +23,10 @@ export function StickyCartBar({
       <div className="mx-auto max-w-lg">
         <Link
           href={cartHref}
-          className="pointer-events-auto flex items-center justify-between gap-3 rounded-2xl bg-amber-600 px-5 py-3.5 text-white shadow-lg shadow-amber-600/30 transition hover:bg-amber-700"
+          className="pointer-events-auto flex min-h-[44px] items-center justify-between gap-3 rounded-2xl bg-brand-orange px-5 py-3.5 text-white shadow-lg shadow-brand-orange/25 transition hover:bg-brand-orange-hover"
         >
           <span className="flex items-center gap-2">
-            <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-white/25 px-2 text-sm font-bold">
+            <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-brand-surface/25 px-2 text-sm font-bold">
               {itemCount}
             </span>
             <span className="font-semibold">عرض السلة</span>

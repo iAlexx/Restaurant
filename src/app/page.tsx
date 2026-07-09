@@ -1,31 +1,67 @@
-export default function HomePage() {
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { buttonPrimaryClassName, buttonSecondaryClassName } from "@/components/dashboard/form-ui";
+
+export default async function HomePage() {
+  const supabase = await createClient();
+  const { data: settings } = await supabase
+    .from("restaurant_settings_public")
+    .select("name, logo_url, opening_hours")
+    .single();
+
+  const name =
+    (settings as { name: string } | null)?.name ?? "مطعمي";
+  const logoUrl = (settings as { logo_url: string | null } | null)?.logo_url;
+  const openingHours = (settings as { opening_hours: string | null } | null)
+    ?.opening_hours;
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-stone-50 px-4 text-center">
-      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-amber-100 text-4xl">
-        🍽
+    <main className="flex min-h-screen flex-col items-center justify-center bg-brand-cream px-4 py-10 text-center">
+      <div className="motion-fade-up w-full max-w-md">
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={logoUrl}
+            alt=""
+            className="motion-scale-in mx-auto mb-5 h-24 w-24 rounded-full object-cover ring-2 ring-brand-gold/60"
+          />
+        ) : (
+          <div className="motion-scale-in mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-brand-orange-soft text-4xl ring-2 ring-brand-gold/50">
+            🍽
+          </div>
+        )}
+
+        <h1 className="motion-fade-up motion-stagger-1 text-3xl font-extrabold text-brand-chocolate">
+          {name}
+        </h1>
+        {openingHours ? (
+          <p className="motion-fade-up motion-stagger-2 mt-2 text-sm text-brand-muted">
+            {openingHours}
+          </p>
+        ) : null}
+        <p className="motion-fade-up motion-stagger-2 mt-4 max-w-sm leading-relaxed text-brand-muted">
+          مرحباً بك — اطلب من طاولتك أو استمتع بتوصيل واستلام سريع.
+        </p>
+
+        <div className="motion-fade-up motion-stagger-3 mt-8 space-y-3">
+          <Link href="/dine-in" className={`${buttonPrimaryClassName()} w-full rounded-2xl py-3.5 text-base`}>
+            طلب داخل المطعم
+          </Link>
+          <Link
+            href="/order"
+            className={`${buttonSecondaryClassName()} w-full rounded-2xl border-brand-gold/50 py-3.5 text-base`}
+          >
+            طلب توصيل أو استلام
+          </Link>
+        </div>
+
+        <Link
+          href="/login"
+          className="motion-fade-up motion-stagger-4 mt-6 inline-block text-sm font-medium text-brand-muted hover:text-brand-chocolate"
+        >
+          دخول الموظفين
+        </Link>
       </div>
-      <h1 className="text-3xl font-extrabold text-stone-900">نظام طلبات المطعم</h1>
-      <p className="mt-3 max-w-md leading-relaxed text-stone-600">
-        امسح رمز QR على طاولتك للطلب مباشرة، أو اطلب توصيل أو استلام من المطعم.
-      </p>
-      <a
-        href="/dine-in"
-        className="mt-4 w-full max-w-xs rounded-2xl border border-stone-300 px-6 py-3.5 font-semibold text-stone-700 transition hover:bg-stone-100"
-      >
-        طلب من الطاولة (QR موحّد)
-      </a>
-      <a
-        href="/order"
-        className="mt-3 w-full max-w-xs rounded-2xl bg-amber-600 px-6 py-3.5 font-bold text-white transition hover:bg-amber-700"
-      >
-        طلب توصيل أو استلام
-      </a>
-      <a
-        href="/login"
-        className="mt-5 text-sm font-medium text-stone-500 hover:text-stone-800"
-      >
-        دخول الموظفين
-      </a>
     </main>
   );
 }

@@ -24,10 +24,10 @@ export default async function AddOnsPage() {
           description="أضف إضافات مثل الجبنة أو الصلصات لربطها بالمنتجات."
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-stone-200">
+        <div className="overflow-hidden rounded-xl border border-brand-border">
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="bg-stone-50 text-stone-500">
+              <thead className="bg-brand-cream text-brand-muted">
                 <tr>
                   <th className="px-4 py-2.5 text-start font-semibold">الاسم</th>
                   <th className="px-4 py-2.5 text-start font-semibold">
@@ -43,15 +43,15 @@ export default async function AddOnsPage() {
               </thead>
               <tbody>
                 {addOns.map((addOn) => (
-                  <tr key={addOn.id} className="border-t border-stone-100">
-                    <td className="px-4 py-3 font-medium text-stone-900">
+                  <tr key={addOn.id} className="border-t border-brand-border">
+                    <td className="px-4 py-3 font-medium text-brand-chocolate">
                       {addOn.name_ar}
                     </td>
-                    <td className="px-4 py-3 tabular-nums text-stone-700">
+                    <td className="px-4 py-3 tabular-nums text-brand-chocolate">
                       {formatPrice(addOn.extra_price)}
                     </td>
                     <td className="px-4 py-3">
-                      <Badge tone={addOn.is_available ? "green" : "stone"}>
+                      <Badge tone={addOn.is_available ? "green" : "muted"}>
                         {addOn.is_available ? "متاح" : "غير متاح"}
                       </Badge>
                     </td>
@@ -74,7 +74,7 @@ export default async function AddOnsPage() {
 
       {addOns.length > 0 ? (
         <div className="space-y-4">
-          <h2 className="font-semibold text-stone-900">تعديل الإضافات</h2>
+          <h2 className="font-semibold text-brand-chocolate">تعديل الإضافات</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {addOns.map((addOn) => (
               <AddOnForm key={addOn.id} addOn={addOn} />

@@ -19,28 +19,28 @@ function TypePicker({ menu }: { menu: PublicMenu }) {
   const canPickup = menu.settings.pickup_enabled;
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      <header className="border-b border-stone-200 bg-white px-4 py-8 text-center">
+    <div className="min-h-screen bg-brand-cream">
+      <header className="motion-fade-up border-b border-brand-gold/40 bg-brand-surface px-4 py-8 text-center">
         {menu.settings.logo_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={menu.settings.logo_url}
             alt=""
-            className="mx-auto mb-3 h-16 w-16 rounded-full object-cover ring-1 ring-stone-200"
+            className="motion-scale-in mx-auto mb-3 h-16 w-16 rounded-full object-cover ring-2 ring-brand-gold/50"
           />
         ) : null}
-        <h1 className="text-2xl font-extrabold text-stone-900">
+        <h1 className="text-2xl font-extrabold text-brand-chocolate">
           {menu.settings.name}
         </h1>
         {menu.settings.opening_hours ? (
-          <p className="mt-1 text-sm text-stone-500">
+          <p className="mt-1 text-sm text-brand-muted">
             {menu.settings.opening_hours}
           </p>
         ) : null}
       </header>
       <main className="mx-auto max-w-lg space-y-3 px-4 py-8">
         {canDeliver || canPickup ? (
-          <p className="mb-2 text-center font-semibold text-stone-700">
+          <p className="motion-fade-up motion-stagger-1 mb-2 text-center font-semibold text-brand-chocolate">
             اختر نوع الطلب
           </p>
         ) : null}
@@ -48,16 +48,16 @@ function TypePicker({ menu }: { menu: PublicMenu }) {
           <button
             type="button"
             onClick={() => router.push("/order?type=DELIVERY")}
-            className="flex w-full items-center gap-4 rounded-2xl border border-stone-200 bg-white p-4 text-start shadow-sm transition hover:border-amber-400 hover:shadow-md"
+            className="motion-fade-up motion-stagger-2 flex w-full min-h-[44px] items-center gap-4 rounded-2xl border border-brand-border bg-brand-surface p-4 text-start shadow-sm transition hover:border-brand-gold/60 hover:shadow-md"
           >
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-2xl">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-orange-soft text-2xl">
               🛵
             </span>
             <span>
-              <span className="block text-lg font-bold text-stone-900">
+              <span className="block text-lg font-bold text-brand-chocolate">
                 توصيل
               </span>
-              <span className="text-sm text-stone-500">
+              <span className="text-sm text-brand-muted">
                 استلم طلبك على عنوانك
               </span>
             </span>
@@ -67,16 +67,16 @@ function TypePicker({ menu }: { menu: PublicMenu }) {
           <button
             type="button"
             onClick={() => router.push("/order?type=PICKUP")}
-            className="flex w-full items-center gap-4 rounded-2xl border border-stone-200 bg-white p-4 text-start shadow-sm transition hover:border-amber-400 hover:shadow-md"
+            className="motion-fade-up motion-stagger-3 flex w-full min-h-[44px] items-center gap-4 rounded-2xl border border-brand-border bg-brand-surface p-4 text-start shadow-sm transition hover:border-brand-gold/60 hover:shadow-md"
           >
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-2xl">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-gold-soft text-2xl">
               🏪
             </span>
             <span>
-              <span className="block text-lg font-bold text-stone-900">
+              <span className="block text-lg font-bold text-brand-chocolate">
                 استلام من المطعم
               </span>
-              <span className="text-sm text-stone-500">
+              <span className="text-sm text-brand-muted">
                 جهّز طلبك واستلمه بنفسك
               </span>
             </span>
@@ -103,20 +103,20 @@ function ExternalMenuInner({
   const { itemCount } = useCart();
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-brand-cream">
       <CustomerHeader
         settings={menu.settings}
         cartHref={`/order/cart?type=${orderType}`}
         itemCount={itemCount}
       />
       <main className="mx-auto max-w-lg px-4 py-3">
-        <div className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm">
-          <p className="font-semibold text-amber-900">
+        <div className="flex items-center justify-between rounded-xl border border-brand-gold/45 bg-brand-gold-soft px-4 py-2.5 text-sm">
+          <p className="font-semibold text-brand-chocolate">
             {orderType === "DELIVERY" ? "🛵 توصيل" : "🏪 استلام من المطعم"}
           </p>
           <Link
             href="/order"
-            className="font-medium text-amber-800 underline"
+            className="font-medium text-brand-orange underline"
           >
             تغيير
           </Link>
@@ -170,14 +170,14 @@ function ExternalCartInner({
   const { itemCount } = useCart();
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-brand-cream">
       <CustomerHeader
         settings={menu.settings}
         cartHref={`/order/cart?type=${orderType}`}
         itemCount={itemCount}
       />
       <main className="mx-auto max-w-lg px-4 py-4">
-        <h1 className="mb-4 text-xl font-bold">السلة</h1>
+        <h1 className="mb-4 text-xl font-bold text-brand-chocolate">السلة</h1>
         <CartView
           menu={menu}
           checkoutHref={`/order/checkout?type=${orderType}`}
@@ -212,14 +212,16 @@ function ExternalCheckoutInner({
   const { itemCount } = useCart();
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-brand-cream">
       <CustomerHeader
         settings={menu.settings}
         cartHref={`/order/cart?type=${orderType}`}
         itemCount={itemCount}
       />
       <main className="mx-auto max-w-lg px-4 py-4">
-        <h1 className="mb-4 text-xl font-bold">تأكيد الطلب</h1>
+        <h1 className="mb-4 text-xl font-bold text-brand-chocolate">
+          تأكيد الطلب
+        </h1>
         <CheckoutClient
           menu={menu}
           orderType={orderType}
@@ -227,7 +229,7 @@ function ExternalCheckoutInner({
         />
         <Link
           href={`/order/cart?type=${orderType}`}
-          className="mt-4 block text-center text-sm text-stone-500 underline"
+          className="mt-4 block text-center text-sm text-brand-muted underline hover:text-brand-chocolate"
         >
           العودة إلى السلة
         </Link>

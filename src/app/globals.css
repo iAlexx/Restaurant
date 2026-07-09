@@ -2,10 +2,29 @@
 
 @theme {
   --font-sans: var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
+
+  /* Approved brand palette */
+  --color-brand-cream: #fffde7;
+  --color-brand-orange: #ff5722;
+  --color-brand-orange-hover: #e64a19;
+  --color-brand-orange-soft: #ffe8e0;
+  --color-brand-gold: #ffca28;
+  --color-brand-gold-soft: #fff8e1;
+  --color-brand-green: #00c853;
+  --color-brand-green-soft: #e8f9ee;
+  --color-brand-chocolate: #212121;
+  --color-brand-surface: #fffff8;
+  --color-brand-muted: #5c5c5c;
+  --color-brand-border: #f0e6b3;
 }
 
 html {
   scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-brand-cream);
+  color: var(--color-brand-chocolate);
 }
 
 /* Hide scrollbar for horizontal category navigation while keeping scroll. */
@@ -15,6 +34,88 @@ html {
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Lightweight motion (CSS only)                                                */
+/* -------------------------------------------------------------------------- */
+
+@keyframes brand-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes brand-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes brand-modal-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.motion-fade-up {
+  animation: brand-fade-up 200ms ease-out both;
+}
+
+.motion-scale-in {
+  animation: brand-scale-in 220ms ease-out both;
+}
+
+.motion-modal-up {
+  animation: brand-modal-up 220ms ease-out both;
+}
+
+.motion-stagger-1 {
+  animation-delay: 60ms;
+}
+.motion-stagger-2 {
+  animation-delay: 120ms;
+}
+.motion-stagger-3 {
+  animation-delay: 180ms;
+}
+.motion-stagger-4 {
+  animation-delay: 240ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .motion-fade-up,
+  .motion-scale-in,
+  .motion-modal-up {
+    animation: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @media print {

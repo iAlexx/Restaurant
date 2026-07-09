@@ -49,8 +49,8 @@ export function SettingsForm({ settings }: { settings: RestaurantSettings }) {
   }
 
   return (
-    <form action={formAction} className="space-y-4 rounded-xl border border-stone-200 bg-white p-4 shadow-sm sm:p-6">
-      <h2 className="font-semibold text-stone-900">إعدادات المطعم</h2>
+    <form action={formAction} className="space-y-4 rounded-xl border border-brand-border bg-brand-surface p-4 shadow-sm sm:p-6">
+      <h2 className="font-semibold text-brand-chocolate">إعدادات المطعم</h2>
       <FormAlert message={state.error} type="error" />
       <FormAlert message={state.success} type="success" />
       <FormAlert message={uploadError ?? undefined} type="error" />
@@ -119,7 +119,7 @@ export function SettingsForm({ settings }: { settings: RestaurantSettings }) {
             defaultValue={settings.default_delivery_fee}
             className={inputClassName()}
           />
-          <p className="mt-1 text-xs text-stone-500">
+          <p className="mt-1 text-xs text-brand-muted">
             {formatPrice(settings.default_delivery_fee, settings.currency_label)}
           </p>
         </div>
@@ -163,7 +163,7 @@ export function SettingsForm({ settings }: { settings: RestaurantSettings }) {
       <div>
         <label className={labelClassName()}>شعار المطعم</label>
         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleLogoChange} />
-        {uploading ? <p className="text-xs text-stone-500">جاري الرفع...</p> : null}
+        {uploading ? <p className="text-xs text-brand-muted">جاري الرفع...</p> : null}
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={logoUrl} alt="" className="mt-2 h-16 w-16 rounded object-cover" />
@@ -186,9 +186,9 @@ export function PrintDeviceSection({ devices }: { devices: PrintDeviceListItem[]
   } | null>(null);
 
   return (
-    <div className="space-y-4 rounded-xl border border-stone-200 bg-white p-4 shadow-sm sm:p-6">
-      <h2 className="font-semibold text-stone-900">أجهزة الطباعة</h2>
-      <p className="text-sm text-stone-600">
+    <div className="space-y-4 rounded-xl border border-brand-border bg-brand-surface p-4 shadow-sm sm:p-6">
+      <h2 className="font-semibold text-brand-chocolate">أجهزة الطباعة</h2>
+      <p className="text-sm text-brand-muted">
         أنشئ رمزاً لجهاز Windows Print Agent. يُعرض الرمز مرة واحدة فقط.
       </p>
 
@@ -206,8 +206,8 @@ export function PrintDeviceSection({ devices }: { devices: PrintDeviceListItem[]
       <FormAlert message={state.success} type="success" />
 
       {state.token ? (
-        <div className="rounded-lg bg-amber-50 p-3">
-          <p className="text-sm font-medium text-amber-900">انسخ الرمز الآن:</p>
+        <div className="rounded-lg bg-brand-orange-soft p-3">
+          <p className="text-sm font-medium text-brand-chocolate">انسخ الرمز الآن:</p>
           <code className="mt-2 block break-all text-xs" dir="ltr">
             {state.token}
           </code>
@@ -216,7 +216,7 @@ export function PrintDeviceSection({ devices }: { devices: PrintDeviceListItem[]
 
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-stone-50 text-stone-600">
+          <thead className="bg-brand-cream text-brand-muted">
             <tr>
               <th className="px-3 py-2 text-start">الاسم</th>
               <th className="px-3 py-2 text-start">الحالة</th>
@@ -228,22 +228,22 @@ export function PrintDeviceSection({ devices }: { devices: PrintDeviceListItem[]
           <tbody>
             {devices.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-3 py-4 text-center text-stone-500">
+                <td colSpan={5} className="px-3 py-4 text-center text-brand-muted">
                   لا توجد أجهزة مسجلة
                 </td>
               </tr>
             ) : (
               devices.map((device) => (
-                <tr key={device.id} className="border-t border-stone-100">
-                  <td className="px-3 py-2 font-medium text-stone-800">
+                <tr key={device.id} className="border-t border-brand-border">
+                  <td className="px-3 py-2 font-medium text-brand-chocolate">
                     {device.name}
                   </td>
                   <td className="px-3 py-2">
-                    <Badge tone={device.is_active ? "green" : "stone"}>
+                    <Badge tone={device.is_active ? "green" : "muted"}>
                       {device.is_active ? "نشط" : "ملغى"}
                     </Badge>
                   </td>
-                  <td className="px-3 py-2 text-xs text-stone-500">
+                  <td className="px-3 py-2 text-xs text-brand-muted">
                     {device.last_heartbeat_at
                       ? new Date(device.last_heartbeat_at).toLocaleString("ar-SY")
                       : "—"}

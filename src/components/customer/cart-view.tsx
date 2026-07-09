@@ -5,7 +5,12 @@ import { useCart, estimateCartTotal } from "@/contexts/cart-context";
 import type { PublicMenu } from "@/lib/menu/public-menu";
 import { formatPrice } from "@/lib/money";
 import { QuantityStepper } from "@/components/customer/quantity-stepper";
-import { EmptyState, Skeleton } from "@/components/dashboard/form-ui";
+import { OrderSummaryCard } from "@/components/customer/order-summary-card";
+import {
+  EmptyState,
+  Skeleton,
+  buttonPrimaryClassName,
+} from "@/components/dashboard/form-ui";
 
 export function CartView({
   menu,
@@ -44,10 +49,7 @@ export function CartView({
         title="السلة فارغة"
         description="أضف بعض الأصناف من القائمة لتبدأ طلبك."
         action={
-          <Link
-            href={backHref}
-            className="inline-flex rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-700"
-          >
+          <Link href={backHref} className={buttonPrimaryClassName()}>
             تصفّح القائمة
           </Link>
         }
@@ -55,85 +57,83 @@ export function CartView({
     );
   }
 
+  const summaryLines = cart.lines
+    .map((line) => {
+      const product = productMap.get(line.productId);
+      if (!product) return null;
+
+      const addOnTotal = line.addOnIds.reduce(
+        (s, id) => s + (addOnMap.get(id)?.extra_price ?? 0),
+        0
+      );
+      const lineTotal = (product.price + addOnTotal) * line.quantity;
+
+      return {
+        key: line.key,
+        name: product.name_ar,
+        quantity: line.quantity,
+        lineTotal,
+        addOns: line.addOnIds.map((id) => ({
+          name: addOnMap.get(id)?.name_ar ?? "",
+          price: addOnMap.get(id)?.extra_price,
+        })),
+        notes: line.notes || null,
+        actions: (
+          <div className="flex flex-col items-end gap-2">
+            <button
+              type="button"
+              onClick={() => removeLine(line.key)}
+              aria-label="حذف الصنف"
+              className="rounded-lg px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+            >
+              حذف
+            </button>
+            <QuantityStepper
+              size="sm"
+              min={0}
+              value={line.quantity}
+              onChange={(q) => updateQuantity(line.key, q)}
+            />
+          </div>
+        ),
+      };
+    })
+    .filter((line): line is NonNullable<typeof line> => line !== null);
+
   return (
     <>
       {tableLabel ? (
-        <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
+        <p className="mb-3 rounded-xl border border-brand-gold/45 bg-brand-gold-soft px-4 py-2.5 text-sm text-brand-chocolate">
           طلبك للطاولة <strong>{tableLabel}</strong>
         </p>
       ) : null}
-      <div className="space-y-3 pb-40">
-        {cart.lines.map((line) => {
-          const product = productMap.get(line.productId);
-          if (!product) return null;
 
-          const addOnTotal = line.addOnIds.reduce(
-            (s, id) => s + (addOnMap.get(id)?.extra_price ?? 0),
-            0
-          );
-          const lineTotal = (product.price + addOnTotal) * line.quantity;
-
-          return (
-            <div
-              key={line.key}
-              className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-bold text-stone-900">{product.name_ar}</p>
-                  {line.addOnIds.length > 0 ? (
-                    <ul className="mt-1 space-y-0.5 text-xs text-stone-500">
-                      {line.addOnIds.map((id) => (
-                        <li key={id}>+ {addOnMap.get(id)?.name_ar}</li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  {line.notes ? (
-                    <p className="mt-1 text-xs text-stone-500">
-                      ملاحظة: {line.notes}
-                    </p>
-                  ) : null}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeLine(line.key)}
-                  aria-label="حذف الصنف"
-                  className="shrink-0 rounded-lg px-2 py-1 text-sm font-medium text-red-600 hover:bg-red-50"
-                >
-                  حذف
-                </button>
-              </div>
-
-              <div className="mt-3 flex items-center justify-between">
-                <QuantityStepper
-                  size="sm"
-                  min={0}
-                  value={line.quantity}
-                  onChange={(q) => updateQuantity(line.key, q)}
-                />
-                <p className="font-bold text-amber-700 tabular-nums">
-                  {formatPrice(lineTotal, menu.settings.currency_label)}
-                </p>
-              </div>
-            </div>
-          );
-        })}
+      <div className="pb-40">
+        <OrderSummaryCard
+          variant="cart"
+          currencyLabel={menu.settings.currency_label}
+          lines={summaryLines}
+          subtotal={estimatedTotal}
+          total={estimatedTotal}
+          tableLabel={tableLabel}
+          orderNotes={cart.orderNotes || null}
+        />
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-stone-200 bg-white/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-brand-gold/40 bg-brand-surface/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
         <div className="mx-auto max-w-lg space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-stone-600">المجموع التقديري</span>
-            <span className="text-lg font-bold text-stone-900 tabular-nums">
+            <span className="text-brand-muted">المجموع التقديري</span>
+            <span className="text-lg font-bold tabular-nums text-brand-orange">
               {formatPrice(estimatedTotal, menu.settings.currency_label)}
             </span>
           </div>
-          <p className="text-[11px] text-stone-400">
+          <p className="text-[11px] text-brand-muted">
             يتم تأكيد السعر النهائي عند إرسال الطلب.
           </p>
           <Link
             href={checkoutHref}
-            className="block w-full rounded-2xl bg-amber-600 py-3.5 text-center font-bold text-white transition hover:bg-amber-700"
+            className={`${buttonPrimaryClassName()} block w-full rounded-2xl py-3.5 text-center text-base`}
           >
             متابعة الطلب
           </Link>

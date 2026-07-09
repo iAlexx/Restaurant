@@ -35,7 +35,7 @@ export function ChangeTableLink({
       <button
         type="button"
         onClick={handleClick}
-        className={className || "text-sm font-medium text-amber-800 underline"}
+        className={className || "text-sm font-medium text-brand-orange underline"}
       >
         تغيير الطاولة
       </button>

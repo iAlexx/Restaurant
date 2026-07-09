@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl">
-      <body className={`${cairo.variable} font-sans antialiased bg-stone-50 text-stone-900`}>
+      <body className={`${cairo.variable} font-sans antialiased bg-brand-cream text-brand-chocolate`}>
         {children}
       </body>
     </html>
