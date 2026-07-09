@@ -3,9 +3,8 @@
 import { useState } from "react";
 import type { PublicMenu } from "@/lib/menu/public-menu";
 import type { Product } from "@/types/database";
-import { formatPrice } from "@/lib/money";
 import { ProductModal } from "@/components/customer/product-modal";
-import { ProductImage } from "@/components/customer/product-image";
+import { ProductCard } from "@/components/customer/product-card";
 import { CategoryNav } from "@/components/customer/category-nav";
 import { EmptyState } from "@/components/dashboard/form-ui";
 
@@ -37,54 +36,24 @@ export function MenuView({ menu }: { menu: PublicMenu }) {
     <>
       <CategoryNav categories={navCategories} />
 
-      <div className="space-y-8 pb-28 pt-4">
+      <div className="space-y-10 pb-32 pt-2 sm:space-y-12 sm:pb-28 sm:pt-4">
         {productsByCategory.map(({ category, products }) => (
           <section
             key={category.id}
             id={`category-${category.id}`}
-            className="scroll-mt-24"
+            className="scroll-mt-28"
           >
-            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-brand-chocolate">
-              <span className="h-5 w-1 rounded-full bg-brand-orange" />
+            <h2 className="mb-4 border-b border-brand-gold/40 pb-2 text-[22px] font-extrabold text-brand-chocolate sm:mb-5 sm:text-[28px]">
               {category.name_ar}
             </h2>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
               {products.map((product) => (
-                <button
+                <ProductCard
                   key={product.id}
-                  type="button"
-                  onClick={() => setSelectedProduct(product)}
-                  className="flex w-full gap-3 rounded-2xl border border-brand-border bg-brand-surface p-3 text-start shadow-sm transition hover:border-brand-gold/60 hover:shadow-md active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-brand-orange/25"
-                >
-                  {product.image_url ? (
-                    <ProductImage src={product.image_url} variant="thumb" />
-                  ) : (
-                    <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-xl bg-brand-cream text-2xl text-brand-muted">
-                      🍽
-                    </div>
-                  )}
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <p className="font-bold text-brand-chocolate">
-                      {product.name_ar}
-                    </p>
-                    {product.description_ar ? (
-                      <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-brand-muted">
-                        {product.description_ar}
-                      </p>
-                    ) : null}
-                    <div className="mt-auto flex items-center justify-between pt-2">
-                      <p className="font-bold text-brand-orange">
-                        {formatPrice(
-                          product.price,
-                          menu.settings.currency_label
-                        )}
-                      </p>
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-orange text-lg font-bold text-white">
-                        +
-                      </span>
-                    </div>
-                  </div>
-                </button>
+                  product={product}
+                  currencyLabel={menu.settings.currency_label}
+                  onSelect={() => setSelectedProduct(product)}
+                />
               ))}
             </div>
           </section>

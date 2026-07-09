@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { customerHeaderOffsetClassName } from "@/components/customer/customer-menu-shell";
 
 interface CategoryNavItem {
   id: string;
@@ -29,7 +30,7 @@ export function CategoryNav({ categories }: { categories: CategoryNavItem[] }) {
           setActive(visible[0].target.id.replace("category-", ""));
         }
       },
-      { rootMargin: "-96px 0px -60% 0px", threshold: 0 }
+      { rootMargin: "-110px 0px -55% 0px", threshold: 0 }
     );
 
     sections.forEach((s) => observer.observe(s));
@@ -47,7 +48,7 @@ export function CategoryNav({ categories }: { categories: CategoryNavItem[] }) {
   function handleClick(id: string) {
     const el = document.getElementById(`category-${id}`);
     if (el) {
-      const top = el.getBoundingClientRect().top + window.scrollY - 88;
+      const top = el.getBoundingClientRect().top + window.scrollY - 110;
       window.scrollTo({ top, behavior: "smooth" });
       setActive(id);
     }
@@ -56,8 +57,10 @@ export function CategoryNav({ categories }: { categories: CategoryNavItem[] }) {
   if (categories.length <= 1) return null;
 
   return (
-    <div className="sticky top-[59px] z-10 -mx-4 border-b border-brand-gold/35 bg-brand-cream/95 px-4 py-2 backdrop-blur">
-      <div ref={navRef} className="no-scrollbar flex gap-2 overflow-x-auto">
+    <div
+      className={`sticky ${customerHeaderOffsetClassName} z-20 -mx-4 border-b border-brand-gold/30 bg-brand-surface/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6`}
+    >
+      <div ref={navRef} className="no-scrollbar flex gap-2.5 overflow-x-auto pb-0.5">
         {categories.map((cat) => {
           const isActive = cat.id === active;
           return (
@@ -66,10 +69,10 @@ export function CategoryNav({ categories }: { categories: CategoryNavItem[] }) {
               type="button"
               data-cat={cat.id}
               onClick={() => handleClick(cat.id)}
-              className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-orange/30 ${
+              className={`shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-orange/30 ${
                 isActive
-                  ? "bg-brand-orange text-white"
-                  : "bg-brand-surface text-brand-chocolate ring-1 ring-brand-border hover:ring-brand-gold/60"
+                  ? "bg-brand-orange text-white shadow-sm"
+                  : "border border-brand-gold/45 bg-brand-surface text-brand-chocolate hover:border-brand-gold"
               }`}
             >
               {cat.name}

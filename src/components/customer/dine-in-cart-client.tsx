@@ -7,6 +7,7 @@ import { CartView } from "@/components/customer/cart-view";
 import { CheckoutClient } from "@/components/customer/checkout-client";
 import { DineInTableBanner } from "@/components/customer/dine-in-table-banner";
 import { DineInTableCacheSync } from "@/components/customer/dine-in-table-cache-sync";
+import { CustomerPageShell } from "@/components/customer/customer-menu-shell";
 import type { PublicMenu } from "@/lib/menu/public-menu";
 import {
   type DineInContext,
@@ -26,30 +27,31 @@ function DineInCartInner({
   const { itemCount } = useCart();
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <>
       <DineInTableCacheSync
         tableToken={ctx.tableToken}
         tableLabel={ctx.tableLabel}
       />
-      <CustomerHeader
-        settings={menu.settings}
-        cartHref={dineInCartHref(ctx)}
-        itemCount={itemCount}
-        tableLabel={ctx.tableLabel}
-      />
-      <main className="mx-auto max-w-lg px-4 py-4">
-        <div className="mb-4">
-          <DineInTableBanner ctx={ctx} />
-        </div>
-        <h1 className="mb-4 text-xl font-bold">السلة</h1>
+      <CustomerPageShell
+        header={
+          <CustomerHeader
+            settings={menu.settings}
+            cartHref={dineInCartHref(ctx)}
+            itemCount={itemCount}
+            tableLabel={ctx.tableLabel}
+          />
+        }
+        contextStrip={<DineInTableBanner ctx={ctx} />}
+        pageTitle="السلة"
+      >
         <CartView
           menu={menu}
           checkoutHref={dineInCheckoutHref(ctx)}
           backHref={dineInMenuHref(ctx)}
           tableLabel={ctx.tableLabel}
         />
-      </main>
-    </div>
+      </CustomerPageShell>
+    </>
   );
 }
 
@@ -81,22 +83,23 @@ function DineInCheckoutInner({
       : `/t/${ctx.tableToken}/success`;
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <>
       <DineInTableCacheSync
         tableToken={ctx.tableToken}
         tableLabel={ctx.tableLabel}
       />
-      <CustomerHeader
-        settings={menu.settings}
-        cartHref={dineInCartHref(ctx)}
-        itemCount={itemCount}
-        tableLabel={ctx.tableLabel}
-      />
-      <main className="mx-auto max-w-lg px-4 py-4">
-        <div className="mb-4">
-          <DineInTableBanner ctx={ctx} />
-        </div>
-        <h1 className="mb-4 text-xl font-bold">تأكيد الطلب</h1>
+      <CustomerPageShell
+        header={
+          <CustomerHeader
+            settings={menu.settings}
+            cartHref={dineInCartHref(ctx)}
+            itemCount={itemCount}
+            tableLabel={ctx.tableLabel}
+          />
+        }
+        contextStrip={<DineInTableBanner ctx={ctx} />}
+        pageTitle="تأكيد الطلب"
+      >
         <CheckoutClient
           menu={menu}
           orderType="DINE_IN"
@@ -111,12 +114,12 @@ function DineInCheckoutInner({
         />
         <Link
           href={dineInCartHref(ctx)}
-          className="mt-4 block text-center text-sm text-brand-muted underline"
+          className="mt-6 block text-center text-sm font-medium text-brand-muted underline-offset-2 hover:text-brand-chocolate hover:underline"
         >
           العودة إلى السلة
         </Link>
-      </main>
-    </div>
+      </CustomerPageShell>
+    </>
   );
 }
 

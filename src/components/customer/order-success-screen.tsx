@@ -4,6 +4,7 @@ import {
   OrderSummaryCard,
   type OrderSummaryLine,
 } from "@/components/customer/order-summary-card";
+import { customerContainerClassName } from "@/components/customer/customer-menu-shell";
 
 interface OrderSuccessScreenProps {
   title: string;
@@ -39,16 +40,20 @@ export function OrderSuccessScreen({
   children,
 }: OrderSuccessScreenProps) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-brand-cream px-4 py-8">
-      <div className="motion-fade-up w-full max-w-md rounded-3xl border border-brand-border bg-brand-surface p-6 shadow-sm sm:p-8">
+    <div className="min-h-screen bg-brand-cream px-4 py-8 sm:py-12">
+      <div
+        className={`${customerContainerClassName} motion-fade-up max-w-2xl`}
+      >
         <div className="text-center">
-          <div className="motion-scale-in mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-green-soft text-3xl text-brand-green ring-2 ring-brand-green/30">
+          <div className="motion-scale-in mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-brand-green-soft text-4xl font-bold text-brand-green ring-4 ring-brand-green/20">
             ✓
           </div>
-          <h1 className="text-2xl font-extrabold text-brand-chocolate">{title}</h1>
+          <h1 className="text-2xl font-extrabold text-brand-chocolate sm:text-3xl">
+            {title}
+          </h1>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-8 rounded-2xl border border-brand-gold/40 bg-brand-surface p-5 shadow-sm sm:p-8">
           <OrderSummaryCard
             variant="success"
             currencyLabel={currencyLabel}

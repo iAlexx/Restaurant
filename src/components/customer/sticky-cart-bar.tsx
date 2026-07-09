@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCart, estimateCartTotal } from "@/contexts/cart-context";
 import { formatPrice } from "@/lib/money";
 import type { PublicMenu } from "@/lib/menu/public-menu";
+import { customerContainerClassName } from "@/components/customer/customer-menu-shell";
 
 export function StickyCartBar({
   menu,
@@ -19,19 +20,19 @@ export function StickyCartBar({
   const total = estimateCartTotal(cart.lines, menu.products, menu.addOns);
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-      <div className="mx-auto max-w-lg">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
+      <div className={customerContainerClassName}>
         <Link
           href={cartHref}
-          className="pointer-events-auto flex min-h-[44px] items-center justify-between gap-3 rounded-2xl bg-brand-orange px-5 py-3.5 text-white shadow-lg shadow-brand-orange/25 transition hover:bg-brand-orange-hover"
+          className="pointer-events-auto flex min-h-[52px] items-center justify-between gap-4 rounded-2xl bg-brand-orange px-5 py-3.5 text-white shadow-lg shadow-brand-orange/30 transition hover:bg-brand-orange-hover active:scale-[0.99]"
         >
-          <span className="flex items-center gap-2">
-            <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-brand-surface/25 px-2 text-sm font-bold">
+          <span className="flex items-center gap-3">
+            <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-white/20 px-2 text-sm font-extrabold">
               {itemCount}
             </span>
-            <span className="font-semibold">عرض السلة</span>
+            <span className="text-base font-bold">عرض السلة</span>
           </span>
-          <span className="font-bold tabular-nums">
+          <span className="text-lg font-extrabold tabular-nums">
             {formatPrice(total, menu.settings.currency_label)}
           </span>
         </Link>

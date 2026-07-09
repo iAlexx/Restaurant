@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { PublicRestaurantSettings } from "@/lib/menu/public-menu";
 import { unifiedDineInHref } from "@/lib/dine-in/paths";
@@ -9,6 +9,8 @@ import {
   writeCachedDineInTable,
 } from "@/lib/dine-in/session-table";
 import { ConfirmDialog } from "@/components/dashboard/confirm-dialog";
+import { CustomerHeader } from "@/components/customer/customer-header";
+import { CustomerPageShell } from "@/components/customer/customer-menu-shell";
 import type { CartState } from "@/types/cart";
 
 interface PublicTableOption {
@@ -46,6 +48,13 @@ export function TableSelectionScreen({
     publicToken: string;
     label: string;
   } | null>(null);
+  const [selectedToken, setSelectedToken] = useState<string | null>(null);
+  const [hoveredToken, setHoveredToken] = useState<string | null>(null);
+  const [cachedToken, setCachedToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCachedToken(readCachedDineInTable()?.publicToken ?? null);
+  }, []);
 
   function navigateToTable(publicToken: string, label: string) {
     writeCachedDineInTable({ publicToken, label });
@@ -53,6 +62,7 @@ export function TableSelectionScreen({
   }
 
   function handleSelect(publicToken: string, label: string) {
+    setSelectedToken(publicToken);
     const cached = readCachedDineInTable();
     if (
       cached &&
@@ -77,58 +87,66 @@ export function TableSelectionScreen({
   }
 
   return (
-    <div className="min-h-screen bg-brand-cream">
-      <header className="motion-fade-up border-b border-brand-gold/40 bg-brand-surface px-4 py-8 text-center">
-        {settings.logo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={settings.logo_url}
-            alt=""
-            className="motion-scale-in mx-auto mb-3 h-16 w-16 rounded-full object-cover ring-2 ring-brand-gold/50"
-          />
-        ) : (
-          <div className="motion-scale-in mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-brand-orange-soft text-3xl">
-            🍽
-          </div>
-        )}
-        <h1 className="text-2xl font-extrabold text-brand-chocolate">
-          {settings.name}
-        </h1>
-        <p className="mt-2 text-sm text-brand-muted">
-          اختر رقم طاولتك للمتابعة إلى القائمة
-        </p>
-      </header>
+    <CustomerPageShell
+      header={
+        <CustomerHeader settings={settings} showCart={false} itemCount={0} />
+      }
+      pageTitle="اختر طاولتك"
+      pageSubtitle="حدّد رقم طاولتك للمتابعة إلى القائمة"
+    >
+      {tables.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-brand-gold/50 bg-brand-surface px-6 py-16 text-center shadow-sm">
+          <p className="text-lg font-extrabold text-brand-chocolate">
+            لا توجد طاولات متاحة حالياً
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-brand-muted">
+            يرجى التواصل مع موظف المطعم.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
+          {tables.map((table, index) => {
+            const isCached = cachedToken === table.public_token;
+            const isSelected = selectedToken === table.public_token;
+            const isHovered = hoveredToken === table.public_token;
 
-      <main className="mx-auto max-w-lg px-4 py-8">
-        {tables.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-brand-gold/50 bg-brand-surface px-6 py-12 text-center">
-            <p className="font-semibold text-brand-chocolate">
-              لا توجد طاولات متاحة حالياً
-            </p>
-            <p className="mt-2 text-sm text-brand-muted">
-              يرجى التواصل مع موظف المطعم.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {tables.map((table, index) => (
+            return (
               <button
                 key={table.public_token}
                 type="button"
                 onClick={() => handleSelect(table.public_token, table.label)}
-                className={`motion-fade-up flex min-h-[88px] flex-col items-center justify-center rounded-2xl border border-brand-border bg-brand-surface p-4 shadow-sm transition hover:border-brand-gold/60 hover:shadow-md active:scale-[0.98] ${
-                  index < 3 ? `motion-stagger-${index + 1}` : ""
-                }`}
+                onMouseEnter={() => setHoveredToken(table.public_token)}
+                onMouseLeave={() => setHoveredToken(null)}
+                className={`motion-fade-up flex min-h-[100px] flex-col items-center justify-center rounded-2xl border bg-brand-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] motion-reduce:transform-none ${
+                  isCached
+                    ? "border-brand-orange ring-2 ring-brand-orange/25"
+                    : isSelected || isHovered
+                      ? "border-brand-gold shadow-md"
+                      : "border-brand-gold/40"
+                } ${index < 4 ? `motion-stagger-${index + 1}` : ""}`}
               >
-                <span className="text-2xl">🍽</span>
-                <span className="mt-2 text-base font-bold text-brand-chocolate">
+                <span
+                  className={`flex h-12 w-12 items-center justify-center rounded-full text-2xl ${
+                    isCached
+                      ? "bg-brand-orange-soft"
+                      : "bg-brand-gold-soft"
+                  }`}
+                >
+                  🍽
+                </span>
+                <span className="mt-2 text-lg font-extrabold text-brand-chocolate">
                   {table.label}
                 </span>
+                {isCached ? (
+                  <span className="mt-1 text-xs font-semibold text-brand-orange">
+                    آخر اختيار
+                  </span>
+                ) : null}
               </button>
-            ))}
-          </div>
-        )}
-      </main>
+            );
+          })}
+        </div>
+      )}
 
       <ConfirmDialog
         open={pending !== null}
@@ -139,6 +157,6 @@ export function TableSelectionScreen({
         onCancel={() => setPending(null)}
         onConfirm={confirmSwitch}
       />
-    </div>
+    </CustomerPageShell>
   );
 }

@@ -8,6 +8,7 @@ import type { CreateOrderInput } from "@/lib/validations/order";
 import { formatPrice } from "@/lib/money";
 import { ConfirmDialog } from "@/components/dashboard/confirm-dialog";
 import { OrderSummaryCard } from "@/components/customer/order-summary-card";
+import { customerContainerClassName } from "@/components/customer/customer-menu-shell";
 import {
   buttonPrimaryClassName,
   inputClassName,
@@ -172,115 +173,165 @@ export function CheckoutClient({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 pb-8">
+    <form onSubmit={handleSubmit} className="pb-32 lg:pb-8">
       {error ? (
         <p
-          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+          className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
           role="alert"
         >
           {error}
         </p>
       ) : null}
 
-      {orderType === "DINE_IN" ? (
-        <div className="space-y-2 rounded-xl border border-brand-gold/45 bg-brand-gold-soft px-4 py-3 text-sm text-brand-chocolate">
-          <p>
-            سيتم إرسال الطلب إلى طاولتك مباشرة. لا حاجة لإدخال بيانات إضافية.
-          </p>
-          {tableLabel ? (
-            <p className="font-bold">الطاولة المختارة: {tableLabel}</p>
-          ) : null}
-        </div>
-      ) : null}
-
-      {orderType !== "DINE_IN" ? (
-        <div className="space-y-4 rounded-2xl border border-brand-border bg-brand-surface p-4">
-          <p className="text-sm font-bold text-brand-chocolate">بيانات العميل</p>
-          <Field
-            label="الاسم"
-            value={customerName}
-            onChange={setCustomerName}
-            required
-          />
-          <Field
-            label="رقم الهاتف"
-            value={customerPhone}
-            onChange={setCustomerPhone}
-            required
-            dir="ltr"
-            placeholder="09XXXXXXXX"
-            inputMode="tel"
-          />
-          {orderType === "DELIVERY" ? (
-            <>
-              <Field
-                label="العنوان"
-                value={customerAddress}
-                onChange={setCustomerAddress}
-                required
-              />
-              <Field
-                label="رابط الموقع (اختياري)"
-                value={locationUrl}
-                onChange={setLocationUrl}
-                dir="ltr"
-                placeholder="https://maps.google.com/..."
-              />
-            </>
+      <div className="grid gap-6 lg:grid-cols-5 lg:gap-8">
+        <div className="space-y-5 lg:col-span-3">
+          {orderType === "DINE_IN" ? (
+            <section className="rounded-2xl border border-brand-gold/40 bg-brand-surface p-5 shadow-sm">
+              <p className="mb-1 text-xs font-bold uppercase tracking-wide text-brand-orange">
+                الخطوة ١
+              </p>
+              <h2 className="text-lg font-extrabold text-brand-chocolate">
+                تأكيد الطاولة
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-brand-muted">
+                سيتم إرسال الطلب إلى طاولتك مباشرة. لا حاجة لإدخال بيانات
+                إضافية.
+              </p>
+              {tableLabel ? (
+                <p className="mt-3 rounded-xl border border-brand-gold/40 bg-brand-gold-soft px-4 py-3 text-base font-bold text-brand-chocolate">
+                  الطاولة المختارة: {tableLabel}
+                </p>
+              ) : null}
+            </section>
           ) : (
-            <Field
-              label="وقت الاستلام (اختياري)"
-              value={pickupTime}
-              onChange={setPickupTime}
-              placeholder="مثال: 19:30"
-            />
+            <section className="rounded-2xl border border-brand-gold/40 bg-brand-surface p-5 shadow-sm sm:p-6">
+              <p className="mb-1 text-xs font-bold uppercase tracking-wide text-brand-orange">
+                الخطوة ١
+              </p>
+              <h2 className="text-lg font-extrabold text-brand-chocolate">
+                بيانات العميل
+              </h2>
+              <div className="mt-5 space-y-4">
+                <Field
+                  label="الاسم"
+                  value={customerName}
+                  onChange={setCustomerName}
+                  required
+                />
+                <Field
+                  label="رقم الهاتف"
+                  value={customerPhone}
+                  onChange={setCustomerPhone}
+                  required
+                  dir="ltr"
+                  placeholder="09XXXXXXXX"
+                  inputMode="tel"
+                />
+                {orderType === "DELIVERY" ? (
+                  <>
+                    <Field
+                      label="العنوان"
+                      value={customerAddress}
+                      onChange={setCustomerAddress}
+                      required
+                    />
+                    <Field
+                      label="رابط الموقع (اختياري)"
+                      value={locationUrl}
+                      onChange={setLocationUrl}
+                      dir="ltr"
+                      placeholder="https://maps.google.com/..."
+                    />
+                  </>
+                ) : (
+                  <Field
+                    label="وقت الاستلام (اختياري)"
+                    value={pickupTime}
+                    onChange={setPickupTime}
+                    placeholder="مثال: 19:30"
+                  />
+                )}
+              </div>
+            </section>
           )}
-        </div>
-      ) : null}
 
-      <div>
-        <label htmlFor="order-notes" className={labelClassName()}>
-          ملاحظات الطلب (اختياري)
-        </label>
-        <textarea
-          id="order-notes"
-          value={orderNotes}
-          onChange={(e) => setOrderNotes(e.target.value)}
-          maxLength={500}
-          rows={3}
-          placeholder="أي تعليمات خاصة بالطلب"
-          className={inputClassName()}
-        />
+          <section className="rounded-2xl border border-brand-gold/40 bg-brand-surface p-5 shadow-sm sm:p-6">
+            <p className="mb-1 text-xs font-bold uppercase tracking-wide text-brand-orange">
+              {orderType === "DINE_IN" ? "الخطوة ٢" : "الخطوة ٢"}
+            </p>
+            <h2 className="text-lg font-extrabold text-brand-chocolate">
+              ملاحظات الطلب
+            </h2>
+            <textarea
+              id="order-notes"
+              value={orderNotes}
+              onChange={(e) => setOrderNotes(e.target.value)}
+              maxLength={500}
+              rows={4}
+              placeholder="أي تعليمات خاصة بالطلب"
+              className={`${inputClassName()} mt-4 text-base`}
+            />
+          </section>
+        </div>
+
+        <div className="lg:col-span-2">
+          <section className="rounded-2xl border border-brand-gold/40 bg-brand-surface p-5 shadow-sm sm:p-6 lg:sticky lg:top-24">
+            <p className="mb-1 text-xs font-bold uppercase tracking-wide text-brand-orange">
+              {orderType === "DINE_IN" ? "الخطوة ٣" : "الخطوة ٣"}
+            </p>
+            <OrderSummaryCard
+              variant="checkout"
+              currencyLabel={currency}
+              lines={summaryLines}
+              subtotal={subtotal}
+              deliveryFee={deliveryFee}
+              total={total}
+              orderType={orderType}
+              tableLabel={tableLabel}
+              customerName={orderType !== "DINE_IN" ? customerName || null : null}
+              customerPhone={
+                orderType !== "DINE_IN" ? customerPhone || null : null
+              }
+              orderNotes={orderNotes || null}
+            />
+
+            {belowMinimum ? (
+              <p className="mt-4 rounded-xl border border-brand-gold/50 bg-brand-gold-soft px-4 py-3 text-sm text-brand-chocolate">
+                الحد الأدنى لطلب التوصيل هو {formatPrice(minDelivery, currency)}
+                . أضف المزيد من الأصناف للمتابعة.
+              </p>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={submitting || cart.lines.length === 0 || belowMinimum}
+              className={`${buttonPrimaryClassName()} mt-5 hidden w-full rounded-2xl py-4 text-base font-bold lg:block`}
+            >
+              {submitting ? "جاري الإرسال..." : "تأكيد الطلب"}
+            </button>
+          </section>
+        </div>
       </div>
 
-      <OrderSummaryCard
-        variant="checkout"
-        currencyLabel={currency}
-        lines={summaryLines}
-        subtotal={subtotal}
-        deliveryFee={deliveryFee}
-        total={total}
-        orderType={orderType}
-        tableLabel={tableLabel}
-        customerName={orderType !== "DINE_IN" ? customerName || null : null}
-        customerPhone={orderType !== "DINE_IN" ? customerPhone || null : null}
-        orderNotes={orderNotes || null}
-      />
-
-      {belowMinimum ? (
-        <p className="rounded-lg border border-brand-gold/50 bg-brand-gold-soft px-3 py-2 text-sm text-brand-chocolate">
-          الحد الأدنى لطلب التوصيل هو {formatPrice(minDelivery, currency)}. أضف
-          المزيد من الأصناف للمتابعة.
-        </p>
-      ) : null}
-
-      <button
-        type="submit"
-        disabled={submitting || cart.lines.length === 0 || belowMinimum}
-        className={`${buttonPrimaryClassName()} w-full rounded-2xl py-3.5 text-base`}
-      >
-        {submitting ? "جاري الإرسال..." : "تأكيد الطلب"}
-      </button>
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-brand-gold/40 bg-brand-surface/95 backdrop-blur lg:hidden">
+        <div
+          className={`${customerContainerClassName} flex items-center gap-4 py-3 pb-[max(1rem,env(safe-area-inset-bottom))]`}
+        >
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-brand-muted">الإجمالي</p>
+            <p className="text-xl font-extrabold tabular-nums text-brand-orange">
+              {formatPrice(total, currency)}
+            </p>
+          </div>
+          <button
+            type="submit"
+            disabled={submitting || cart.lines.length === 0 || belowMinimum}
+            className={`${buttonPrimaryClassName()} min-h-[48px] shrink-0 rounded-2xl px-6 py-3 text-base font-bold`}
+          >
+            {submitting ? "جاري الإرسال..." : "تأكيد الطلب"}
+          </button>
+        </div>
+      </div>
 
       {orderType === "DINE_IN" && tableLabel ? (
         <ConfirmDialog
@@ -328,7 +379,7 @@ function Field({
         dir={dir}
         inputMode={inputMode}
         placeholder={placeholder}
-        className={inputClassName()}
+        className={`${inputClassName()} py-3 text-base`}
       />
     </div>
   );
