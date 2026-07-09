@@ -2,17 +2,24 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import type { OrderListRow } from "@/lib/orders/dashboard";
+import type {
+  OrderListRow,
+  OrdersOperationalSummary,
+} from "@/lib/orders/dashboard";
 import type { OrderListFilter } from "@/lib/validations/order-status";
 import { formatRestaurantDateTime } from "@/lib/time/restaurant-date";
 import { formatPrice } from "@/lib/money";
+import { isUrgentOrderStatus } from "@/lib/dashboard/order-alerts";
+import { useOrderAlerts } from "@/hooks/use-order-alerts";
 import {
   OrderStatusBadge,
   OrderTypeBadge,
   PrintStatusBadge,
 } from "@/components/dashboard/order-status-badge";
+import { OrdersSummaryStrip } from "@/components/dashboard/orders-summary-strip";
 import {
   buttonPrimaryClassName,
+  buttonSecondaryClassName,
   EmptyState,
   PageHeader,
 } from "@/components/dashboard/form-ui";
@@ -33,21 +40,22 @@ const FILTERS: { value: OrderListFilter; label: string }[] = [
 
 const POLL_MS = 8000;
 
-function isUrgent(status: OrderListRow["status"]) {
-  return status === "NEW" || status === "WAITING_WHATSAPP_CONFIRMATION";
-}
-
 export function OrdersDashboard({
   initialOrders,
+  initialSummary,
   currencyLabel,
 }: {
   initialOrders: OrderListRow[];
+  initialSummary: OrdersOperationalSummary;
   currencyLabel: string;
 }) {
   const [filter, setFilter] = useState<OrderListFilter>("all");
   const [orders, setOrders] = useState(initialOrders);
+  const [summary, setSummary] = useState(initialSummary);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+
+  const { muted, toggleMute, urgentCount } = useOrderAlerts(orders);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -56,8 +64,12 @@ export function OrdersDashboard({
         cache: "no-store",
       });
       if (res.ok) {
-        const data = (await res.json()) as { orders: OrderListRow[] };
+        const data = (await res.json()) as {
+          orders: OrderListRow[];
+          summary: OrdersOperationalSummary;
+        };
         setOrders(data.orders);
+        setSummary(data.summary);
         setLastUpdated(new Date());
       }
     } finally {
@@ -79,22 +91,45 @@ export function OrdersDashboard({
           lastUpdated.toISOString()
         )}`}
         actions={
-          <Link
-            href="/dashboard/orders/new"
-            className={buttonPrimaryClassName()}
-          >
-            + طلب يدوي
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleMute}
+              className={buttonSecondaryClassName()}
+              title={
+                muted
+                  ? "تنبيهات الصوت معطّلة — انقر للتفعيل"
+                  : "تنبيهات الصوت مفعّلة — انقر للإيقاف"
+              }
+            >
+              {muted ? "🔇 صامت" : "🔔 تنبيه"}
+            </button>
+            <Link
+              href="/dashboard/orders/new"
+              className={buttonPrimaryClassName()}
+            >
+              + طلب يدوي
+            </Link>
+          </div>
         }
       />
 
-      <div className="flex items-center gap-2 text-xs text-stone-500">
-        <span
-          className={`inline-block h-2 w-2 rounded-full ${
-            loading ? "bg-amber-500" : "bg-green-500"
-          }`}
-        />
-        {loading ? "جاري التحديث..." : "تحديث تلقائي كل ٨ ثوانٍ"}
+      <OrdersSummaryStrip summary={summary} currencyLabel={currencyLabel} />
+
+      <div className="flex flex-wrap items-center gap-3 text-xs text-stone-500">
+        <span className="flex items-center gap-2">
+          <span
+            className={`inline-block h-2 w-2 rounded-full ${
+              loading ? "bg-amber-500" : "bg-green-500"
+            }`}
+          />
+          {loading ? "جاري التحديث..." : "تحديث تلقائي كل ٨ ثوانٍ"}
+        </span>
+        {urgentCount > 0 ? (
+          <span className="rounded-full bg-amber-100 px-2.5 py-1 font-semibold text-amber-800">
+            {urgentCount} طلب عاجل
+          </span>
+        ) : null}
       </div>
 
       <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
@@ -142,12 +177,12 @@ export function OrdersDashboard({
               </thead>
               <tbody>
                 {orders.map((order) => {
-                  const urgent = isUrgent(order.status);
+                  const urgent = isUrgentOrderStatus(order.status);
                   return (
                     <tr
                       key={order.id}
                       className={`border-t border-stone-100 transition hover:bg-stone-50 ${
-                        urgent ? "bg-amber-50/50" : ""
+                        urgent ? "bg-amber-50/70 ring-1 ring-inset ring-amber-200/60" : ""
                       }`}
                     >
                       <td className="px-3 py-3">
@@ -156,7 +191,7 @@ export function OrdersDashboard({
                           className="flex items-center gap-2 font-bold text-amber-700 hover:underline"
                         >
                           {urgent ? (
-                            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-500" />
+                            <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.8)]" />
                           ) : null}
                           {order.order_number}
                         </Link>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getStaffSession } from "@/lib/auth/session";
 import { listOrdersForStaff } from "@/lib/actions/orders";
+import { getOperationalSummaryForStaff } from "@/lib/actions/reports";
 import { orderListFilterSchema } from "@/lib/validations/order-status";
 
 export async function GET(request: Request) {
@@ -18,8 +19,11 @@ export async function GET(request: Request) {
   }
 
   try {
-    const orders = await listOrdersForStaff(parsed.data);
-    return NextResponse.json({ orders });
+    const [orders, summary] = await Promise.all([
+      listOrdersForStaff(parsed.data),
+      getOperationalSummaryForStaff(),
+    ]);
+    return NextResponse.json({ orders, summary });
   } catch {
     return NextResponse.json({ error: "تعذر تحميل الطلبات" }, { status: 500 });
   }

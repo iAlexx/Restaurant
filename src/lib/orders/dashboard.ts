@@ -46,6 +46,23 @@ export interface DailyReportSummary {
   cancelled_count: number;
 }
 
+export interface OrdersOperationalSummary {
+  date: string;
+  timezone: string;
+  total_orders: number;
+  urgent_count: number;
+  preparing_count: number;
+  total_value: number;
+}
+
+export interface OrderExportRow {
+  order_number: string;
+  order_type: OrderType;
+  status: OrderStatus;
+  total: number;
+  created_at: string;
+}
+
 export function filterOrdersByListFilter<T extends { status: OrderStatus; order_type: OrderType }>(
   orders: T[],
   filter: OrderListFilter
@@ -90,6 +107,28 @@ export function computeDailyReport(
     delivery_count: active.filter((o) => o.order_type === "DELIVERY").length,
     pickup_count: active.filter((o) => o.order_type === "PICKUP").length,
     cancelled_count: orders.filter((o) => o.status === "CANCELLED").length,
+  };
+}
+
+export function computeOperationalSummary(
+  orders: Pick<Order, "status" | "total">[],
+  date: string,
+  timezone: string
+): OrdersOperationalSummary {
+  const active = orders.filter((o) => o.status !== "CANCELLED");
+  const urgentStatuses: OrderStatus[] = [
+    "NEW",
+    "WAITING_WHATSAPP_CONFIRMATION",
+  ];
+
+  return {
+    date,
+    timezone,
+    total_orders: active.length,
+    urgent_count: orders.filter((o) => urgentStatuses.includes(o.status))
+      .length,
+    preparing_count: orders.filter((o) => o.status === "PREPARING").length,
+    total_value: active.reduce((sum, o) => sum + o.total, 0),
   };
 }
 

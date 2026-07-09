@@ -38,6 +38,7 @@ interface OrderDetailData {
   addOns: OrderItemAddOn[];
   printJobs: PrintJob[];
   currency_label: string;
+  created_by_display_name: string | null;
 }
 
 export function OrderDetailClient({
@@ -87,7 +88,8 @@ export function OrderDetailClient({
     }
   }, [statusState.success, cancelState.success, reprintState.success, refresh]);
 
-  const { order, items, addOns, printJobs, currency_label } = data;
+  const { order, items, addOns, printJobs, currency_label, created_by_display_name } =
+    data;
   const addOnsByItem = new Map<string, OrderItemAddOn[]>();
   for (const addOn of addOns) {
     const list = addOnsByItem.get(addOn.order_item_id) ?? [];
@@ -188,6 +190,12 @@ export function OrderDetailClient({
               <div>
                 <dt className="text-stone-500">ملاحظات</dt>
                 <dd className="mt-1">{order.notes}</dd>
+              </div>
+            )}
+            {order.created_by && created_by_display_name && (
+              <div className="flex justify-between gap-4">
+                <dt className="text-stone-500">أُنشئ يدوياً بواسطة</dt>
+                <dd>{created_by_display_name}</dd>
               </div>
             )}
             {order.cancellation_reason && (

@@ -116,12 +116,28 @@ export async function getOrderDetailForStaff(orderId: string) {
     .eq("id", 1)
     .single();
 
+  const typedOrder = order as Order;
+  let created_by_display_name: string | null = null;
+
+  if (typedOrder.created_by) {
+    const service = createServiceClient();
+    const { data: creator } = await service
+      .from("profiles")
+      .select("display_name")
+      .eq("id", typedOrder.created_by)
+      .maybeSingle();
+
+    created_by_display_name =
+      (creator as { display_name: string } | null)?.display_name ?? null;
+  }
+
   return {
-    order: order as Order,
+    order: typedOrder,
     items: (items ?? []) as OrderItem[],
     addOns: (addOns ?? []) as OrderItemAddOn[],
     printJobs: (printJobs ?? []) as PrintJob[],
     currency_label: (settings as { currency_label: string } | null)?.currency_label ?? "ل.س",
+    created_by_display_name,
   };
 }
 

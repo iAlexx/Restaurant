@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdminSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { safeDeleteReplacedMenuImage } from "@/lib/storage/menu-bucket";
 import { generateSecureToken, hashToken } from "@/lib/tokens";
 import {
   printDeviceSchema,
@@ -56,6 +57,20 @@ export async function updateRestaurantSettings(
   const logoUrl = (formData.get("logo_url") as string) || undefined;
 
   const supabase = await createClient();
+
+  const { data: existingSettings, error: existingError } = await supabase
+    .from("restaurant_settings")
+    .select("logo_url")
+    .eq("id", 1)
+    .single();
+
+  if (existingError || !existingSettings) {
+    return { error: "تعذر تحميل الإعدادات الحالية" };
+  }
+
+  const previousLogoUrl = (existingSettings as { logo_url: string | null })
+    .logo_url;
+
   const updatePayload = logoUrl
     ? { ...parsed.data, logo_url: logoUrl, updated_at: new Date().toISOString() }
     : { ...parsed.data, updated_at: new Date().toISOString() };
@@ -66,6 +81,10 @@ export async function updateRestaurantSettings(
     .eq("id", 1);
 
   if (error) return { error: "تعذر حفظ الإعدادات" };
+
+  if (logoUrl && logoUrl !== previousLogoUrl) {
+    await safeDeleteReplacedMenuImage(previousLogoUrl, logoUrl);
+  }
 
   revalidatePath("/dashboard/settings");
   return { success: "تم حفظ الإعدادات" };

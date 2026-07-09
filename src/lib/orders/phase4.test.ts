@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { canRoleAccessDashboardPath } from "@/lib/auth/permissions";
 import {
   computeDailyReport,
+  computeOperationalSummary,
   filterOrdersByListFilter,
 } from "@/lib/orders/dashboard";
 import {
@@ -67,6 +68,26 @@ describe("filterOrdersByListFilter", () => {
     expect(filterOrdersByListFilter(sampleOrders, "DINE_IN")).toHaveLength(1);
     expect(filterOrdersByListFilter(sampleOrders, "PICKUP")).toHaveLength(2);
     expect(filterOrdersByListFilter(sampleOrders, "DELIVERY")).toHaveLength(1);
+  });
+});
+
+describe("computeOperationalSummary", () => {
+  it("counts urgent, preparing, and revenue excluding cancelled", () => {
+    const summary = computeOperationalSummary(
+      [
+        { status: "NEW", total: 1000 },
+        { status: "WAITING_WHATSAPP_CONFIRMATION", total: 2000 },
+        { status: "PREPARING", total: 3000 },
+        { status: "CANCELLED", total: 999 },
+      ],
+      "2026-07-09",
+      RESTAURANT_TIMEZONE
+    );
+
+    expect(summary.total_orders).toBe(3);
+    expect(summary.urgent_count).toBe(2);
+    expect(summary.preparing_count).toBe(1);
+    expect(summary.total_value).toBe(6000);
   });
 });
 

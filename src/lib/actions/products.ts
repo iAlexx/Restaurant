@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdminSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { productSchema } from "@/lib/validations/menu";
+import { safeDeleteReplacedMenuImage } from "@/lib/storage/menu-bucket";
 import type { Product } from "@/types/database";
 import type { ActionResult } from "@/lib/actions/types";
 import { parseToggleForm } from "@/lib/actions/toggle-form";
@@ -128,6 +129,19 @@ export async function updateProduct(
   const { add_on_ids, ...productData } = parsed.data;
 
   const supabase = await createClient();
+
+  const { data: existing, error: existingError } = await supabase
+    .from("products")
+    .select("image_url")
+    .eq("id", id)
+    .single();
+
+  if (existingError || !existing) {
+    return { error: "المنتج غير موجود" };
+  }
+
+  const previousImageUrl = (existing as { image_url: string | null }).image_url;
+
   const { error } = await supabase
     .from("products")
     .update({ ...productData, image_url: imageUrl })
@@ -136,6 +150,10 @@ export async function updateProduct(
   if (error) return { error: "تعذر تحديث المنتج" };
 
   await syncProductAddOns(id, add_on_ids);
+
+  await safeDeleteReplacedMenuImage(previousImageUrl, imageUrl, {
+    excludeProductId: id,
+  });
 
   revalidatePath("/dashboard/products");
   return { success: "تم تحديث المنتج" };
@@ -164,4 +182,58 @@ export async function toggleProductAvailableForm(
   const values = parseToggleForm(formData);
   if (!values) return;
   await toggleProductAvailable(values.id, values.next);
+}
+
+export async function duplicateProduct(productId: string): Promise<ActionResult> {
+  await requireAdminSession();
+  const supabase = await createClient();
+
+  const { data: source, error: sourceError } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", productId)
+    .single();
+
+  if (sourceError || !source) {
+    return { error: "المنتج غير موجود" };
+  }
+
+  const product = source as Product;
+
+  const { data: links, error: linksError } = await supabase
+    .from("product_add_ons")
+    .select("add_on_id")
+    .eq("product_id", productId);
+
+  if (linksError) {
+    return { error: "تعذر قراءة إضافات المنتج" };
+  }
+
+  const { data: created, error: createError } = await supabase
+    .from("products")
+    .insert({
+      category_id: product.category_id,
+      name_ar: `${product.name_ar} نسخة`,
+      description_ar: product.description_ar,
+      price: product.price,
+      image_url: product.image_url,
+      is_available: false,
+      sort_order: product.sort_order,
+    })
+    .select("id")
+    .single();
+
+  if (createError || !created) {
+    return { error: "تعذر نسخ المنتج" };
+  }
+
+  const newId = (created as { id: string }).id;
+  const addOnIds = (links ?? []).map(
+    (row) => (row as { add_on_id: string }).add_on_id
+  );
+
+  await syncProductAddOns(newId, addOnIds);
+
+  revalidatePath("/dashboard/products");
+  return { success: "تم نسخ المنتج — راجعه وفعّله عند الجاهزية" };
 }
