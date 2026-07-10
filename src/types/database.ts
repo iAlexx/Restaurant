@@ -25,6 +25,8 @@ export interface RestaurantSettings {
   id: number;
   name: string;
   logo_url: string | null;
+  hero_image_url: string | null;
+  welcome_message: string | null;
   phone: string | null;
   whatsapp_phone: string | null;
   address: string | null;

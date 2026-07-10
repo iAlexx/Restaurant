@@ -13,6 +13,7 @@ export const restaurantSettingsSchema = z.object({
   min_delivery_order: z.coerce.number().int().min(0),
   receipt_header: z.string().max(300).optional().nullable(),
   receipt_footer: z.string().max(300).optional().nullable(),
+  welcome_message: z.string().max(300).optional().nullable(),
 });
 
 export const printDeviceSchema = z.object({

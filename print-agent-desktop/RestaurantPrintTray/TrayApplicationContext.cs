@@ -33,15 +33,13 @@ public sealed class TrayApplicationContext : ApplicationContext
 
         Application.ApplicationExit += (_, _) => Shutdown();
 
-        if (!_configService.IsConfigured())
+        if (!EnsureConfigured())
         {
-            ShowSetupWizard(required: true);
-        }
-        else
-        {
-            StartAgentSafe();
+            return;
         }
 
+        StartAgentSafe();
+        _ = WaitForAgentBootstrapAsync();
         UpdateTrayPresentation();
     }
 
@@ -60,36 +58,53 @@ public sealed class TrayApplicationContext : ApplicationContext
         menu.Items.Add("عرض آخر خطأ", null, (_, _) => ShowLastError());
         menu.Items.Add("فتح لوحة الطلبات", null, (_, _) => OpenDashboard());
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add("الإعدادات", null, (_, _) => ShowSettings());
+        menu.Items.Add("إعادة تشغيل معالج الإعداد", null, (_, _) => ShowSetupWizard(required: false));
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("خروج", null, (_, _) => ConfirmExit());
 
         return menu;
     }
 
-    private void ShowSetupWizard(bool required)
+    private bool EnsureConfigured()
     {
-        using var wizard = new SetupWizardForm();
-        var result = wizard.ShowDialog();
-        if (result != DialogResult.OK)
+        var state = _configService.GetConfigurationState();
+        if (state == ConfigurationState.Valid)
         {
-            if (required)
-            {
-                ExitThread();
-            }
-
-            return;
+            return true;
         }
 
-        ReconnectAgent();
+        ShowSetupWizard(required: true);
+        return _configService.GetConfigurationState() == ConfigurationState.Valid;
+    }
+
+    private void ShowSetupWizard(bool required)
+    {
+        using var wizard = new SetupWizardForm(ReconnectAgent);
+        var result = wizard.ShowDialog();
+        if (result != DialogResult.OK && required)
+        {
+            ExitThread();
+        }
+    }
+
+    private void ShowSettings()
+    {
+        using var settings = new SettingsForm(ReconnectAgent);
+        settings.ShowDialog();
+        UpdateTrayPresentation();
     }
 
     private void StartAgentSafe()
     {
         try
         {
+            TrayBootstrapLogger.Info("Tray requesting agent start");
             _supervisor.Start();
         }
         catch (Exception ex)
         {
+            TrayBootstrapLogger.Error("Tray failed to start agent", ex);
             MessageBox.Show(
                 ex.Message,
                 "تعذر تشغيل وكيل الطباعة",
@@ -98,15 +113,35 @@ public sealed class TrayApplicationContext : ApplicationContext
         }
     }
 
-    private void ReconnectAgent()
+    private async Task WaitForAgentBootstrapAsync()
     {
         try
         {
-            _supervisor.Restart();
+            var ready = await _supervisor.WaitForStatusReadyAsync().ConfigureAwait(true);
+            TrayBootstrapLogger.Info(
+                ready
+                    ? "Agent bootstrap complete (status.json ready)"
+                    : "Agent bootstrap incomplete — check tray-bootstrap.log and agent logs");
             UpdateTrayPresentation();
         }
         catch (Exception ex)
         {
+            TrayBootstrapLogger.Error("Agent bootstrap wait failed", ex);
+        }
+    }
+
+    private void ReconnectAgent()
+    {
+        try
+        {
+            TrayBootstrapLogger.Info("Tray requested agent reconnect");
+            _supervisor.Restart();
+            _ = WaitForAgentBootstrapAsync();
+            UpdateTrayPresentation();
+        }
+        catch (Exception ex)
+        {
+            TrayBootstrapLogger.Error("Tray reconnect failed", ex);
             MessageBox.Show(
                 ex.Message,
                 "إعادة الاتصال",

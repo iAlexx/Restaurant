@@ -5,6 +5,8 @@ public static class AppPaths
     public const string TrayTaskName = "RestaurantPrintTray";
     public const string LegacyAgentTaskName = "RestaurantPrintAgent";
 
+    public static string? OverrideConfigDirectoryForTests { get; set; }
+
     public static string InstallDirectory =>
         Path.GetDirectoryName(Environment.ProcessPath)
         ?? AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
@@ -16,6 +18,11 @@ public static class AppPaths
     {
         get
         {
+            if (!string.IsNullOrWhiteSpace(OverrideConfigDirectoryForTests))
+            {
+                return OverrideConfigDirectoryForTests;
+            }
+
             var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             return Path.Combine(localAppData, "RestaurantPrint");
         }

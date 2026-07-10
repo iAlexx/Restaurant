@@ -15,18 +15,11 @@ public sealed class AgentCommandService
             return (false, "لم يتم العثور على RestaurantPrintAgent.exe");
         }
 
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = AppPaths.AgentExecutable,
-            Arguments = command,
-            WorkingDirectory = AppPaths.InstallDirectory,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
-        };
+        var startInfo = AgentLaunchHelper.CreateStartInfo(command);
+        startInfo.RedirectStandardOutput = true;
+        startInfo.RedirectStandardError = true;
+        startInfo.StandardOutputEncoding = Encoding.UTF8;
+        startInfo.StandardErrorEncoding = Encoding.UTF8;
 
         if (!string.IsNullOrWhiteSpace(extraEnv))
         {

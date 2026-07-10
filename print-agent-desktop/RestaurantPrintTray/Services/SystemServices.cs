@@ -31,6 +31,7 @@ public static class ScheduledTaskService
         var escapedPath = $"\\\"{trayExecutablePath}\\\"";
         var createArgs =
             $"/Create /TN \"{AppPaths.TrayTaskName}\" /TR {escapedPath} /SC ONLOGON /RL LIMITED /F";
+        TrayBootstrapLogger.Info($"Creating scheduled task: {createArgs}");
         RunSchtasks(createArgs, ignoreErrors: false);
     }
 

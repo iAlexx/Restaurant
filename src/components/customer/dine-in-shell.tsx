@@ -8,6 +8,10 @@ import { StickyCartBar } from "@/components/customer/sticky-cart-bar";
 import { DineInTableBanner } from "@/components/customer/dine-in-table-banner";
 import { DineInTableCacheSync } from "@/components/customer/dine-in-table-cache-sync";
 import { CustomerPageShell } from "@/components/customer/customer-menu-shell";
+import {
+  DineInMenuEntryGate,
+  dispatchReopenDineInCover,
+} from "@/components/customer/dine-in-menu-entry-gate";
 import type { PublicMenu } from "@/lib/menu/public-menu";
 import {
   type DineInContext,
@@ -26,28 +30,31 @@ function DineInMenuInner({
   const cartHref = dineInCartHref(ctx);
 
   return (
-    <>
-      <DineInTableCacheSync
-        tableToken={ctx.tableToken}
-        tableLabel={ctx.tableLabel}
-      />
-      <CustomerPageShell
-        header={
-          <CustomerHeader
-            settings={menu.settings}
-            cartHref={cartHref}
-            itemCount={itemCount}
-            tableLabel={ctx.tableLabel}
-          />
-        }
-        contextStrip={<DineInTableBanner ctx={ctx} />}
-        pageTitle="القائمة"
-        pageSubtitle="تصفّح القائمة وأرسل طلبك"
-        bottomBar={<StickyCartBar menu={menu} cartHref={cartHref} />}
-      >
-        <MenuView menu={menu} />
-      </CustomerPageShell>
-    </>
+    <DineInMenuEntryGate settings={menu.settings} ctx={ctx}>
+      <>
+        <DineInTableCacheSync
+          tableToken={ctx.tableToken}
+          tableLabel={ctx.tableLabel}
+        />
+        <CustomerPageShell
+          header={
+            <CustomerHeader
+              settings={menu.settings}
+              cartHref={cartHref}
+              itemCount={itemCount}
+              tableLabel={ctx.tableLabel}
+              onReopenCover={() => dispatchReopenDineInCover(ctx.tableToken)}
+            />
+          }
+          contextStrip={<DineInTableBanner ctx={ctx} />}
+          pageTitle="القائمة"
+          pageSubtitle="تصفّح القائمة وأرسل طلبك"
+          bottomBar={<StickyCartBar menu={menu} cartHref={cartHref} />}
+        >
+          <MenuView menu={menu} />
+        </CustomerPageShell>
+      </>
+    </DineInMenuEntryGate>
   );
 }
 

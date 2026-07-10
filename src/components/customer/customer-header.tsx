@@ -8,6 +8,7 @@ export function CustomerHeader({
   itemCount = 0,
   tableLabel,
   showCart = true,
+  onReopenCover,
 }: {
   settings: PublicRestaurantSettings;
   cartHref?: string;
@@ -15,37 +16,63 @@ export function CustomerHeader({
   tableLabel?: string;
   /** Hide cart button (e.g. table picker). */
   showCart?: boolean;
+  /** Reopen dine-in entry cover (menu pages with table context). */
+  onReopenCover?: () => void;
 }) {
+  const logoContent = settings.logo_url ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={settings.logo_url}
+      alt=""
+      className="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-brand-gold/45"
+    />
+  ) : (
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-orange-soft text-xl">
+      🍽
+    </div>
+  );
+
   return (
     <header className="sticky top-0 z-30 bg-brand-surface shadow-sm">
       <div
         className={`${customerContainerClassName} flex min-h-[60px] items-center justify-between gap-3 py-2.5`}
       >
         <div className="flex min-w-0 items-center gap-3">
-          {settings.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={settings.logo_url}
-              alt=""
-              className="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-brand-gold/45"
-            />
+          {onReopenCover ? (
+            <button
+              type="button"
+              onClick={onReopenCover}
+              className="shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-brand-orange/40"
+              aria-label="العودة للواجهة"
+            >
+              {logoContent}
+            </button>
           ) : (
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-orange-soft text-xl">
-              🍽
-            </div>
+            logoContent
           )}
           <div className="min-w-0">
             <h1 className="truncate text-base font-extrabold text-brand-chocolate sm:text-lg">
               {settings.name}
             </h1>
             {tableLabel ? (
-              <span className="mt-0.5 inline-flex max-w-full items-center gap-1.5 rounded-full border border-brand-gold/50 bg-brand-gold-soft px-2 py-0.5 text-xs font-semibold text-brand-chocolate">
-                <span
-                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-gold"
-                  aria-hidden="true"
-                />
-                <span className="truncate">طاولة {tableLabel}</span>
-              </span>
+              <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-brand-gold/50 bg-brand-gold-soft px-2 py-0.5 text-xs font-semibold text-brand-chocolate">
+                  <span
+                    className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-gold"
+                    aria-hidden="true"
+                  />
+                  <span className="truncate">طاولة {tableLabel}</span>
+                </span>
+                {onReopenCover ? (
+                  <button
+                    type="button"
+                    onClick={onReopenCover}
+                    className="text-xs font-medium text-brand-orange underline-offset-2 hover:underline"
+                  >
+                    العودة للواجهة
+                  </button>
+                ) : null}
+              </div>
             ) : settings.opening_hours ? (
               <p className="truncate text-xs text-brand-muted sm:text-sm">
                 {settings.opening_hours}

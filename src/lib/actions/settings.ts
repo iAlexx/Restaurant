@@ -48,6 +48,7 @@ export async function updateRestaurantSettings(
     min_delivery_order: formData.get("min_delivery_order") ?? 0,
     receipt_header: formData.get("receipt_header") || null,
     receipt_footer: formData.get("receipt_footer") || null,
+    welcome_message: formData.get("welcome_message") || null,
   });
 
   if (!parsed.success) {
@@ -55,12 +56,13 @@ export async function updateRestaurantSettings(
   }
 
   const logoUrl = (formData.get("logo_url") as string) || undefined;
+  const heroUrl = (formData.get("hero_image_url") as string) || undefined;
 
   const supabase = await createClient();
 
   const { data: existingSettings, error: existingError } = await supabase
     .from("restaurant_settings")
-    .select("logo_url")
+    .select("logo_url, hero_image_url")
     .eq("id", 1)
     .single();
 
@@ -70,10 +72,15 @@ export async function updateRestaurantSettings(
 
   const previousLogoUrl = (existingSettings as { logo_url: string | null })
     .logo_url;
+  const previousHeroUrl = (existingSettings as { hero_image_url: string | null })
+    .hero_image_url;
 
-  const updatePayload = logoUrl
-    ? { ...parsed.data, logo_url: logoUrl, updated_at: new Date().toISOString() }
-    : { ...parsed.data, updated_at: new Date().toISOString() };
+  const updatePayload = {
+    ...parsed.data,
+    ...(logoUrl ? { logo_url: logoUrl } : {}),
+    ...(heroUrl ? { hero_image_url: heroUrl } : {}),
+    updated_at: new Date().toISOString(),
+  };
 
   const { error } = await supabase
     .from("restaurant_settings")
@@ -84,6 +91,10 @@ export async function updateRestaurantSettings(
 
   if (logoUrl && logoUrl !== previousLogoUrl) {
     await safeDeleteReplacedMenuImage(previousLogoUrl, logoUrl);
+  }
+
+  if (heroUrl && heroUrl !== previousHeroUrl) {
+    await safeDeleteReplacedMenuImage(previousHeroUrl, heroUrl);
   }
 
   revalidatePath("/dashboard/settings");

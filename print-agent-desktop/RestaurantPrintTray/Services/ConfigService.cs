@@ -49,9 +49,41 @@ public sealed class ConfigService
         }
     }
 
-    public bool IsConfigured()
+    public bool IsConfigured() => GetConfigurationState() == ConfigurationState.Valid;
+
+    public ConfigurationState GetConfigurationState()
     {
-        return File.Exists(AppPaths.ConfigFile) && File.Exists(AppPaths.TokenFile);
+        if (!File.Exists(AppPaths.ConfigFile) || !File.Exists(AppPaths.TokenFile))
+        {
+            return ConfigurationState.Missing;
+        }
+
+        try
+        {
+            var config = LoadConfig();
+            var printers = PrinterService.ListInstalledPrinters();
+            var validation = SettingsValidator.Validate(
+                new SettingsSaveInput
+                {
+                    ApiBaseUrl = config.ApiBaseUrl,
+                    PrinterName = config.WindowsPrinterName,
+                    PollIntervalMs = config.PollIntervalMs,
+                    ReplaceToken = false,
+                },
+                printers,
+                hasStoredToken: true);
+
+            if (validation.Count > 0 || !TokenStore.ValidateStoredToken())
+            {
+                return ConfigurationState.Invalid;
+            }
+
+            return ConfigurationState.Valid;
+        }
+        catch
+        {
+            return ConfigurationState.Invalid;
+        }
     }
 
     public AgentConfig LoadConfig()
@@ -74,12 +106,23 @@ public sealed class ConfigService
         TokenStore.SaveToken(deviceToken);
     }
 
+    public void SaveConfigKeepingToken(AgentConfig config)
+    {
+        if (!TokenStore.ValidateStoredToken())
+        {
+            throw new InvalidOperationException("لا يوجد رمز محفوظ لتحديث الإعدادات بدونه");
+        }
+
+        Directory.CreateDirectory(AppPaths.ConfigDirectory);
+        var json = JsonSerializer.Serialize(config, JsonOptions);
+        File.WriteAllText(AppPaths.ConfigFile, json, Encoding.UTF8);
+    }
+
     public void UpdatePrinter(string printerName)
     {
         var config = LoadConfig();
         config.WindowsPrinterName = printerName;
-        var json = JsonSerializer.Serialize(config, JsonOptions);
-        File.WriteAllText(AppPaths.ConfigFile, json, Encoding.UTF8);
+        SaveConfigKeepingToken(config);
     }
 }
 
@@ -100,4 +143,33 @@ public static class TokenStore
     }
 
     public static bool HasToken() => File.Exists(AppPaths.TokenFile);
+
+    public static bool ValidateStoredToken()
+    {
+        if (!File.Exists(AppPaths.TokenFile))
+        {
+            return false;
+        }
+
+        try
+        {
+            var raw = File.ReadAllText(AppPaths.TokenFile, Encoding.ASCII).Trim();
+            if (string.IsNullOrEmpty(raw))
+            {
+                return false;
+            }
+
+            var protectedBytes = Convert.FromBase64String(raw);
+            var bytes = ProtectedData.Unprotect(
+                protectedBytes,
+                null,
+                DataProtectionScope.CurrentUser);
+            var token = Encoding.UTF8.GetString(bytes).Trim();
+            return token.Length > 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }

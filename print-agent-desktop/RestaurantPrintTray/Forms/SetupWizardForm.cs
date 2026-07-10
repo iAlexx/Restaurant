@@ -6,13 +6,18 @@ namespace RestaurantPrintTray.Forms;
 public sealed class SetupWizardForm : Form
 {
     private readonly ConfigService _configService = new();
+    private readonly SettingsCoordinator _coordinator;
+    private readonly Action _onSaved;
     private readonly TextBox _apiUrlBox = new() { Dock = DockStyle.Fill };
     private readonly ComboBox _printerBox = new() { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly TextBox _tokenBox = new() { Dock = DockStyle.Fill, UseSystemPasswordChar = true };
     private readonly Label _statusLabel = new() { Dock = DockStyle.Fill, AutoSize = false, Height = 48 };
 
-    public SetupWizardForm()
+    public SetupWizardForm(Action onSaved)
     {
+        _onSaved = onSaved;
+        _coordinator = new SettingsCoordinator(_configService);
+
         Text = "إعداد وكيل الطباعة — مطعم النخة";
         RightToLeft = RightToLeft.Yes;
         RightToLeftLayout = true;
@@ -82,7 +87,7 @@ public sealed class SetupWizardForm : Form
 
         var saveButton = new Button { Text = "حفظ وبدء", AutoSize = true, DialogResult = DialogResult.None };
         var cancelButton = new Button { Text = "إلغاء", AutoSize = true, DialogResult = DialogResult.Cancel };
-        saveButton.Click += async (_, _) => await OnSaveClicked(saveButton);
+        saveButton.Click += (_, _) => OnSaveClicked(saveButton);
         buttons.Controls.Add(saveButton);
         buttons.Controls.Add(cancelButton);
 
@@ -106,56 +111,29 @@ public sealed class SetupWizardForm : Form
         layout.Controls.Add(control, 1, row);
     }
 
-    private async Task OnSaveClicked(Button saveButton)
+    private void OnSaveClicked(Button saveButton)
     {
         saveButton.Enabled = false;
         _statusLabel.Text = "جاري الحفظ...";
 
-        try
+        var input = new SettingsSaveInput
         {
-            var apiUrl = _apiUrlBox.Text.Trim();
-            var printer = _printerBox.SelectedItem?.ToString()?.Trim() ?? "";
-            var token = _tokenBox.Text.Trim();
+            ApiBaseUrl = _apiUrlBox.Text,
+            PrinterName = _printerBox.SelectedItem?.ToString() ?? "",
+            PollIntervalMs = _configService.LoadConfig().PollIntervalMs,
+            ReplaceToken = true,
+            NewToken = _tokenBox.Text,
+        };
 
-            if (string.IsNullOrWhiteSpace(apiUrl))
-            {
-                throw new InvalidOperationException("عنوان API مطلوب");
-            }
-
-            if (!Uri.TryCreate(apiUrl, UriKind.Absolute, out _))
-            {
-                throw new InvalidOperationException("عنوان API غير صالح");
-            }
-
-            if (string.IsNullOrWhiteSpace(printer))
-            {
-                throw new InvalidOperationException("يجب اختيار طابعة");
-            }
-
-            if (string.IsNullOrWhiteSpace(token))
-            {
-                throw new InvalidOperationException("رمز الجهاز مطلوب");
-            }
-
-            var config = new AgentConfig
-            {
-                ApiBaseUrl = apiUrl,
-                WindowsPrinterName = printer,
-                PrintMode = "windows",
-                PollIntervalMs = 4000,
-                ReceiptWidthPx = 576,
-            };
-
-            _configService.SaveConfig(config, token);
-            DialogResult = DialogResult.OK;
-            Close();
-        }
-        catch (Exception ex)
+        var result = _coordinator.TrySave(input, _onSaved);
+        if (!result.Success)
         {
-            _statusLabel.Text = ex.Message;
+            _statusLabel.Text = string.Join(" — ", result.Errors);
             saveButton.Enabled = true;
+            return;
         }
 
-        await Task.CompletedTask;
+        DialogResult = DialogResult.OK;
+        Close();
     }
 }

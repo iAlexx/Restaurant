@@ -28,16 +28,21 @@ internal static class Program
 
         if (args.Contains("--register-autostart", StringComparer.OrdinalIgnoreCase))
         {
+            TrayBootstrapLogger.Info($"Registering tray autostart task for {Environment.ProcessPath}");
             ScheduledTaskService.EnsureTrayAutoStart(Environment.ProcessPath!);
+            TrayBootstrapLogger.Info("Tray autostart task registered");
             return;
         }
 
         if (args.Contains("--unregister-autostart", StringComparer.OrdinalIgnoreCase))
         {
+            TrayBootstrapLogger.Info("Unregistering tray autostart task");
             ScheduledTaskService.RemoveTrayAutoStart();
             ScheduledTaskService.RemoveLegacyAgentTask();
             return;
         }
+
+        TrayBootstrapLogger.Info($"Tray starting installDir={AppPaths.InstallDirectory}");
 
         Application.Run(new TrayApplicationContext());
     }

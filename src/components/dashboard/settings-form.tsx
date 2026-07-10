@@ -27,8 +27,10 @@ const initial: ActionResult = {};
 export function SettingsForm({ settings }: { settings: RestaurantSettings }) {
   const [state, formAction, pending] = useActionState(updateRestaurantSettings, initial);
   const [logoUrl, setLogoUrl] = useState(settings.logo_url ?? "");
+  const [heroUrl, setHeroUrl] = useState(settings.hero_image_url ?? "");
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadingHero, setUploadingHero] = useState(false);
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -48,6 +50,24 @@ export function SettingsForm({ settings }: { settings: RestaurantSettings }) {
     if (result.url) setLogoUrl(result.url);
   }
 
+  async function handleHeroChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingHero(true);
+    setUploadError(null);
+    const formData = new FormData();
+    formData.append("file", file);
+    const result = await uploadMenuImage(formData, "hero");
+    setUploadingHero(false);
+
+    if (result.error) {
+      setUploadError(result.error);
+      return;
+    }
+    if (result.url) setHeroUrl(result.url);
+  }
+
   return (
     <form action={formAction} className="space-y-4 rounded-xl border border-brand-border bg-brand-surface p-4 shadow-sm sm:p-6">
       <h2 className="font-semibold text-brand-chocolate">إعدادات المطعم</h2>
@@ -56,6 +76,7 @@ export function SettingsForm({ settings }: { settings: RestaurantSettings }) {
       <FormAlert message={uploadError ?? undefined} type="error" />
 
       <input type="hidden" name="logo_url" value={logoUrl} />
+      <input type="hidden" name="hero_image_url" value={heroUrl} />
 
       <div className="grid gap-4 md:grid-cols-2">
         <div>
@@ -161,6 +182,23 @@ export function SettingsForm({ settings }: { settings: RestaurantSettings }) {
       </div>
 
       <div>
+        <label className={labelClassName()} htmlFor="welcome_message">
+          رسالة الترحيب (واجهة QR)
+        </label>
+        <textarea
+          id="welcome_message"
+          name="welcome_message"
+          rows={2}
+          defaultValue={settings.welcome_message ?? ""}
+          className={inputClassName()}
+          placeholder="مثال: أهلاً بكم — اطلب من طاولتك بكل سهولة"
+        />
+        <p className="mt-1 text-xs text-brand-muted">
+          تظهر على واجهة الدخول قبل القائمة. إذا تُركت فارغة يُستخدم نص افتراضي.
+        </p>
+      </div>
+
+      <div>
         <label className={labelClassName()}>شعار المطعم</label>
         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleLogoChange} />
         {uploading ? <p className="text-xs text-brand-muted">جاري الرفع...</p> : null}
@@ -170,7 +208,21 @@ export function SettingsForm({ settings }: { settings: RestaurantSettings }) {
         ) : null}
       </div>
 
-      <button type="submit" disabled={pending || uploading} className={buttonPrimaryClassName()}>
+      <div>
+        <label className={labelClassName()}>صورة واجهة QR (غلاف)</label>
+        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleHeroChange} />
+        {uploadingHero ? <p className="text-xs text-brand-muted">جاري الرفع...</p> : null}
+        {heroUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={heroUrl} alt="" className="mt-2 h-24 w-full max-w-xs rounded-lg object-cover" />
+        ) : (
+          <p className="mt-1 text-xs text-brand-muted">
+            إذا لم تُرفع صورة، تُستخدم الصورة الافتراضية المدمجة في التطبيق.
+          </p>
+        )}
+      </div>
+
+      <button type="submit" disabled={pending || uploading || uploadingHero} className={buttonPrimaryClassName()}>
         {pending ? "جاري الحفظ..." : "حفظ الإعدادات"}
       </button>
     </form>

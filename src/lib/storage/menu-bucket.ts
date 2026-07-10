@@ -50,12 +50,13 @@ export async function safeDeleteReplacedMenuImage(
 
   const { data: settings, error: settingsError } = await supabase
     .from("restaurant_settings")
-    .select("logo_url")
+    .select("logo_url, hero_image_url")
     .eq("id", 1)
     .single();
 
   if (settingsError) return;
-  if ((settings as { logo_url: string | null } | null)?.logo_url === oldUrl) {
+  const row = settings as { logo_url: string | null; hero_image_url: string | null } | null;
+  if (row?.logo_url === oldUrl || row?.hero_image_url === oldUrl) {
     return;
   }
 

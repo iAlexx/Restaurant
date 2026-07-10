@@ -15,14 +15,20 @@ cd print-agent-desktop
 .\build-installer.ps1
 ```
 
-المخرجات:
-- `print-agent-desktop\release\RestaurantPrintSetup-x64.exe`
+**المخرجات (بعد البناء المحلي — غير مُتتبَّعة في git):**
 
-## المتطلبات على جهاز التطوير
+| الملف | المسار |
+|---|---|
+| **مثبّت Windows (Inno Setup)** | `print-agent-desktop\release\RestaurantPrintSetup-x64.exe` |
+| وكيل محمول فقط (Phase 0) | `print-agent\release\RestaurantPrintAgent-Portable-x64.zip` |
 
-- Node.js 20+ (لبناء print-agent فقط)
-- .NET 8 SDK
-- Inno Setup 6
+إذا لم تجد `RestaurantPrintSetup-x64.exe`، فأنت غالباً تنظر إلى `print-agent\release\` بدلاً من `print-agent-desktop\release\`. شغّل `build-installer.ps1` لإنشاء المثبّت.
+
+### متطلبات جهاز التطوير
+
+- Node.js 20+ (لبناء print-agent)
+- .NET 8 SDK: `winget install Microsoft.DotNet.SDK.8`
+- Inno Setup 6: `winget install --id JRSoftware.InnoSetup -e`
 
 ## بيانات المستخدم (لا تُحذف عند الترقية)
 

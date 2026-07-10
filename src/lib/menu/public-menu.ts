@@ -4,6 +4,8 @@ import type { AddOn, Category, Product } from "@/types/database";
 export interface PublicRestaurantSettings {
   name: string;
   logo_url: string | null;
+  hero_image_url: string | null;
+  welcome_message: string | null;
   phone: string | null;
   address: string | null;
   currency_label: string;
