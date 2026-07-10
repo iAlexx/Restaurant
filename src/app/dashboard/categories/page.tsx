@@ -1,10 +1,9 @@
 import { requireAdminPage } from "@/lib/auth/admin-page";
 import {
   listCategories,
-  toggleCategoryActiveForm,
 } from "@/lib/actions/categories";
 import { CategoryForm } from "@/components/dashboard/category-form";
-import { ToggleActiveButton } from "@/components/dashboard/toggle-active-button";
+import { CategoryRowActions } from "@/components/dashboard/category-row-actions";
 import {
   Badge,
   EmptyState,
@@ -59,9 +58,9 @@ export default async function CategoriesPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3">
-                      <ToggleActiveButton
-                        action={toggleCategoryActiveForm}
-                        entityId={category.id}
+                      <CategoryRowActions
+                        categoryId={category.id}
+                        categoryName={category.name_ar}
                         isActive={category.is_active}
                       />
                     </td>

@@ -3,6 +3,8 @@
 import { useActionState } from "react";
 import {
   createAddOn,
+  deleteAddOn,
+  getAddOnDeletePreview,
   updateAddOn,
 } from "@/lib/actions/add-ons";
 import type { ActionResult } from "@/lib/actions/types";
@@ -12,6 +14,7 @@ import {
   inputClassName,
   labelClassName,
 } from "@/components/dashboard/form-ui";
+import { DeleteEntityButton } from "@/components/dashboard/delete-entity-button";
 import type { AddOn } from "@/types/database";
 import { formatPrice } from "@/lib/money";
 
@@ -72,9 +75,19 @@ export function AddOnForm({ addOn }: { addOn?: AddOn }) {
         متاح
       </label>
 
-      <button type="submit" disabled={pending} className={buttonPrimaryClassName()}>
-        {pending ? "جاري الحفظ..." : addOn ? "تحديث" : "إضافة"}
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="submit" disabled={pending} className={buttonPrimaryClassName()}>
+          {pending ? "جاري الحفظ..." : addOn ? "تحديث" : "إضافة"}
+        </button>
+        {addOn ? (
+          <DeleteEntityButton
+            entityId={addOn.id}
+            entityName={addOn.name_ar}
+            previewAction={getAddOnDeletePreview}
+            deleteAction={deleteAddOn}
+          />
+        ) : null}
+      </div>
     </form>
   );
 }

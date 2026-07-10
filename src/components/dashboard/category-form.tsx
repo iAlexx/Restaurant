@@ -3,6 +3,8 @@
 import { useActionState, useState } from "react";
 import {
   createCategory,
+  deleteCategory,
+  getCategoryDeletePreview,
   updateCategory,
 } from "@/lib/actions/categories";
 import { uploadMenuImage } from "@/lib/actions/upload";
@@ -13,6 +15,7 @@ import {
   inputClassName,
   labelClassName,
 } from "@/components/dashboard/form-ui";
+import { DeleteEntityButton } from "@/components/dashboard/delete-entity-button";
 import type { Category } from "@/types/database";
 
 const initial: ActionResult = {};
@@ -124,13 +127,23 @@ export function CategoryForm({ category }: { category?: Category }) {
         نشط
       </label>
 
-      <button
-        type="submit"
-        disabled={pending || uploading}
-        className={buttonPrimaryClassName()}
-      >
-        {pending ? "جاري الحفظ..." : category ? "تحديث" : "إضافة"}
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="submit"
+          disabled={pending || uploading}
+          className={buttonPrimaryClassName()}
+        >
+          {pending ? "جاري الحفظ..." : category ? "تحديث" : "إضافة"}
+        </button>
+        {category ? (
+          <DeleteEntityButton
+            entityId={category.id}
+            entityName={category.name_ar}
+            previewAction={getCategoryDeletePreview}
+            deleteAction={deleteCategory}
+          />
+        ) : null}
+      </div>
     </form>
   );
 }

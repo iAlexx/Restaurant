@@ -8,6 +8,11 @@ import { safeDeleteReplacedMenuImage } from "@/lib/storage/menu-bucket";
 import type { Product } from "@/types/database";
 import type { ActionResult } from "@/lib/actions/types";
 import { parseToggleForm } from "@/lib/actions/toggle-form";
+import {
+  buildProductDeletePreview,
+  type DeletePreview,
+} from "@/lib/admin/delete-policy";
+import { parseEntityId } from "@/lib/admin/delete-id";
 
 export interface ProductWithAddOns extends Product {
   add_on_ids: string[];
@@ -236,4 +241,90 @@ export async function duplicateProduct(productId: string): Promise<ActionResult>
 
   revalidatePath("/dashboard/products");
   return { success: "تم نسخ المنتج — راجعه وفعّله عند الجاهزية" };
+}
+
+export async function getProductDeletePreview(
+  id: string
+): Promise<DeletePreview> {
+  await requireAdminSession();
+  const entityId = parseEntityId(id);
+  if (!entityId) {
+    return {
+      canDelete: false,
+      entityName: "",
+      blockReason: "معرّف المنتج غير صالح",
+      dependencyLines: [],
+      requireTypedConfirmation: false,
+    };
+  }
+
+  const supabase = await createClient();
+  const { data: product, error } = await supabase
+    .from("products")
+    .select("name_ar")
+    .eq("id", entityId)
+    .maybeSingle();
+
+  if (error || !product) {
+    return {
+      canDelete: false,
+      entityName: "",
+      blockReason: "المنتج غير موجود",
+      dependencyLines: [],
+      requireTypedConfirmation: false,
+    };
+  }
+
+  const { count, error: countError } = await supabase
+    .from("order_items")
+    .select("id", { count: "exact", head: true })
+    .eq("product_id", entityId);
+
+  if (countError) {
+    return {
+      canDelete: false,
+      entityName: (product as { name_ar: string }).name_ar,
+      blockReason: "تعذر التحقق من الطلبات السابقة",
+      dependencyLines: [],
+      requireTypedConfirmation: false,
+    };
+  }
+
+  return buildProductDeletePreview(
+    (product as { name_ar: string }).name_ar,
+    count ?? 0
+  );
+}
+
+export async function deleteProduct(id: string): Promise<ActionResult> {
+  await requireAdminSession();
+  const entityId = parseEntityId(id);
+  if (!entityId) return { error: "معرّف المنتج غير صالح" };
+
+  const preview = await getProductDeletePreview(entityId);
+  if (!preview.canDelete) {
+    return { error: preview.blockReason ?? "لا يمكن حذف هذا المنتج" };
+  }
+
+  const supabase = await createClient();
+  const { data: existing, error: fetchError } = await supabase
+    .from("products")
+    .select("image_url")
+    .eq("id", entityId)
+    .maybeSingle();
+
+  if (fetchError || !existing) {
+    return { error: "المنتج غير موجود" };
+  }
+
+  const imageUrl = (existing as { image_url: string | null }).image_url;
+
+  const { error } = await supabase.from("products").delete().eq("id", entityId);
+
+  if (error) return { error: "تعذر حذف المنتج" };
+
+  await safeDeleteReplacedMenuImage(imageUrl, null);
+
+  revalidatePath("/dashboard/products");
+  return { success: "تم حذف المنتج" };
 }

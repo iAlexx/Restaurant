@@ -3,6 +3,8 @@
 import { useActionState } from "react";
 import {
   createTable,
+  deleteTable,
+  getTableDeletePreview,
   updateTable,
 } from "@/lib/actions/tables";
 import type { ActionResult } from "@/lib/actions/types";
@@ -12,6 +14,7 @@ import {
   inputClassName,
   labelClassName,
 } from "@/components/dashboard/form-ui";
+import { DeleteEntityButton } from "@/components/dashboard/delete-entity-button";
 import type { Table } from "@/types/database";
 
 const initial: ActionResult = {};
@@ -50,9 +53,19 @@ export function TableForm({ table }: { table?: Table }) {
         نشطة
       </label>
 
-      <button type="submit" disabled={pending} className={buttonPrimaryClassName()}>
-        {pending ? "جاري الحفظ..." : table ? "تحديث" : "إضافة"}
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="submit" disabled={pending} className={buttonPrimaryClassName()}>
+          {pending ? "جاري الحفظ..." : table ? "تحديث" : "إضافة"}
+        </button>
+        {table ? (
+          <DeleteEntityButton
+            entityId={table.id}
+            entityName={table.label}
+            previewAction={getTableDeletePreview}
+            deleteAction={deleteTable}
+          />
+        ) : null}
+      </div>
     </form>
   );
 }

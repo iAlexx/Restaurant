@@ -3,6 +3,8 @@
 import { useActionState, useState } from "react";
 import {
   createProduct,
+  deleteProduct,
+  getProductDeletePreview,
   updateProduct,
   type ProductWithAddOns,
 } from "@/lib/actions/products";
@@ -13,6 +15,7 @@ import {
   inputClassName,
   labelClassName,
 } from "@/components/dashboard/form-ui";
+import { DeleteEntityButton } from "@/components/dashboard/delete-entity-button";
 import { ProductImageUpload } from "@/components/dashboard/product-image-upload";
 import type { AddOn, Category } from "@/types/database";
 
@@ -155,9 +158,19 @@ export function ProductForm({ categories, addOns, product }: ProductFormProps) {
         متاح للطلب
       </label>
 
-      <button type="submit" disabled={pending || uploading} className={buttonPrimaryClassName()}>
-        {pending ? "جاري الحفظ..." : product ? "تحديث" : "إضافة"}
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="submit" disabled={pending || uploading} className={buttonPrimaryClassName()}>
+          {pending ? "جاري الحفظ..." : product ? "تحديث" : "إضافة"}
+        </button>
+        {product ? (
+          <DeleteEntityButton
+            entityId={product.id}
+            entityName={product.name_ar}
+            previewAction={getProductDeletePreview}
+            deleteAction={deleteProduct}
+          />
+        ) : null}
+      </div>
     </form>
   );
 }

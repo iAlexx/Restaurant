@@ -7,6 +7,11 @@ import { addOnSchema } from "@/lib/validations/menu";
 import type { AddOn } from "@/types/database";
 import type { ActionResult } from "@/lib/actions/types";
 import { parseToggleForm } from "@/lib/actions/toggle-form";
+import {
+  buildAddOnDeletePreview,
+  type DeletePreview,
+} from "@/lib/admin/delete-policy";
+import { parseEntityId } from "@/lib/admin/delete-id";
 
 export async function listAddOns(): Promise<AddOn[]> {
   await requireAdminSession();
@@ -101,4 +106,88 @@ export async function toggleAddOnAvailableForm(
   const values = parseToggleForm(formData);
   if (!values) return;
   await toggleAddOnAvailable(values.id, values.next);
+}
+
+export async function getAddOnDeletePreview(id: string): Promise<DeletePreview> {
+  await requireAdminSession();
+  const entityId = parseEntityId(id);
+  if (!entityId) {
+    return {
+      canDelete: false,
+      entityName: "",
+      blockReason: "معرّف الإضافة غير صالح",
+      dependencyLines: [],
+      requireTypedConfirmation: false,
+    };
+  }
+
+  const supabase = await createClient();
+  const { data: addOn, error } = await supabase
+    .from("add_ons")
+    .select("name_ar")
+    .eq("id", entityId)
+    .maybeSingle();
+
+  if (error || !addOn) {
+    return {
+      canDelete: false,
+      entityName: "",
+      blockReason: "الإضافة غير موجودة",
+      dependencyLines: [],
+      requireTypedConfirmation: false,
+    };
+  }
+
+  const { count: productLinkCount, error: linkError } = await supabase
+    .from("product_add_ons")
+    .select("product_id", { count: "exact", head: true })
+    .eq("add_on_id", entityId);
+
+  const { count: orderItemAddOnCount, error: orderError } = await supabase
+    .from("order_item_add_ons")
+    .select("id", { count: "exact", head: true })
+    .eq("add_on_id", entityId);
+
+  if (linkError || orderError) {
+    return {
+      canDelete: false,
+      entityName: (addOn as { name_ar: string }).name_ar,
+      blockReason: "تعذر التحقق من ارتباطات الإضافة",
+      dependencyLines: [],
+      requireTypedConfirmation: false,
+    };
+  }
+
+  return buildAddOnDeletePreview(
+    (addOn as { name_ar: string }).name_ar,
+    productLinkCount ?? 0,
+    orderItemAddOnCount ?? 0
+  );
+}
+
+export async function deleteAddOn(id: string): Promise<ActionResult> {
+  await requireAdminSession();
+  const entityId = parseEntityId(id);
+  if (!entityId) return { error: "معرّف الإضافة غير صالح" };
+
+  const preview = await getAddOnDeletePreview(entityId);
+  if (!preview.canDelete) {
+    return { error: preview.blockReason ?? "لا يمكن حذف هذه الإضافة" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("add_ons").delete().eq("id", entityId);
+
+  if (error) {
+    if (error.code === "23503") {
+      return {
+        error: "لا يمكن حذف الإضافة لأنها مرتبطة بمنتجات حالياً",
+      };
+    }
+    return { error: "تعذر حذف الإضافة" };
+  }
+
+  revalidatePath("/dashboard/add-ons");
+  revalidatePath("/dashboard/products");
+  return { success: "تم حذف الإضافة" };
 }

@@ -8,6 +8,11 @@ import { tableSchema } from "@/lib/validations/tables";
 import type { Table } from "@/types/database";
 import type { ActionResult } from "@/lib/actions/types";
 import { parseToggleForm } from "@/lib/actions/toggle-form";
+import {
+  buildTableDeletePreview,
+  type DeletePreview,
+} from "@/lib/admin/delete-policy";
+import { parseEntityId } from "@/lib/admin/delete-id";
 
 export async function listTables(): Promise<Table[]> {
   await requireAdminSession();
@@ -124,4 +129,74 @@ export async function toggleTableActiveForm(formData: FormData): Promise<void> {
   const values = parseToggleForm(formData);
   if (!values) return;
   await toggleTableActive(values.id, values.next);
+}
+
+export async function getTableDeletePreview(id: string): Promise<DeletePreview> {
+  await requireAdminSession();
+  const entityId = parseEntityId(id);
+  if (!entityId) {
+    return {
+      canDelete: false,
+      entityName: "",
+      blockReason: "معرّف الطاولة غير صالح",
+      dependencyLines: [],
+      requireTypedConfirmation: false,
+    };
+  }
+
+  const supabase = await createClient();
+  const { data: table, error } = await supabase
+    .from("tables")
+    .select("label")
+    .eq("id", entityId)
+    .maybeSingle();
+
+  if (error || !table) {
+    return {
+      canDelete: false,
+      entityName: "",
+      blockReason: "الطاولة غير موجودة",
+      dependencyLines: [],
+      requireTypedConfirmation: false,
+    };
+  }
+
+  const { count, error: countError } = await supabase
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("table_id", entityId);
+
+  if (countError) {
+    return {
+      canDelete: false,
+      entityName: (table as { label: string }).label,
+      blockReason: "تعذر التحقق من الطلبات المرتبطة",
+      dependencyLines: [],
+      requireTypedConfirmation: false,
+    };
+  }
+
+  return buildTableDeletePreview(
+    (table as { label: string }).label,
+    count ?? 0
+  );
+}
+
+export async function deleteTable(id: string): Promise<ActionResult> {
+  await requireAdminSession();
+  const entityId = parseEntityId(id);
+  if (!entityId) return { error: "معرّف الطاولة غير صالح" };
+
+  const preview = await getTableDeletePreview(entityId);
+  if (!preview.canDelete) {
+    return { error: preview.blockReason ?? "لا يمكن حذف هذه الطاولة" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("tables").delete().eq("id", entityId);
+
+  if (error) return { error: "تعذر حذف الطاولة" };
+
+  revalidatePath("/dashboard/tables");
+  return { success: "تم حذف الطاولة" };
 }

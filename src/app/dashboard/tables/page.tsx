@@ -1,8 +1,7 @@
 import { requireAdminPage } from "@/lib/auth/admin-page";
-import { listTables, toggleTableActiveForm } from "@/lib/actions/tables";
+import { listTables } from "@/lib/actions/tables";
 import { TableForm } from "@/components/dashboard/table-form";
-import { TableQrActions } from "@/components/dashboard/table-qr-actions";
-import { ToggleActiveButton } from "@/components/dashboard/toggle-active-button";
+import { TableRowActions } from "@/components/dashboard/table-row-actions";
 import { Badge, EmptyState, PageHeader, buttonPrimaryClassName } from "@/components/dashboard/form-ui";
 import { buildDineInUrl, getSiteUrl } from "@/lib/env";
 import Link from "next/link";
@@ -84,14 +83,11 @@ export default async function TablesPage() {
                       {siteUrl}/t/{table.public_token.slice(0, 8)}…
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <TableQrActions tableId={table.id} />
-                        <ToggleActiveButton
-                          action={toggleTableActiveForm}
-                          entityId={table.id}
-                          isActive={table.is_active}
-                        />
-                      </div>
+                      <TableRowActions
+                        tableId={table.id}
+                        tableLabel={table.label}
+                        isActive={table.is_active}
+                      />
                     </td>
                   </tr>
                 ))}

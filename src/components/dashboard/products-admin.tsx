@@ -3,9 +3,12 @@
 import { useMemo, useState, useTransition } from "react";
 import {
   duplicateProduct,
+  deleteProduct,
+  getProductDeletePreview,
   type ProductWithAddOns,
 } from "@/lib/actions/products";
 import { ProductForm } from "@/components/dashboard/product-form";
+import { DeleteEntityButton } from "@/components/dashboard/delete-entity-button";
 import { ToggleActiveButton } from "@/components/dashboard/toggle-active-button";
 import {
   Badge,
@@ -225,6 +228,13 @@ export function ProductsAdmin({
                             ? "..."
                             : "نسخ"}
                         </button>
+                        <DeleteEntityButton
+                          entityId={product.id}
+                          entityName={product.name_ar}
+                          previewAction={getProductDeletePreview}
+                          deleteAction={deleteProduct}
+                          compact
+                        />
                       </div>
                     </td>
                   </tr>
