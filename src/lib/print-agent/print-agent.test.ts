@@ -5,6 +5,7 @@ import {
   claimPrintJob,
   completePrintJob,
   failPrintJob,
+  releaseClaimedPrintJob,
   resetStalePrintJobs,
   STALE_PRINTING_MS,
 } from "@/lib/print-agent/service";
@@ -178,6 +179,15 @@ describe("job completion authorization", () => {
     });
   });
 
+  it("treats repeated success acknowledgement as success", async () => {
+    rpcMock.mockResolvedValueOnce({ data: true, error: null });
+    const first = await completePrintJob("job-1", "device-1");
+    rpcMock.mockResolvedValueOnce({ data: true, error: null });
+    const second = await completePrintJob("job-1", "device-1");
+    expect(first).toBe(true);
+    expect(second).toBe(true);
+  });
+
   it("rejects wrong device completing job", async () => {
     rpcMock.mockResolvedValueOnce({ data: false, error: null });
     const ok = await completePrintJob("job-1", "device-2");
@@ -259,5 +269,67 @@ describe("reprint marker in receipt payload", () => {
     const claim = await claimPrintJob("device-1");
     expect(claim?.is_reprint).toBe(true);
     expect(claim?.receipt.is_reprint).toBe(true);
+  });
+});
+
+describe("receipt assembly failure recovery", () => {
+  beforeEach(() => {
+    rpcMock.mockReset();
+    fromMock.mockReset();
+  });
+
+  it("releases claimed job when receipt assembly fails", async () => {
+    const jobId = "00000000-0000-4000-8000-000000000020";
+    const orderId = "00000000-0000-4000-8000-000000000010";
+
+    rpcMock.mockResolvedValueOnce({
+      data: {
+        job_id: jobId,
+        order_id: orderId,
+        is_reprint: false,
+      },
+      error: null,
+    });
+
+    const updateEqMock = vi.fn().mockResolvedValue({ error: null });
+    fromMock.mockImplementation((table: string) => {
+      if (table === "print_jobs") {
+        return {
+          update: () => ({
+            eq: () => ({
+              eq: () => ({
+                eq: updateEqMock,
+              }),
+            }),
+          }),
+        };
+      }
+      return {
+        select: () => ({
+          eq: () => ({
+            single: async () => ({ data: null, error: { message: "missing" } }),
+          }),
+        }),
+      };
+    });
+
+    await expect(claimPrintJob("device-1")).rejects.toThrow();
+    expect(updateEqMock).toHaveBeenCalled();
+  });
+
+  it("releaseClaimedPrintJob resets PRINTING job to PENDING", async () => {
+    const updateEqMock = vi.fn().mockResolvedValue({ error: null });
+    fromMock.mockImplementation(() => ({
+      update: () => ({
+        eq: () => ({
+          eq: () => ({
+            eq: updateEqMock,
+          }),
+        }),
+      }),
+    }));
+
+    await releaseClaimedPrintJob("job-1", "device-1");
+    expect(updateEqMock).toHaveBeenCalled();
   });
 });

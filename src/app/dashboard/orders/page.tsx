@@ -1,5 +1,8 @@
 import { requireStaffPage } from "@/lib/auth/staff-page";
-import { listOrdersForStaff } from "@/lib/actions/orders";
+import {
+  getPrintDeviceHealthForStaff,
+  listOrdersForStaff,
+} from "@/lib/actions/orders";
 import { getOperationalSummaryForStaff } from "@/lib/actions/reports";
 import { createClient } from "@/lib/supabase/server";
 import { OrdersDashboard } from "@/components/dashboard/orders-dashboard";
@@ -7,7 +10,7 @@ import { OrdersDashboard } from "@/components/dashboard/orders-dashboard";
 export default async function OrdersPage() {
   await requireStaffPage("/dashboard/orders");
 
-  const [orders, summary, settings] = await Promise.all([
+  const [orders, summary, settings, printDevices] = await Promise.all([
     listOrdersForStaff("all"),
     getOperationalSummaryForStaff(),
     createClient()
@@ -18,6 +21,7 @@ export default async function OrdersPage() {
           .eq("id", 1)
           .single()
       ),
+    getPrintDeviceHealthForStaff(),
   ]);
 
   const currencyLabel =
@@ -28,6 +32,7 @@ export default async function OrdersPage() {
       initialOrders={orders}
       initialSummary={summary}
       currencyLabel={currencyLabel}
+      printDevices={printDevices}
     />
   );
 }

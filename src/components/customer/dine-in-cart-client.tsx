@@ -106,6 +106,7 @@ function DineInCheckoutInner({
           tableToken={ctx.tableToken}
           tableLabel={ctx.tableLabel}
           successBasePath={successBasePath}
+          emptyCartHref={dineInCartHref(ctx)}
           unifiedSuccessPath={
             ctx.flow === "unified"
               ? (orderId) => dineInSuccessPath(ctx, orderId)

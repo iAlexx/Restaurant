@@ -17,6 +17,8 @@ import {
   PrintStatusBadge,
 } from "@/components/dashboard/order-status-badge";
 import { OrdersSummaryStrip } from "@/components/dashboard/orders-summary-strip";
+import { PrintHealthBanner } from "@/components/dashboard/print-health-banner";
+import type { PrintDeviceHealthSummary } from "@/lib/actions/orders";
 import {
   buttonPrimaryClassName,
   buttonSecondaryClassName,
@@ -44,10 +46,12 @@ export function OrdersDashboard({
   initialOrders,
   initialSummary,
   currencyLabel,
+  printDevices,
 }: {
   initialOrders: OrderListRow[];
   initialSummary: OrdersOperationalSummary;
   currencyLabel: string;
+  printDevices: PrintDeviceHealthSummary[];
 }) {
   const [filter, setFilter] = useState<OrderListFilter>("all");
   const [orders, setOrders] = useState(initialOrders);
@@ -115,6 +119,8 @@ export function OrdersDashboard({
       />
 
       <OrdersSummaryStrip summary={summary} currencyLabel={currencyLabel} />
+
+      <PrintHealthBanner devices={printDevices} />
 
       <div className="flex flex-wrap items-center gap-3 text-xs text-brand-muted">
         <span className="flex items-center gap-2">

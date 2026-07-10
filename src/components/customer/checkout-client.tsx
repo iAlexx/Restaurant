@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart, estimateCartTotal } from "@/contexts/cart-context";
 import type { PublicMenu } from "@/lib/menu/public-menu";
@@ -13,7 +13,10 @@ import {
   buttonPrimaryClassName,
   inputClassName,
   labelClassName,
+  Skeleton,
 } from "@/components/dashboard/form-ui";
+
+const ORDER_SUBMIT_TIMEOUT_MS = 30_000;
 
 interface CheckoutClientProps {
   menu: PublicMenu;
@@ -22,6 +25,7 @@ interface CheckoutClientProps {
   tableLabel?: string;
   successBasePath: string;
   unifiedSuccessPath?: (orderId: string) => string;
+  emptyCartHref: string;
 }
 
 export function CheckoutClient({
@@ -31,9 +35,11 @@ export function CheckoutClient({
   tableLabel,
   successBasePath,
   unifiedSuccessPath,
+  emptyCartHref,
 }: CheckoutClientProps) {
   const router = useRouter();
-  const { cart, getSubmitToken, clearCart, resetSubmitToken } = useCart();
+  const { cart, hydrated, getSubmitToken, clearCart, resetSubmitToken } =
+    useCart();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -44,6 +50,13 @@ export function CheckoutClient({
   const [locationUrl, setLocationUrl] = useState("");
   const [pickupTime, setPickupTime] = useState("");
   const [orderNotes, setOrderNotes] = useState(cart.orderNotes);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    if (cart.lines.length === 0) {
+      router.replace(emptyCartHref);
+    }
+  }, [hydrated, cart.lines.length, router, emptyCartHref]);
 
   const currency = menu.settings.currency_label;
   const productMap = useMemo(
@@ -137,11 +150,23 @@ export function CheckoutClient({
     }
 
     try {
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(
+        () => controller.abort(),
+        ORDER_SUBMIT_TIMEOUT_MS
+      );
+
+      let res: Response;
+      try {
+        res = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
 
       const data = await res.json();
 
@@ -157,8 +182,14 @@ export function CheckoutClient({
         ? unifiedSuccessPath(data.id)
         : `${successBasePath}/${data.id}`;
       router.push(successHref);
-    } catch {
-      setError("تعذر الاتصال بالخادم");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        setError(
+          "استغرق إرسال الطلب وقتاً طويلاً. تحقق من الاتصال وأعد المحاولة — لم يتم إفراغ السلة."
+        );
+      } else {
+        setError("تعذر الاتصال بالخادم. لم يتم إفراغ السلة — يمكنك إعادة المحاولة.");
+      }
       setSubmitting(false);
     }
   }
@@ -170,6 +201,19 @@ export function CheckoutClient({
       return;
     }
     void submitOrder();
+  }
+
+  if (!hydrated) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-40 w-full rounded-2xl" />
+        <Skeleton className="h-56 w-full rounded-2xl" />
+      </div>
+    );
+  }
+
+  if (cart.lines.length === 0) {
+    return null;
   }
 
   return (

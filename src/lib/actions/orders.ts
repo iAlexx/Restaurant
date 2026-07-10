@@ -363,3 +363,25 @@ export async function listActiveTablesForManualOrder() {
   if (error) return [];
   return (data ?? []) as { id: string; label: string }[];
 }
+
+export interface PrintDeviceHealthSummary {
+  name: string;
+  last_heartbeat_at: string | null;
+  last_error: string | null;
+}
+
+export async function getPrintDeviceHealthForStaff(): Promise<
+  PrintDeviceHealthSummary[]
+> {
+  await requireStaffSession();
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from("print_devices")
+    .select("name, last_heartbeat_at, last_error")
+    .eq("is_active", true)
+    .order("created_at", { ascending: true });
+
+  if (error) return [];
+  return (data ?? []) as PrintDeviceHealthSummary[];
+}

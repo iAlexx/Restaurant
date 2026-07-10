@@ -1,5 +1,11 @@
 import type { AgentConfig } from "../config/config.js";
 import { PrintAgentApiClient } from "../api/client.js";
+import { markSuccessWithRetry } from "../api/ack-retry.js";
+import {
+  clearPendingAck,
+  loadPendingAcks,
+  savePendingAck,
+} from "../config/pending-ack-store.js";
 import { createPrintProvider } from "../providers/index.js";
 import type { ClaimResponse } from "../providers/types.js";
 
@@ -17,6 +23,7 @@ export class PrintAgent {
   private running = false;
   private printing = false;
   private currentJobId: string | null = null;
+  private pendingAckJobId: string | null = null;
   private shutdownRequested = false;
 
   constructor(
@@ -38,6 +45,14 @@ export class PrintAgent {
     this.running = true;
     this.shutdownRequested = false;
 
+    const pending = await loadPendingAcks();
+    if (pending.length > 0) {
+      this.pendingAckJobId = pending[0] ?? null;
+      this.logger.info(
+        `استئناف تأكيد طباعة معلّق — مهمة ${this.pendingAckJobId}`
+      );
+    }
+
     const api = new PrintAgentApiClient(this.config.apiBaseUrl, this.token);
     const provider = createPrintProvider(this.config);
 
@@ -53,7 +68,9 @@ export class PrintAgent {
           this.logger.error("الطابعة غير جاهزة");
         }
 
-        if (!this.printing) {
+        if (this.pendingAckJobId) {
+          await this.retryPendingAck(api);
+        } else if (!this.printing) {
           const claim = await api.claim();
           if (claim) {
             await this.processJob(api, provider, claim);
@@ -72,6 +89,21 @@ export class PrintAgent {
     this.logger.info("تم إيقاف وكيل الطباعة");
   }
 
+  private async retryPendingAck(api: PrintAgentApiClient): Promise<void> {
+    if (!this.pendingAckJobId) return;
+
+    try {
+      await markSuccessWithRetry(api, this.pendingAckJobId, this.logger);
+      await clearPendingAck(this.pendingAckJobId);
+      this.logger.info(`تم تأكيد الطباعة المعلّقة — مهمة ${this.pendingAckJobId}`);
+      this.pendingAckJobId = null;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "فشل تأكيد الطباعة المعلّقة";
+      this.logger.error(message);
+    }
+  }
+
   private async processJob(
     api: PrintAgentApiClient,
     provider: ReturnType<typeof createPrintProvider>,
@@ -87,35 +119,51 @@ export class PrintAgent {
     const label = claim.is_reprint ? "إعادة طباعة" : "طباعة";
     this.logger.info(`${label} — طلب ${claim.receipt.order_number}`);
 
-    let lastError: string | null = null;
+    let printError: string | null = null;
 
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
         await provider.print(claim.receipt);
-        await api.markSuccess(claim.job_id);
-        this.logger.info(`تمت الطباعة بنجاح — ${claim.receipt.order_number}`);
-        lastError = null;
+        printError = null;
         break;
       } catch (error) {
-        lastError =
+        printError =
           error instanceof Error ? error.message : "فشل الطباعة بدون تفاصيل";
         this.logger.error(
           attempt === 1
-            ? `فشل الطباعة — إعادة محاولة واحدة: ${lastError}`
-            : `فشل الطباعة النهائي: ${lastError}`
+            ? `فشل الطباعة — إعادة محاولة واحدة: ${printError}`
+            : `فشل الطباعة النهائي: ${printError}`
         );
       }
     }
 
-    if (lastError) {
+    if (printError) {
       try {
-        await api.markFail(claim.job_id, lastError);
+        await api.markFail(claim.job_id, printError);
       } catch (failError) {
         const message =
           failError instanceof Error
             ? failError.message
             : "تعذر تسجيل فشل الطباعة";
         this.logger.error(message);
+      }
+    } else {
+      await savePendingAck(claim.job_id);
+      this.pendingAckJobId = claim.job_id;
+
+      try {
+        await markSuccessWithRetry(api, claim.job_id, this.logger);
+        await clearPendingAck(claim.job_id);
+        this.pendingAckJobId = null;
+        this.logger.info(`تمت الطباعة بنجاح — ${claim.receipt.order_number}`);
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "فشل تأكيد الطباعة بعد الطباعة الفعلية";
+        this.logger.error(
+          `${message} — لن تتم إعادة الطباعة تلقائياً؛ سيتم إعادة تأكيد المهمة`
+        );
       }
     }
 
@@ -138,8 +186,16 @@ export async function runSinglePrintAttempt(
 
   try {
     await provider.print(claim.receipt);
-    await api.markSuccess(claim.job_id);
-    return "success";
+    await savePendingAck(claim.job_id);
+    try {
+      await markSuccessWithRetry(api, claim.job_id, {
+        error: (message) => console.error(message),
+      });
+      await clearPendingAck(claim.job_id);
+      return "success";
+    } catch {
+      return "success";
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : "فشل الطباعة";
     await api.markFail(claim.job_id, message);

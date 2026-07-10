@@ -9,6 +9,28 @@ const STALE_PRINTING_MS = 2 * 60 * 1000;
 
 export { STALE_PRINTING_MS };
 
+export async function releaseClaimedPrintJob(
+  jobId: string,
+  deviceId: string
+): Promise<void> {
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from("print_jobs")
+    .update({
+      status: "PENDING",
+      device_id: null,
+      claimed_at: null,
+      error_message: "تعذر تجهيز الإيصال — إعادة للانتظار",
+    })
+    .eq("id", jobId)
+    .eq("device_id", deviceId)
+    .eq("status", "PRINTING");
+
+  if (error) {
+    throw new Error("تعذر إعادة مهمة الطباعة للانتظار");
+  }
+}
+
 export async function resetStalePrintJobs(): Promise<number> {
   const supabase = createServiceClient();
   const { data, error } = await supabase.rpc("reset_stale_print_jobs");
@@ -43,18 +65,23 @@ export async function claimPrintJob(
     is_reprint: boolean;
   };
 
-  const receipt = await buildReceiptPayloadFromSnapshots(supabase, {
-    jobId: claim.job_id,
-    orderId: claim.order_id,
-    isReprint: claim.is_reprint,
-  });
+  try {
+    const receipt = await buildReceiptPayloadFromSnapshots(supabase, {
+      jobId: claim.job_id,
+      orderId: claim.order_id,
+      isReprint: claim.is_reprint,
+    });
 
-  return claimResponseSchema.parse({
-    job_id: claim.job_id,
-    order_id: claim.order_id,
-    is_reprint: claim.is_reprint,
-    receipt,
-  });
+    return claimResponseSchema.parse({
+      job_id: claim.job_id,
+      order_id: claim.order_id,
+      is_reprint: claim.is_reprint,
+      receipt,
+    });
+  } catch (error) {
+    await releaseClaimedPrintJob(claim.job_id, deviceId);
+    throw error;
+  }
 }
 
 export async function completePrintJob(

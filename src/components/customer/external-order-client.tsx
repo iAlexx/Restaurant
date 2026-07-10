@@ -227,6 +227,7 @@ function ExternalCheckoutInner({
         menu={menu}
         orderType={orderType}
         successBasePath="/order/success"
+        emptyCartHref={`/order/cart?type=${orderType}`}
       />
       <Link
         href={`/order/cart?type=${orderType}`}
