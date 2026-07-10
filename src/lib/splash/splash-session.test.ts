@@ -60,10 +60,9 @@ describe("splash-session", () => {
   });
 
   it("uses target hold and fade timings within spec", () => {
-    expect(SPLASH_HOLD_MS).toBeGreaterThanOrEqual(800);
-    expect(SPLASH_HOLD_MS).toBeLessThanOrEqual(1200);
+    expect(SPLASH_HOLD_MS).toBe(2000);
     expect(SPLASH_FADE_OUT_MS).toBe(250);
-    expect(SPLASH_TOTAL_MS).toBeLessThanOrEqual(1500);
+    expect(SPLASH_TOTAL_MS).toBe(2250);
   });
 
   it("shortens timings for reduced motion", () => {

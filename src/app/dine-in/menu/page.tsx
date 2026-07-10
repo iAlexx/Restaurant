@@ -13,10 +13,7 @@ export default async function UnifiedDineInMenuPage({ searchParams }: PageProps)
   const menu = await fetchPublicMenu();
 
   return (
-    <RestaurantSplashGate
-      logoUrl={menu.settings.logo_url}
-      restaurantName={menu.settings.name}
-    >
+    <RestaurantSplashGate logoUrl={menu.settings.logo_url}>
       <DineInMenuClient
         menu={menu}
         ctx={{

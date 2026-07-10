@@ -2,16 +2,13 @@
 
 export const SPLASH_SEEN_KEY = "restaurant-splash-seen";
 
-/** Visible hold before fade-out begins (excluding fade-in). */
-export const SPLASH_HOLD_MS = 800;
+/** Full-opacity hold before overlay fade-out begins. */
+export const SPLASH_HOLD_MS = 2000;
 
 /** Overlay fade-out duration. */
 export const SPLASH_FADE_OUT_MS = 250;
 
-/** Target total visible time ≈ fade-in (200ms) + hold + fade-out. */
-export const SPLASH_TOTAL_MS = SPLASH_HOLD_MS + SPLASH_FADE_OUT_MS + 200;
-
-export const SPLASH_MAX_MS = 1500;
+export const SPLASH_TOTAL_MS = SPLASH_HOLD_MS + SPLASH_FADE_OUT_MS;
 
 export function hasSeenSplash(): boolean {
   if (typeof window === "undefined") return false;
@@ -33,7 +30,7 @@ export function splashTimings(reducedMotion: boolean): {
   fadeOutMs: number;
 } {
   if (reducedMotion) {
-    return { holdMs: 200, fadeOutMs: 150 };
+    return { holdMs: 400, fadeOutMs: 150 };
   }
   return { holdMs: SPLASH_HOLD_MS, fadeOutMs: SPLASH_FADE_OUT_MS };
 }

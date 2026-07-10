@@ -105,12 +105,11 @@ body {
 
   .motion-fade-up,
   .motion-scale-in,
-  .motion-modal-up,
-  .splash-logo-in {
+  .motion-modal-up {
     animation: none !important;
   }
 
-  .splash-overlay-fade-out {
+  .splash-overlay--fade-out {
     transition: none !important;
   }
 
@@ -123,24 +122,32 @@ body {
   }
 }
 
-@keyframes splash-logo-in {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.splash-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fffde7;
 }
 
-.splash-logo-in {
-  animation: splash-logo-in 200ms ease-out both;
-}
-
-.splash-overlay-fade-out {
+.splash-overlay--fade-out {
   opacity: 0;
   transition: opacity 250ms ease-out;
+}
+
+.splash-logo {
+  width: clamp(180px, 42vw, 240px);
+  height: auto;
+  max-height: 45vh;
+  object-fit: contain;
+}
+
+@media (min-width: 640px) {
+  .splash-logo {
+    width: clamp(220px, 24vw, 320px);
+  }
 }
 
 @media print {

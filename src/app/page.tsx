@@ -17,7 +17,7 @@ export default async function HomePage() {
     ?.opening_hours;
 
   return (
-    <RestaurantSplashGate logoUrl={logoUrl} restaurantName={name}>
+    <RestaurantSplashGate logoUrl={logoUrl}>
       <main className="flex min-h-screen flex-col items-center justify-center bg-brand-cream px-4 py-10 text-center">
       <div className="motion-fade-up w-full max-w-md">
         {logoUrl ? (

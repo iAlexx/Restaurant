@@ -17,30 +17,21 @@ export default async function ExternalOrderPage({ searchParams }: PageProps) {
 
   if (orderType === "DELIVERY" && !menu.settings.delivery_enabled) {
     return (
-      <RestaurantSplashGate
-        logoUrl={menu.settings.logo_url}
-        restaurantName={menu.settings.name}
-      >
+      <RestaurantSplashGate logoUrl={menu.settings.logo_url}>
         <ExternalOrderPageClient menu={menu} orderType={null} />
       </RestaurantSplashGate>
     );
   }
   if (orderType === "PICKUP" && !menu.settings.pickup_enabled) {
     return (
-      <RestaurantSplashGate
-        logoUrl={menu.settings.logo_url}
-        restaurantName={menu.settings.name}
-      >
+      <RestaurantSplashGate logoUrl={menu.settings.logo_url}>
         <ExternalOrderPageClient menu={menu} orderType={null} />
       </RestaurantSplashGate>
     );
   }
 
   return (
-    <RestaurantSplashGate
-      logoUrl={menu.settings.logo_url}
-      restaurantName={menu.settings.name}
-    >
+    <RestaurantSplashGate logoUrl={menu.settings.logo_url}>
       <ExternalOrderPageClient menu={menu} orderType={orderType} />
     </RestaurantSplashGate>
   );
