@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { sortCategoriesStable } from "@/lib/menu/category-filter";
 import type { AddOn, Category, Product } from "@/types/database";
 
 export interface PublicRestaurantSettings {
@@ -72,7 +73,7 @@ export async function fetchPublicMenu(): Promise<PublicMenu> {
 
   return {
     settings: settingsRes.data as PublicRestaurantSettings,
-    categories: (categoriesRes.data ?? []) as Category[],
+    categories: sortCategoriesStable((categoriesRes.data ?? []) as Category[]),
     products,
     addOns: (addOnsRes.data ?? []) as AddOn[],
   };

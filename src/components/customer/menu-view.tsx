@@ -1,71 +1,99 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { PublicMenu } from "@/lib/menu/public-menu";
 import type { Product } from "@/types/database";
 import { ProductModal } from "@/components/customer/product-modal";
 import { ProductCard } from "@/components/customer/product-card";
-import { MenuCategoryNavigation } from "@/components/customer/menu-category-navigation";
-import { categorySectionId } from "@/lib/menu/category-navigation";
+import { CategoryCardGrid } from "@/components/customer/category-card-grid";
+import {
+  ALL_CATEGORIES_ID,
+  buildCategoryFilterItems,
+  filterProductsByCategory,
+  formatCategoryProductCount,
+  getSelectedCategoryLabel,
+} from "@/lib/menu/category-filter";
 import { EmptyState } from "@/components/dashboard/form-ui";
 
 export function MenuView({ menu }: { menu: PublicMenu }) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] =
+    useState<string>(ALL_CATEGORIES_ID);
 
-  const productsByCategory = menu.categories
-    .map((category) => ({
-      category,
-      products: menu.products.filter((p) => p.category_id === category.id),
-    }))
-    .filter(({ products }) => products.length > 0);
+  const categoryItems = useMemo(
+    () => buildCategoryFilterItems(menu.categories, menu.products),
+    [menu.categories, menu.products]
+  );
 
-  if (productsByCategory.length === 0) {
+  const visibleProducts = useMemo(
+    () => filterProductsByCategory(menu.products, selectedCategoryId),
+    [menu.products, selectedCategoryId]
+  );
+
+  const selectedLabel = getSelectedCategoryLabel(
+    categoryItems,
+    selectedCategoryId
+  );
+  const selectedCount = visibleProducts.length;
+
+  if (menu.categories.length === 0) {
     return (
       <EmptyState
         title="القائمة غير متوفرة حالياً"
-        description="لا توجد أصناف متاحة في الوقت الحالي. يرجى المحاولة لاحقاً أو سؤال الموظف."
+        description="لا توجد أقسام متاحة في الوقت الحالي."
       />
     );
   }
 
-  const navCategories = productsByCategory.map(({ category, products }) => ({
-    id: category.id,
-    name: category.name_ar,
-    productCount: products.length,
-  }));
-
   return (
     <>
-      <MenuCategoryNavigation categories={navCategories} />
+      <CategoryCardGrid
+        categories={categoryItems}
+        selectedId={selectedCategoryId}
+        onSelect={setSelectedCategoryId}
+      />
 
-      <div className="space-y-10 pb-32 sm:space-y-12 sm:pb-28">
-        {productsByCategory.map(({ category, products }) => (
-          <section
-            key={category.id}
-            id={categorySectionId(category.id)}
-            className="scroll-mt-[118px]"
-          >
-            <div className="mb-4 sm:mb-5">
-              <h2 className="text-[22px] font-extrabold text-brand-chocolate sm:text-[26px]">
-                {category.name_ar}
-              </h2>
-              <div
-                className="mt-2 h-0.5 w-12 rounded-full bg-brand-gold"
-                aria-hidden="true"
+      <div className="pb-32 sm:pb-28">
+        {selectedLabel ? (
+          <header className="mb-4 sm:mb-5">
+            <h2 className="text-[22px] font-extrabold text-brand-chocolate sm:text-[26px]">
+              {selectedLabel}
+            </h2>
+            <p className="mt-1 text-sm text-brand-muted">
+              {formatCategoryProductCount(selectedCount)}
+            </p>
+            <div
+              className="mt-2 h-0.5 w-12 rounded-full bg-brand-gold"
+              aria-hidden="true"
+            />
+          </header>
+        ) : null}
+
+        {visibleProducts.length === 0 ? (
+          <EmptyState
+            title={
+              selectedCategoryId === ALL_CATEGORIES_ID
+                ? "القائمة غير متوفرة حالياً"
+                : "لا توجد أصناف متاحة في هذا القسم حالياً"
+            }
+            description={
+              selectedCategoryId === ALL_CATEGORIES_ID
+                ? "لا توجد أصناف متاحة في الوقت الحالي. يرجى المحاولة لاحقاً أو سؤال الموظف."
+                : "جرّب قسماً آخر أو عد لاحقاً."
+            }
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
+            {visibleProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                currencyLabel={menu.settings.currency_label}
+                onSelect={() => setSelectedProduct(product)}
               />
-            </div>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  currencyLabel={menu.settings.currency_label}
-                  onSelect={() => setSelectedProduct(product)}
-                />
-              ))}
-            </div>
-          </section>
-        ))}
+            ))}
+          </div>
+        )}
       </div>
 
       {selectedProduct ? (
