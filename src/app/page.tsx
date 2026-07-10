@@ -8,29 +8,22 @@ export default async function HomePage() {
   const supabase = await createClient();
   const { data: settings } = await supabase
     .from("restaurant_settings_public")
-    .select("logo_url, opening_hours")
+    .select("logo_url")
     .single();
 
   const logoUrl = (settings as { logo_url: string | null } | null)?.logo_url;
-  const openingHours = (settings as { opening_hours: string | null } | null)
-    ?.opening_hours;
 
   return (
     <RestaurantSplashGate logoUrl={logoUrl}>
       <main className="flex min-h-screen flex-col items-center justify-center bg-brand-cream px-4 py-10 text-center">
         <div className="motion-fade-up w-full max-w-md">
-          <RestaurantLogo logoUrl={logoUrl} />
+          <RestaurantLogo logoUrl={logoUrl} variant="landing" />
 
-          {openingHours ? (
-            <p className="motion-fade-up motion-stagger-1 mt-2 text-sm text-brand-muted">
-              {openingHours}
-            </p>
-          ) : null}
-          <p className="motion-fade-up motion-stagger-2 mt-4 max-w-sm leading-relaxed text-brand-muted">
+          <p className="motion-fade-up motion-stagger-1 mt-4 max-w-sm leading-relaxed text-brand-muted">
             مرحباً بك — اطلب من طاولتك أو استمتع بتوصيل واستلام سريع.
           </p>
 
-          <div className="motion-fade-up motion-stagger-3 mt-8 space-y-3">
+          <div className="motion-fade-up motion-stagger-2 mt-8 space-y-3">
             <Link href="/dine-in" className={`${buttonPrimaryClassName()} w-full rounded-2xl py-3.5 text-base`}>
               طلب داخل المطعم
             </Link>
@@ -44,7 +37,7 @@ export default async function HomePage() {
 
           <Link
             href="/login"
-            className="motion-fade-up motion-stagger-4 mt-6 inline-block text-sm font-medium text-brand-muted hover:text-brand-chocolate"
+            className="motion-fade-up motion-stagger-3 mt-6 inline-block text-sm font-medium text-brand-muted hover:text-brand-chocolate"
           >
             دخول الموظفين
           </Link>

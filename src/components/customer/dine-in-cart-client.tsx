@@ -38,7 +38,6 @@ function DineInCartInner({
             settings={menu.settings}
             cartHref={dineInCartHref(ctx)}
             itemCount={itemCount}
-            tableLabel={ctx.tableLabel}
           />
         }
         contextStrip={<DineInTableBanner ctx={ctx} />}
@@ -94,7 +93,6 @@ function DineInCheckoutInner({
             settings={menu.settings}
             cartHref={dineInCartHref(ctx)}
             itemCount={itemCount}
-            tableLabel={ctx.tableLabel}
           />
         }
         contextStrip={<DineInTableBanner ctx={ctx} />}

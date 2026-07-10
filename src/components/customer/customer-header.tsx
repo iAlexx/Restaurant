@@ -1,18 +1,17 @@
 import Link from "next/link";
 import type { PublicRestaurantSettings } from "@/lib/menu/public-menu";
 import { customerContainerClassName } from "@/components/customer/customer-menu-shell";
+import { RestaurantLogo } from "@/components/customer/restaurant-logo";
 
 export function CustomerHeader({
   settings,
   cartHref,
   itemCount = 0,
-  tableLabel,
   showCart = true,
 }: {
   settings: PublicRestaurantSettings;
   cartHref?: string;
   itemCount?: number;
-  tableLabel?: string;
   /** Hide cart button (e.g. table picker). */
   showCart?: boolean;
 }) {
@@ -22,36 +21,14 @@ export function CustomerHeader({
         className={`${customerContainerClassName} flex min-h-[60px] items-center justify-between gap-3 py-2.5`}
       >
         <div className="flex min-w-0 items-center gap-3">
-          {settings.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={settings.logo_url}
-              alt=""
-              className="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-brand-gold/45"
-            />
-          ) : (
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-orange-soft text-xl">
-              🍽
-            </div>
-          )}
-          <div className="min-w-0">
-            <h1 className="truncate text-base font-extrabold text-brand-chocolate sm:text-lg">
-              {settings.name}
-            </h1>
-            {tableLabel ? (
-              <span className="mt-0.5 inline-flex max-w-full items-center gap-1.5 rounded-full border border-brand-gold/50 bg-brand-gold-soft px-2 py-0.5 text-xs font-semibold text-brand-chocolate">
-                <span
-                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-gold"
-                  aria-hidden="true"
-                />
-                <span className="truncate">طاولة {tableLabel}</span>
-              </span>
-            ) : settings.opening_hours ? (
-              <p className="truncate text-xs text-brand-muted sm:text-sm">
-                {settings.opening_hours}
-              </p>
-            ) : null}
-          </div>
+          <RestaurantLogo
+            logoUrl={settings.logo_url}
+            variant="header"
+            priority={false}
+          />
+          <h1 className="min-w-0 truncate text-base font-extrabold text-brand-chocolate sm:text-lg">
+            {settings.name}
+          </h1>
         </div>
 
         {showCart && cartHref ? (

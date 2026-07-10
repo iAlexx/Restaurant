@@ -36,7 +36,6 @@ function DineInMenuInner({
             settings={menu.settings}
             cartHref={cartHref}
             itemCount={itemCount}
-            tableLabel={ctx.tableLabel}
           />
         }
         contextStrip={<DineInTableBanner ctx={ctx} />}
