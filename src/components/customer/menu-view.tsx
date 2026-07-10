@@ -5,7 +5,8 @@ import type { PublicMenu } from "@/lib/menu/public-menu";
 import type { Product } from "@/types/database";
 import { ProductModal } from "@/components/customer/product-modal";
 import { ProductCard } from "@/components/customer/product-card";
-import { CategoryNav } from "@/components/customer/category-nav";
+import { MenuCategoryNavigation } from "@/components/customer/menu-category-navigation";
+import { categorySectionId } from "@/lib/menu/category-navigation";
 import { EmptyState } from "@/components/dashboard/form-ui";
 
 export function MenuView({ menu }: { menu: PublicMenu }) {
@@ -27,25 +28,32 @@ export function MenuView({ menu }: { menu: PublicMenu }) {
     );
   }
 
-  const navCategories = productsByCategory.map(({ category }) => ({
+  const navCategories = productsByCategory.map(({ category, products }) => ({
     id: category.id,
     name: category.name_ar,
+    productCount: products.length,
   }));
 
   return (
     <>
-      <CategoryNav categories={navCategories} />
+      <MenuCategoryNavigation categories={navCategories} />
 
-      <div className="space-y-10 pb-32 pt-2 sm:space-y-12 sm:pb-28 sm:pt-4">
+      <div className="space-y-10 pb-32 sm:space-y-12 sm:pb-28">
         {productsByCategory.map(({ category, products }) => (
           <section
             key={category.id}
-            id={`category-${category.id}`}
-            className="scroll-mt-28"
+            id={categorySectionId(category.id)}
+            className="scroll-mt-[118px]"
           >
-            <h2 className="mb-4 border-b border-brand-gold/40 pb-2 text-[22px] font-extrabold text-brand-chocolate sm:mb-5 sm:text-[28px]">
-              {category.name_ar}
-            </h2>
+            <div className="mb-4 sm:mb-5">
+              <h2 className="text-[22px] font-extrabold text-brand-chocolate sm:text-[26px]">
+                {category.name_ar}
+              </h2>
+              <div
+                className="mt-2 h-0.5 w-12 rounded-full bg-brand-gold"
+                aria-hidden="true"
+              />
+            </div>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5 lg:grid-cols-3">
               {products.map((product) => (
                 <ProductCard
