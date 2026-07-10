@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { buttonPrimaryClassName, buttonSecondaryClassName } from "@/components/dashboard/form-ui";
+import { RestaurantSplashGate } from "@/components/customer/restaurant-splash-gate";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -16,7 +17,8 @@ export default async function HomePage() {
     ?.opening_hours;
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-brand-cream px-4 py-10 text-center">
+    <RestaurantSplashGate logoUrl={logoUrl} restaurantName={name}>
+      <main className="flex min-h-screen flex-col items-center justify-center bg-brand-cream px-4 py-10 text-center">
       <div className="motion-fade-up w-full max-w-md">
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -63,5 +65,6 @@ export default async function HomePage() {
         </Link>
       </div>
     </main>
+    </RestaurantSplashGate>
   );
 }

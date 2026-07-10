@@ -1,6 +1,7 @@
 import { fetchPublicMenu } from "@/lib/menu/public-menu";
 import { requireUnifiedDineInTable } from "@/lib/dine-in/resolve-table";
 import { DineInMenuClient } from "@/components/customer/dine-in-shell";
+import { RestaurantSplashGate } from "@/components/customer/restaurant-splash-gate";
 
 interface PageProps {
   searchParams: Promise<{ table?: string | string[] }>;
@@ -12,13 +13,18 @@ export default async function UnifiedDineInMenuPage({ searchParams }: PageProps)
   const menu = await fetchPublicMenu();
 
   return (
-    <DineInMenuClient
-      menu={menu}
-      ctx={{
-        flow: "unified",
-        tableToken: table.public_token,
-        tableLabel: table.label,
-      }}
-    />
+    <RestaurantSplashGate
+      logoUrl={menu.settings.logo_url}
+      restaurantName={menu.settings.name}
+    >
+      <DineInMenuClient
+        menu={menu}
+        ctx={{
+          flow: "unified",
+          tableToken: table.public_token,
+          tableLabel: table.label,
+        }}
+      />
+    </RestaurantSplashGate>
   );
 }

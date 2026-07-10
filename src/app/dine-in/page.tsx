@@ -1,6 +1,6 @@
 import { fetchActiveTables, fetchPublicMenu } from "@/lib/menu/public-menu";
 import { TableSelectionScreen } from "@/components/customer/table-selection-screen";
-import { DineInLandingGate } from "@/components/customer/dine-in-landing-gate";
+import { RestaurantSplashGate } from "@/components/customer/restaurant-splash-gate";
 import { redirect } from "next/navigation";
 import { resolveUnifiedDineInTable } from "@/lib/dine-in/resolve-table";
 import { unifiedDineInHref } from "@/lib/dine-in/paths";
@@ -22,8 +22,11 @@ export default async function UnifiedDineInPage({ searchParams }: PageProps) {
   ]);
 
   return (
-    <DineInLandingGate settings={menu.settings}>
+    <RestaurantSplashGate
+      logoUrl={menu.settings.logo_url}
+      restaurantName={menu.settings.name}
+    >
       <TableSelectionScreen settings={menu.settings} tables={tables} />
-    </DineInLandingGate>
+    </RestaurantSplashGate>
   );
 }

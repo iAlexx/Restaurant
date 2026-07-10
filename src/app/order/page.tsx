@@ -1,5 +1,6 @@
 import { fetchPublicMenu } from "@/lib/menu/public-menu";
 import { ExternalOrderPageClient } from "@/components/customer/external-order-client";
+import { RestaurantSplashGate } from "@/components/customer/restaurant-splash-gate";
 
 interface PageProps {
   searchParams: Promise<{ type?: string }>;
@@ -15,11 +16,32 @@ export default async function ExternalOrderPage({ searchParams }: PageProps) {
       : null;
 
   if (orderType === "DELIVERY" && !menu.settings.delivery_enabled) {
-    return <ExternalOrderPageClient menu={menu} orderType={null} />;
+    return (
+      <RestaurantSplashGate
+        logoUrl={menu.settings.logo_url}
+        restaurantName={menu.settings.name}
+      >
+        <ExternalOrderPageClient menu={menu} orderType={null} />
+      </RestaurantSplashGate>
+    );
   }
   if (orderType === "PICKUP" && !menu.settings.pickup_enabled) {
-    return <ExternalOrderPageClient menu={menu} orderType={null} />;
+    return (
+      <RestaurantSplashGate
+        logoUrl={menu.settings.logo_url}
+        restaurantName={menu.settings.name}
+      >
+        <ExternalOrderPageClient menu={menu} orderType={null} />
+      </RestaurantSplashGate>
+    );
   }
 
-  return <ExternalOrderPageClient menu={menu} orderType={orderType} />;
+  return (
+    <RestaurantSplashGate
+      logoUrl={menu.settings.logo_url}
+      restaurantName={menu.settings.name}
+    >
+      <ExternalOrderPageClient menu={menu} orderType={orderType} />
+    </RestaurantSplashGate>
+  );
 }
