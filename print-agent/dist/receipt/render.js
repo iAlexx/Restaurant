@@ -1,33 +1,7 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
-import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
-import { getFontsDir } from "../paths.js";
-import { formatPrice } from "./format.js";
-const FONT_REGULAR = "CairoReceipt";
-const FONT_BOLD = "CairoReceiptBold";
-let fontsRegistered = false;
-function ensureFonts() {
-    if (fontsRegistered)
-        return;
-    const fontsDir = getFontsDir();
-    const regular = join(fontsDir, "Cairo-Regular.woff");
-    const bold = join(fontsDir, "Cairo-Bold.woff");
-    const regularTtf = join(fontsDir, "Cairo-Regular.ttf");
-    const boldTtf = join(fontsDir, "Cairo-Bold.ttf");
-    if (existsSync(regular)) {
-        GlobalFonts.registerFromPath(regular, FONT_REGULAR);
-    }
-    else if (existsSync(regularTtf)) {
-        GlobalFonts.registerFromPath(regularTtf, FONT_REGULAR);
-    }
-    if (existsSync(bold)) {
-        GlobalFonts.registerFromPath(bold, FONT_BOLD);
-    }
-    else if (existsSync(boldTtf)) {
-        GlobalFonts.registerFromPath(boldTtf, FONT_BOLD);
-    }
-    fontsRegistered = true;
-}
+import { createCanvas } from "@napi-rs/canvas";
+import { createReceiptDrawer, wrapArabicBlock } from "./draw.js";
+import { formatMoneyLTR, formatOrderNumberLTR, formatQuantityLTR, } from "./format.js";
+import { registerReceiptFonts, FONT_ARABIC } from "./fonts.js";
 function makeTheme(width) {
     const k = width / 576;
     return {
@@ -43,13 +17,10 @@ function makeTheme(width) {
     };
 }
 function fontString(size, bold) {
-    return `${size}px "${bold ? FONT_BOLD : FONT_REGULAR}"`;
+    return `${bold ? "bold " : ""}${size}px "${FONT_ARABIC}"`;
 }
-/**
- * Single layout routine used for both measuring (draw=false) and painting
- * (draw=true). Returns the total content height in pixels.
- */
 function layout(ctx, theme, receipt, draw) {
+    registerReceiptFonts();
     const { width, pad, k } = theme;
     const contentWidth = width - pad * 2;
     const rightX = width - pad;
@@ -59,10 +30,19 @@ function layout(ctx, theme, receipt, draw) {
     ctx.fillStyle = "#000000";
     ctx.strokeStyle = "#000000";
     const lineHeight = (size) => Math.round(size * 1.35);
-    function measureWidth(text, size, bold) {
-        ctx.font = fontString(size, bold);
-        return ctx.measureText(text).width;
-    }
+    const drawer = createReceiptDrawer({
+        ctx,
+        draw,
+        width,
+        pad,
+        leftX,
+        rightX,
+        lineHeight,
+        getY: () => y,
+        setY: (next) => {
+            y = next;
+        },
+    });
     function drawCenter(text, size, bold) {
         const h = lineHeight(size);
         if (draw) {
@@ -72,56 +52,6 @@ function layout(ctx, theme, receipt, draw) {
             ctx.fillText(text, width / 2, y);
         }
         y += h + theme.lineGap;
-    }
-    function drawRight(text, size, bold, indent = 0) {
-        const h = lineHeight(size);
-        if (draw) {
-            ctx.font = fontString(size, bold);
-            ctx.direction = "rtl";
-            ctx.textAlign = "right";
-            ctx.fillText(text, rightX - indent, y);
-        }
-        y += h;
-    }
-    function drawRow(rightText, leftText, size, bold, indent = 0) {
-        const h = lineHeight(size);
-        if (draw) {
-            ctx.font = fontString(size, bold);
-            ctx.direction = "rtl";
-            ctx.textAlign = "right";
-            ctx.fillText(rightText, rightX - indent, y);
-            ctx.direction = "ltr";
-            ctx.textAlign = "left";
-            ctx.fillText(leftText, leftX, y);
-        }
-        y += h;
-    }
-    function wrapRight(text, size, bold, maxWidth, priceText, indent = 0) {
-        const words = text.split(/\s+/).filter(Boolean);
-        const lines = [];
-        let current = "";
-        for (const word of words) {
-            const candidate = current ? `${current} ${word}` : word;
-            if (measureWidth(candidate, size, bold) <= maxWidth || !current) {
-                current = candidate;
-            }
-            else {
-                lines.push(current);
-                current = word;
-            }
-        }
-        if (current)
-            lines.push(current);
-        if (lines.length === 0)
-            lines.push(text);
-        lines.forEach((line, index) => {
-            if (index === 0 && priceText) {
-                drawRow(line, priceText, size, bold, indent);
-            }
-            else {
-                drawRight(line, size, bold, indent);
-            }
-        });
     }
     function separator() {
         const h = Math.round(6 * k);
@@ -141,7 +71,6 @@ function layout(ctx, theme, receipt, draw) {
     function spacer(px) {
         y += Math.round(px * k);
     }
-    // --- Reprint marker ---------------------------------------------------
     if (receipt.is_reprint) {
         const boxH = lineHeight(theme.sizeTitle) + Math.round(10 * k);
         if (draw) {
@@ -157,58 +86,65 @@ function layout(ctx, theme, receipt, draw) {
         }
         y += boxH + theme.lineGap;
     }
-    // --- Header -----------------------------------------------------------
     drawCenter(receipt.restaurant_name, theme.sizeName, true);
     if (receipt.receipt_header) {
         drawCenter(receipt.receipt_header, theme.sizeTitle, false);
     }
     separator();
-    // --- Order info -------------------------------------------------------
-    drawRight(`رقم الطلب: ${receipt.order_number}`, theme.sizeNormal, true);
-    drawRight(`النوع: ${receipt.order_type_label}`, theme.sizeNormal, false);
+    drawer.drawRow("رقم الطلب", formatOrderNumberLTR(receipt.order_number), theme.sizeNormal, true);
+    drawer.drawRtlLabel(`النوع: ${receipt.order_type_label}`, theme.sizeNormal, false);
     if (receipt.table_label) {
-        drawRight(`الطاولة: ${receipt.table_label}`, theme.sizeNormal, false);
+        drawer.drawRtlLabel(`الطاولة: ${receipt.table_label}`, theme.sizeNormal, false);
     }
     if (receipt.customer_name) {
-        drawRight(`العميل: ${receipt.customer_name}`, theme.sizeNormal, false);
+        drawer.drawRtlLabel(`العميل: ${receipt.customer_name}`, theme.sizeNormal, false);
     }
     if (receipt.customer_phone) {
-        drawRight(`الهاتف: ${receipt.customer_phone}`, theme.sizeSmall, false);
+        drawer.drawRow("الهاتف", formatOrderNumberLTR(receipt.customer_phone), theme.sizeSmall, false);
     }
     if (receipt.customer_address) {
-        wrapRight(`العنوان: ${receipt.customer_address}`, theme.sizeSmall, false, contentWidth, null);
+        wrapArabicBlock(drawer, "العنوان: ", receipt.customer_address, theme.sizeSmall, false, contentWidth);
     }
     if (receipt.pickup_time) {
-        drawRight(`وقت الاستلام: ${receipt.pickup_time}`, theme.sizeSmall, false);
+        drawer.drawRow("وقت الاستلام", formatOrderNumberLTR(receipt.pickup_time), theme.sizeSmall, false);
     }
     if (receipt.notes) {
-        wrapRight(`ملاحظات: ${receipt.notes}`, theme.sizeSmall, false, contentWidth, null);
+        wrapArabicBlock(drawer, "ملاحظات: ", receipt.notes, theme.sizeSmall, false, contentWidth);
     }
     separator();
-    // --- Items ------------------------------------------------------------
     for (const item of receipt.items) {
-        const priceText = formatPrice(item.line_total, receipt.currency_label);
-        const nameMax = contentWidth - measureWidth(priceText, theme.sizeNormal, true) - Math.round(16 * k);
-        wrapRight(`${item.name} × ${item.quantity}`, theme.sizeNormal, false, nameMax, priceText);
+        drawer.drawItemRow(item.name, formatQuantityLTR(item.quantity), formatMoneyLTR(item.line_total, receipt.currency_label), theme.sizeNormal, false, contentWidth);
         for (const addOn of item.add_ons) {
-            const addPrice = `+${formatPrice(addOn.price, receipt.currency_label)}`;
-            drawRow(`+ ${addOn.name}`, addPrice, theme.sizeSmall, false, Math.round(20 * k));
+            const addMoney = formatMoneyLTR(addOn.price, receipt.currency_label);
+            const prefix = `+ ${addOn.name}`;
+            const h = lineHeight(theme.sizeSmall);
+            if (draw) {
+                ctx.font = fontString(theme.sizeSmall, false);
+                ctx.direction = "rtl";
+                ctx.textAlign = "right";
+                ctx.fillText(prefix, rightX - Math.round(20 * k), y);
+                let x = leftX;
+                x += drawer.drawLtrValue(`+${addMoney.amount}`, theme.sizeSmall, false, x);
+                ctx.font = fontString(theme.sizeSmall, false);
+                ctx.direction = "ltr";
+                ctx.textAlign = "left";
+                ctx.fillText(` ${addMoney.currency}`, x, y);
+            }
+            y += h;
         }
         if (item.notes) {
-            wrapRight(`» ${item.notes}`, theme.sizeSmall, false, contentWidth - Math.round(20 * k), null, Math.round(20 * k));
+            wrapArabicBlock(drawer, "» ", item.notes, theme.sizeSmall, false, contentWidth - Math.round(20 * k), Math.round(20 * k));
         }
         spacer(6);
     }
     separator();
-    // --- Totals -----------------------------------------------------------
-    drawRow("المجموع الفرعي", formatPrice(receipt.subtotal, receipt.currency_label), theme.sizeNormal, false);
+    drawer.drawMoneyRow("المجموع الفرعي", formatMoneyLTR(receipt.subtotal, receipt.currency_label), theme.sizeNormal, false);
     if (receipt.delivery_fee > 0) {
-        drawRow("رسوم التوصيل", formatPrice(receipt.delivery_fee, receipt.currency_label), theme.sizeNormal, false);
+        drawer.drawMoneyRow("رسوم التوصيل", formatMoneyLTR(receipt.delivery_fee, receipt.currency_label), theme.sizeNormal, false);
     }
     spacer(4);
-    drawRow("الإجمالي", formatPrice(receipt.total, receipt.currency_label), theme.sizeTotal, true);
+    drawer.drawMoneyRow("الإجمالي", formatMoneyLTR(receipt.total, receipt.currency_label), theme.sizeTotal, true);
     separator();
-    // --- Footer -----------------------------------------------------------
     if (receipt.receipt_footer) {
         drawCenter(receipt.receipt_footer, theme.sizeSmall, false);
     }
@@ -216,7 +152,6 @@ function layout(ctx, theme, receipt, draw) {
     return Math.ceil(y);
 }
 export function renderReceiptPng(receipt, widthPx) {
-    ensureFonts();
     const theme = makeTheme(widthPx);
     const measureCanvas = createCanvas(widthPx, 10);
     const measureCtx = measureCanvas.getContext("2d");

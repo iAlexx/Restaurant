@@ -1,15 +1,15 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const FONT_FILES = [
   {
-    name: "Cairo-Regular.woff",
-    url: "https://raw.githubusercontent.com/fontsource/font-files/main/fonts/google/cairo/files/cairo-arabic-400-normal.woff",
+    name: "Cairo-Variable.ttf",
+    url: "https://raw.githubusercontent.com/google/fonts/main/ofl/cairo/Cairo%5Bslnt%2Cwght%5D.ttf",
   },
   {
-    name: "Cairo-Bold.woff",
-    url: "https://raw.githubusercontent.com/fontsource/font-files/main/fonts/google/cairo/files/cairo-arabic-700-normal.woff",
+    name: "Numeric-Regular.ttf",
+    url: "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@5.2.7/latin-400-normal.ttf",
   },
 ];
 
@@ -33,6 +33,10 @@ async function main() {
     await writeFile(target, bytes);
     console.log(`Downloaded ${font.name} (${bytes.length} bytes)`);
   }
+
+  console.log(
+    "Receipt fonts ready (TTF only — Cairo for Arabic, Noto Sans Latin for digits)"
+  );
 }
 
 main().catch((error) => {

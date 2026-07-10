@@ -136,12 +136,17 @@ if (-not (Test-Path $fontsDir)) {
     Write-Failure ('Missing fonts directory: ' + $fontsDir + '. Run: cd print-agent; npm run download-fonts')
 }
 
-$fontFiles = Get-ChildItem $fontsDir -Filter "*.woff" -ErrorAction SilentlyContinue
-if ($fontFiles.Count -eq 0) {
-    Write-Failure ('No .woff font files in ' + $fontsDir + '. Run: cd print-agent; npm run download-fonts')
-}
+$requiredFonts = @(
+    "Cairo-Variable.ttf",
+    "Numeric-Regular.ttf"
+)
 
-foreach ($font in $fontFiles) {
+foreach ($fontName in $requiredFonts) {
+    $fontPath = Join-Path $fontsDir $fontName
+    if (-not (Test-Path $fontPath)) {
+        Write-Failure ('Missing required font: ' + $fontPath + '. Run: cd print-agent; npm run download-fonts')
+    }
+    $font = Get-Item $fontPath
     Write-Host ('  OK ' + $font.FullName + ' (' + $font.Length + ' bytes)')
 }
 
