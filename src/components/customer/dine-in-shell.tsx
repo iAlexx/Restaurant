@@ -4,7 +4,6 @@ import Link from "next/link";
 import { CartProvider, useCart } from "@/contexts/cart-context";
 import { CustomerHeader } from "@/components/customer/customer-header";
 import { MenuView } from "@/components/customer/menu-view";
-import { StickyCartBar } from "@/components/customer/sticky-cart-bar";
 import { DineInTableBanner } from "@/components/customer/dine-in-table-banner";
 import { DineInTableCacheSync } from "@/components/customer/dine-in-table-cache-sync";
 import { CustomerPageShell } from "@/components/customer/customer-menu-shell";
@@ -43,9 +42,8 @@ function DineInMenuInner({
         contextStrip={<DineInTableBanner ctx={ctx} />}
         pageTitle="القائمة"
         pageSubtitle="تصفّح القائمة وأرسل طلبك"
-        bottomBar={<StickyCartBar menu={menu} cartHref={cartHref} />}
       >
-        <MenuView menu={menu} />
+        <MenuView menu={menu} cartHref={cartHref} />
       </CustomerPageShell>
     </>
   );

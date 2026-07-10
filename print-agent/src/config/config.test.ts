@@ -96,7 +96,7 @@ describe("receipt formatting", () => {
 
   it("includes order details from payload snapshots", () => {
     const text = formatReceiptText(buildTestReceipt());
-    expect(text).toContain("TEST-001");
+    expect(text).toContain("100726-010");
     expect(text).toContain("برجر");
     expect(text).toContain("مطعمي");
   });

@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { createCanvas, GlobalFonts, type SKRSContext2D } from "@napi-rs/canvas";
 import { getFontsDir } from "../paths.js";
 import type { ReceiptPayload } from "../providers/types.js";
-import { formatPrice } from "./format.js";
+import { formatPricePlain } from "./format.js";
 
 const FONT_REGULAR = "CairoReceipt";
 const FONT_BOLD = "CairoReceiptBold";
@@ -218,17 +218,17 @@ function layout(
   separator();
 
   // --- Order info -------------------------------------------------------
-  drawRight(`رقم الطلب: ${receipt.order_number}`, theme.sizeNormal, true);
-  drawRight(`النوع: ${receipt.order_type_label}`, theme.sizeNormal, false);
+  drawRow("رقم الطلب", receipt.order_number, theme.sizeNormal, true);
+  drawRow("النوع", receipt.order_type_label, theme.sizeNormal, false);
 
   if (receipt.table_label) {
-    drawRight(`الطاولة: ${receipt.table_label}`, theme.sizeNormal, false);
+    drawRow("الطاولة", receipt.table_label, theme.sizeNormal, false);
   }
   if (receipt.customer_name) {
-    drawRight(`العميل: ${receipt.customer_name}`, theme.sizeNormal, false);
+    drawRow("العميل", receipt.customer_name, theme.sizeNormal, false);
   }
   if (receipt.customer_phone) {
-    drawRight(`الهاتف: ${receipt.customer_phone}`, theme.sizeSmall, false);
+    drawRow("الهاتف", receipt.customer_phone, theme.sizeSmall, false);
   }
   if (receipt.customer_address) {
     wrapRight(
@@ -240,7 +240,7 @@ function layout(
     );
   }
   if (receipt.pickup_time) {
-    drawRight(`وقت الاستلام: ${receipt.pickup_time}`, theme.sizeSmall, false);
+    drawRow("وقت الاستلام", receipt.pickup_time, theme.sizeSmall, false);
   }
   if (receipt.notes) {
     wrapRight(
@@ -256,18 +256,16 @@ function layout(
 
   // --- Items ------------------------------------------------------------
   for (const item of receipt.items) {
-    const priceText = formatPrice(item.line_total, receipt.currency_label);
-    const nameMax = contentWidth - measureWidth(priceText, theme.sizeNormal, true) - Math.round(16 * k);
-    wrapRight(
-      `${item.name} × ${item.quantity}`,
-      theme.sizeNormal,
-      false,
-      nameMax,
-      priceText
-    );
+    const priceText = formatPricePlain(item.line_total, receipt.currency_label);
+    const qtyText = `${item.quantity} × ${priceText}`;
+    const nameMax =
+      contentWidth -
+      measureWidth(qtyText, theme.sizeNormal, true) -
+      Math.round(16 * k);
+    wrapRight(item.name, theme.sizeNormal, false, nameMax, qtyText);
 
     for (const addOn of item.add_ons) {
-      const addPrice = `+${formatPrice(addOn.price, receipt.currency_label)}`;
+      const addPrice = `+${formatPricePlain(addOn.price, receipt.currency_label)}`;
       drawRow(
         `+ ${addOn.name}`,
         addPrice,
@@ -296,7 +294,7 @@ function layout(
   // --- Totals -----------------------------------------------------------
   drawRow(
     "المجموع الفرعي",
-    formatPrice(receipt.subtotal, receipt.currency_label),
+    formatPricePlain(receipt.subtotal, receipt.currency_label),
     theme.sizeNormal,
     false
   );
@@ -304,7 +302,7 @@ function layout(
   if (receipt.delivery_fee > 0) {
     drawRow(
       "رسوم التوصيل",
-      formatPrice(receipt.delivery_fee, receipt.currency_label),
+      formatPricePlain(receipt.delivery_fee, receipt.currency_label),
       theme.sizeNormal,
       false
     );
@@ -313,7 +311,7 @@ function layout(
   spacer(4);
   drawRow(
     "الإجمالي",
-    formatPrice(receipt.total, receipt.currency_label),
+    formatPricePlain(receipt.total, receipt.currency_label),
     theme.sizeTotal,
     true
   );

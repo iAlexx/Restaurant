@@ -2,6 +2,10 @@ import { z } from "zod";
 
 export const categorySchema = z.object({
   name_ar: z.string().min(1, "اسم القسم مطلوب").max(100),
+  image_url: z
+    .union([z.string().url(), z.literal("")])
+    .optional()
+    .transform((value) => (value ? value : null)),
   sort_order: z.coerce.number().int().min(0).default(0),
   is_active: z.coerce.boolean().default(true),
 });

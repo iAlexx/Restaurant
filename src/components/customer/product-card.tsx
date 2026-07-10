@@ -18,12 +18,11 @@ export function ProductCard({
   const price = formatPrice(product.price, currencyLabel);
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-brand-gold/40 bg-brand-surface shadow-sm transition hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none motion-reduce:transition-none">
-      {/* Desktop / tablet: vertical card */}
+    <article className="overflow-hidden rounded-2xl border border-brand-gold/35 bg-brand-surface shadow-sm transition hover:-translate-y-0.5 hover:border-brand-gold/55 hover:shadow-md motion-reduce:transform-none">
       <button
         type="button"
         onClick={onSelect}
-        className="hidden w-full text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/40 md:block"
+        className="flex w-full flex-col text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/40 active:scale-[0.995] motion-reduce:transform-none md:active:scale-100"
       >
         <div className="relative overflow-hidden bg-brand-cream">
           {product.image_url ? (
@@ -33,69 +32,32 @@ export function ProductCard({
               className="rounded-none"
             />
           ) : (
-            <div className="flex aspect-[4/3] w-full items-center justify-center text-4xl text-brand-muted">
+            <div className="flex aspect-[4/3] w-full items-center justify-center text-3xl text-brand-muted sm:text-4xl">
               🍽
             </div>
           )}
-          {product.is_available ? (
-            <span className="absolute start-3 top-3 rounded-full bg-brand-green px-2.5 py-0.5 text-xs font-bold text-white">
-              متاح
-            </span>
-          ) : null}
         </div>
 
-        <div className="flex flex-col p-4">
-          <h3 className="text-lg font-extrabold leading-snug text-brand-chocolate">
+        <div className="flex flex-1 flex-col p-3.5 sm:p-4">
+          <h3 className="text-base font-extrabold leading-snug text-brand-chocolate sm:text-lg">
             {product.name_ar}
           </h3>
           {product.description_ar ? (
             <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-brand-muted">
               {product.description_ar}
             </p>
-          ) : null}
+          ) : (
+            <p className="mt-1.5 text-sm text-brand-muted/70">&nbsp;</p>
+          )}
 
-          <div className="mt-4 flex items-center justify-between gap-3 border-t border-brand-gold/30 pt-3">
-            <p className="text-xl font-extrabold tabular-nums text-brand-orange">
+          <div className="mt-auto flex items-center justify-between gap-3 border-t border-brand-gold/25 pt-3">
+            <p className="text-lg font-extrabold tabular-nums text-brand-orange sm:text-xl">
               {price}
             </p>
-            <span className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-brand-orange px-4 text-sm font-bold text-white transition group-hover:bg-brand-orange-hover">
+            <span className="inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-xl bg-brand-orange px-4 text-sm font-bold text-white">
               أضف للسلة
             </span>
           </div>
-        </div>
-      </button>
-
-      {/* Mobile: horizontal card — image on inline-start (right in RTL) */}
-      <button
-        type="button"
-        onClick={onSelect}
-        className="flex w-full gap-3 p-3 text-start active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/40 md:hidden"
-      >
-        <div className="relative w-[112px] shrink-0 overflow-hidden rounded-xl bg-brand-cream">
-          {product.image_url ? (
-            <ProductImage src={product.image_url} variant="card-thumb" />
-          ) : (
-            <div className="flex aspect-[4/3] w-full items-center justify-center text-2xl text-brand-muted">
-              🍽
-            </div>
-          )}
-        </div>
-
-        <div className="flex min-w-0 flex-1 flex-col">
-          <h3 className="text-base font-extrabold leading-snug text-brand-chocolate">
-            {product.name_ar}
-          </h3>
-          {product.description_ar ? (
-            <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-brand-muted">
-              {product.description_ar}
-            </p>
-          ) : null}
-          <p className="mt-2 text-lg font-extrabold tabular-nums text-brand-orange">
-            {price}
-          </p>
-          <span className="mt-2 inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-brand-orange text-sm font-bold text-white">
-            أضف للسلة
-          </span>
         </div>
       </button>
     </article>

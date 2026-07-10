@@ -1,7 +1,16 @@
 import type { ReceiptPayload } from "../providers/types.js";
 
+/** Wrap ASCII digits for stable RTL receipt lines on text printers. */
+export function ltrIsolate(value: string | number): string {
+  return `\u2066${String(value)}\u2069`;
+}
+
+export function formatPricePlain(amount: number, currencyLabel: string): string {
+  return `${amount.toLocaleString("en-US")} ${currencyLabel}`;
+}
+
 export function formatPrice(amount: number, currencyLabel: string): string {
-  return `${amount.toLocaleString("ar-SY")} ${currencyLabel}`;
+  return ltrIsolate(formatPricePlain(amount, currencyLabel));
 }
 
 export function formatReceiptText(receipt: ReceiptPayload): string {
@@ -18,7 +27,7 @@ export function formatReceiptText(receipt: ReceiptPayload): string {
     lines.push(receipt.receipt_header);
   }
   lines.push(divider);
-  lines.push(`رقم الطلب: ${receipt.order_number}`);
+  lines.push(`رقم الطلب: ${ltrIsolate(receipt.order_number)}`);
   lines.push(`النوع: ${receipt.order_type_label}`);
 
   if (receipt.table_label) {
@@ -29,13 +38,13 @@ export function formatReceiptText(receipt: ReceiptPayload): string {
     lines.push(`العميل: ${receipt.customer_name}`);
   }
   if (receipt.customer_phone) {
-    lines.push(`الهاتف: ${receipt.customer_phone}`);
+    lines.push(`الهاتف: ${ltrIsolate(receipt.customer_phone)}`);
   }
   if (receipt.customer_address) {
     lines.push(`العنوان: ${receipt.customer_address}`);
   }
   if (receipt.pickup_time) {
-    lines.push(`وقت الاستلام: ${receipt.pickup_time}`);
+    lines.push(`وقت الاستلام: ${ltrIsolate(receipt.pickup_time)}`);
   }
   if (receipt.notes) {
     lines.push(`ملاحظات: ${receipt.notes}`);
@@ -44,9 +53,11 @@ export function formatReceiptText(receipt: ReceiptPayload): string {
   lines.push(divider);
 
   for (const item of receipt.items) {
-    lines.push(`${item.name} x${item.quantity}`);
+    lines.push(`${item.name} × ${ltrIsolate(item.quantity)}`);
     for (const addOn of item.add_ons) {
-      lines.push(`  + ${addOn.name} (${formatPrice(addOn.price, receipt.currency_label)})`);
+      lines.push(
+        `  + ${addOn.name} (${formatPrice(addOn.price, receipt.currency_label)})`
+      );
     }
     if (item.notes) {
       lines.push(`  ملاحظة: ${item.notes}`);
@@ -55,10 +66,14 @@ export function formatReceiptText(receipt: ReceiptPayload): string {
   }
 
   lines.push(divider);
-  lines.push(`المجموع الفرعي: ${formatPrice(receipt.subtotal, receipt.currency_label)}`);
+  lines.push(
+    `المجموع الفرعي: ${formatPrice(receipt.subtotal, receipt.currency_label)}`
+  );
 
   if (receipt.delivery_fee > 0) {
-    lines.push(`رسوم التوصيل: ${formatPrice(receipt.delivery_fee, receipt.currency_label)}`);
+    lines.push(
+      `رسوم التوصيل: ${formatPrice(receipt.delivery_fee, receipt.currency_label)}`
+    );
   }
 
   lines.push(`الإجمالي: ${formatPrice(receipt.total, receipt.currency_label)}`);
@@ -82,7 +97,7 @@ export function buildTestReceipt(): ReceiptPayload {
     receipt_header: "اختبار الطباعة",
     receipt_footer: "شكراً لزيارتكم",
     currency_label: "ل.س",
-    order_number: "TEST-001",
+    order_number: "100726-010",
     order_type: "DINE_IN",
     order_type_label: "داخل المطعم",
     table_label: "طاولة 1",
@@ -95,16 +110,16 @@ export function buildTestReceipt(): ReceiptPayload {
     items: [
       {
         name: "برجر",
-        quantity: 1,
+        quantity: 2,
         unit_price: 1000,
-        line_total: 1000,
+        line_total: 2000,
         notes: null,
         add_ons: [],
       },
     ],
-    subtotal: 1000,
+    subtotal: 2000,
     delivery_fee: 0,
-    total: 1000,
+    total: 2000,
     created_at: new Date().toISOString(),
   };
 }

@@ -4,12 +4,22 @@ import { revalidatePath } from "next/cache";
 import { requireAdminSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { categorySchema } from "@/lib/validations/menu";
+import { safeDeleteReplacedMenuImage } from "@/lib/storage/menu-bucket";
 import type { Category } from "@/types/database";
 
 import type { ActionResult } from "@/lib/actions/types";
 import { parseToggleForm } from "@/lib/actions/toggle-form";
 
 export type { ActionResult } from "@/lib/actions/types";
+
+function parseCategoryForm(formData: FormData) {
+  return categorySchema.safeParse({
+    name_ar: formData.get("name_ar"),
+    image_url: formData.get("image_url") ?? "",
+    sort_order: formData.get("sort_order") || 0,
+    is_active: formData.get("is_active") === "on" || formData.get("is_active") === "true",
+  });
+}
 
 export async function listCategories(): Promise<Category[]> {
   await requireAdminSession();
@@ -28,11 +38,7 @@ export async function createCategory(
   formData: FormData
 ): Promise<ActionResult> {
   await requireAdminSession();
-  const parsed = categorySchema.safeParse({
-    name_ar: formData.get("name_ar"),
-    sort_order: formData.get("sort_order") || 0,
-    is_active: formData.get("is_active") === "on" || formData.get("is_active") === "true",
-  });
+  const parsed = parseCategoryForm(formData);
 
   if (!parsed.success) {
     return { error: parsed.error.errors[0]?.message ?? "بيانات غير صالحة" };
@@ -53,17 +59,24 @@ export async function updateCategory(
   formData: FormData
 ): Promise<ActionResult> {
   await requireAdminSession();
-  const parsed = categorySchema.safeParse({
-    name_ar: formData.get("name_ar"),
-    sort_order: formData.get("sort_order") || 0,
-    is_active: formData.get("is_active") === "on" || formData.get("is_active") === "true",
-  });
+  const parsed = parseCategoryForm(formData);
 
   if (!parsed.success) {
     return { error: parsed.error.errors[0]?.message ?? "بيانات غير صالحة" };
   }
 
   const supabase = await createClient();
+  const { data: existing, error: fetchError } = await supabase
+    .from("categories")
+    .select("image_url")
+    .eq("id", id)
+    .single();
+
+  if (fetchError) return { error: "تعذر تحديث القسم" };
+
+  const previousImageUrl = (existing as { image_url: string | null }).image_url;
+  await safeDeleteReplacedMenuImage(previousImageUrl, parsed.data.image_url);
+
   const { error } = await supabase
     .from("categories")
     .update(parsed.data)

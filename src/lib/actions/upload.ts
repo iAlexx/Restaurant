@@ -10,7 +10,7 @@ import {
 
 export async function uploadMenuImage(
   formData: FormData,
-  folder: "products" | "logo" | "hero"
+  folder: "products" | "logo" | "hero" | "categories"
 ): Promise<{ url?: string; error?: string }> {
   await requireAdminSession();
 

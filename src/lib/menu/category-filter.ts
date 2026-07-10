@@ -1,12 +1,10 @@
 import type { Category } from "@/types/database";
 
-/** Sentinel id for the "show all products" category card. */
-export const ALL_CATEGORIES_ID = "__all__";
-
-export interface CategoryFilterItem {
+export interface CategoryMenuItem {
   id: string;
   name: string;
   productCount: number;
+  imageUrl: string | null;
 }
 
 export function formatCategoryProductCount(count: number): string {
@@ -44,46 +42,34 @@ export function countAvailableProductsByCategory(
   return counts;
 }
 
-export function buildCategoryFilterItems(
+export function buildCategoryItems(
   categories: Category[],
   products: readonly { category_id: string }[]
-): CategoryFilterItem[] {
+): CategoryMenuItem[] {
   const sorted = sortCategoriesStable(categories);
   const counts = countAvailableProductsByCategory(
     products,
     sorted.map((c) => c.id)
   );
 
-  return [
-    {
-      id: ALL_CATEGORIES_ID,
-      name: "الكل",
-      productCount: products.length,
-    },
-    ...sorted.map((category) => ({
-      id: category.id,
-      name: category.name_ar,
-      productCount: counts.get(category.id) ?? 0,
-    })),
-  ];
+  return sorted.map((category) => ({
+    id: category.id,
+    name: category.name_ar,
+    productCount: counts.get(category.id) ?? 0,
+    imageUrl: category.image_url ?? null,
+  }));
 }
 
 export function filterProductsByCategory<T extends { category_id: string }>(
   products: readonly T[],
   selectedCategoryId: string
 ): T[] {
-  if (selectedCategoryId === ALL_CATEGORIES_ID) {
-    return [...products];
-  }
   return products.filter((p) => p.category_id === selectedCategoryId);
 }
 
-export function getSelectedCategoryLabel(
-  items: CategoryFilterItem[],
-  selectedCategoryId: string
-): string | null {
-  if (selectedCategoryId === ALL_CATEGORIES_ID) {
-    return "كل الأصناف";
-  }
-  return items.find((item) => item.id === selectedCategoryId)?.name ?? null;
+export function getCategoryById(
+  items: CategoryMenuItem[],
+  categoryId: string
+): CategoryMenuItem | undefined {
+  return items.find((item) => item.id === categoryId);
 }

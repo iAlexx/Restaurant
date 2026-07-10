@@ -7,7 +7,6 @@ import { CustomerHeader } from "@/components/customer/customer-header";
 import { MenuView } from "@/components/customer/menu-view";
 import { CartView } from "@/components/customer/cart-view";
 import { CheckoutClient } from "@/components/customer/checkout-client";
-import { StickyCartBar } from "@/components/customer/sticky-cart-bar";
 import { TableContextStrip } from "@/components/customer/table-context-strip";
 import { CustomerPageShell } from "@/components/customer/customer-menu-shell";
 import { EmptyState } from "@/components/dashboard/form-ui";
@@ -121,9 +120,8 @@ function ExternalMenuInner({
           }
         />
       }
-      bottomBar={<StickyCartBar menu={menu} cartHref={cartHref} />}
     >
-      <MenuView menu={menu} />
+      <MenuView menu={menu} cartHref={cartHref} />
     </CustomerPageShell>
   );
 }

@@ -52,6 +52,7 @@ export interface Table {
 export interface Category {
   id: string;
   name_ar: string;
+  image_url: string | null;
   sort_order: number;
   is_active: boolean;
   created_at: string;

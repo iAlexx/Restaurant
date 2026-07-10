@@ -48,6 +48,13 @@ export async function safeDeleteReplacedMenuImage(
   const { count: productRefs, error: productError } = await productQuery;
   if (productError || (productRefs ?? 0) > 0) return;
 
+  const { count: categoryRefs, error: categoryError } = await supabase
+    .from("categories")
+    .select("id", { count: "exact", head: true })
+    .eq("image_url", oldUrl);
+
+  if (categoryError || (categoryRefs ?? 0) > 0) return;
+
   const { data: settings, error: settingsError } = await supabase
     .from("restaurant_settings")
     .select("logo_url, hero_image_url")
