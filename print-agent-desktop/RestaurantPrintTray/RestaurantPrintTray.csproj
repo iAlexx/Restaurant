@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>RestaurantPrintTray</AssemblyName>
+    <RootNamespace>RestaurantPrintTray</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Version>1.0.0</Version>
+    <Company>Restaurant Print</Company>
+    <Product>مطعم النخة — وكيل الطباعة</Product>
+    <Description>Windows tray supervisor for Restaurant Print Agent</Description>
+  </PropertyGroup>
+</Project>

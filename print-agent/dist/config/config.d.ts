@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { getConfigDir, getConfigPath } from "../paths.js";
+export { getConfigDir, getConfigPath };
 export declare const printModeSchema: z.ZodEnum<["windows", "lan"]>;
 export declare const agentConfigSchema: z.ZodObject<{
     apiBaseUrl: z.ZodString;
@@ -28,6 +30,4 @@ export declare const agentConfigSchema: z.ZodObject<{
 export type AgentConfig = z.infer<typeof agentConfigSchema>;
 export type PrintMode = z.infer<typeof printModeSchema>;
 export declare const DEFAULT_CONFIG: AgentConfig;
-export declare function getConfigDir(): string;
-export declare function getConfigPath(): string;
 export declare function validateConfig(input: unknown): AgentConfig;

@@ -6,6 +6,11 @@ import { useCart, estimateCartTotal } from "@/contexts/cart-context";
 import type { PublicMenu } from "@/lib/menu/public-menu";
 import type { CreateOrderInput } from "@/lib/validations/order";
 import { formatPrice } from "@/lib/money";
+import {
+  applyOrderSuccessSideEffects,
+  planOrderSuccessNavigation,
+  shouldRedirectEmptyCart,
+} from "@/lib/checkout/success-navigation";
 import { ConfirmDialog } from "@/components/dashboard/confirm-dialog";
 import { OrderSummaryCard } from "@/components/customer/order-summary-card";
 import { customerContainerClassName } from "@/components/customer/customer-menu-shell";
@@ -43,6 +48,7 @@ export function CheckoutClient({
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [isRedirectingToSuccess, setIsRedirectingToSuccess] = useState(false);
 
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -52,11 +58,17 @@ export function CheckoutClient({
   const [orderNotes, setOrderNotes] = useState(cart.orderNotes);
 
   useEffect(() => {
-    if (!hydrated) return;
-    if (cart.lines.length === 0) {
-      router.replace(emptyCartHref);
+    if (
+      !shouldRedirectEmptyCart({
+        hydrated,
+        cartLineCount: cart.lines.length,
+        isRedirectingToSuccess,
+      })
+    ) {
+      return;
     }
-  }, [hydrated, cart.lines.length, router, emptyCartHref]);
+    router.replace(emptyCartHref);
+  }, [hydrated, cart.lines.length, isRedirectingToSuccess, router, emptyCartHref]);
 
   const currency = menu.settings.currency_label;
   const productMap = useMemo(
@@ -176,12 +188,14 @@ export function CheckoutClient({
         return;
       }
 
-      clearCart();
-      resetSubmitToken();
-      const successHref = unifiedSuccessPath
-        ? unifiedSuccessPath(data.id)
-        : `${successBasePath}/${data.id}`;
-      router.push(successHref);
+      const plan = planOrderSuccessNavigation(data.id, {
+        successBasePath,
+        unifiedSuccessPath,
+      });
+
+      setIsRedirectingToSuccess(true);
+      router.push(plan.successHref);
+      applyOrderSuccessSideEffects(plan, { clearCart, resetSubmitToken });
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
         setError(
@@ -212,8 +226,19 @@ export function CheckoutClient({
     );
   }
 
-  if (cart.lines.length === 0) {
+  if (cart.lines.length === 0 && !isRedirectingToSuccess) {
     return null;
+  }
+
+  if (isRedirectingToSuccess) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-40 w-full rounded-2xl" />
+        <p className="text-center text-sm font-medium text-brand-muted">
+          تم إرسال طلبك بنجاح — جاري فتح صفحة التأكيد...
+        </p>
+      </div>
+    );
   }
 
   return (

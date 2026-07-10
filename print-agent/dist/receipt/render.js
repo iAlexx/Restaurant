@@ -1,23 +1,30 @@
-import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
 import { existsSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
+import { getFontsDir } from "../paths.js";
 import { formatPrice } from "./format.js";
 const FONT_REGULAR = "CairoReceipt";
 const FONT_BOLD = "CairoReceiptBold";
 let fontsRegistered = false;
-function fontPath(file) {
-    return fileURLToPath(new URL(`../../assets/fonts/${file}`, import.meta.url));
-}
 function ensureFonts() {
     if (fontsRegistered)
         return;
-    const regular = fontPath("Cairo-Regular.ttf");
-    const bold = fontPath("Cairo-Bold.ttf");
+    const fontsDir = getFontsDir();
+    const regular = join(fontsDir, "Cairo-Regular.woff");
+    const bold = join(fontsDir, "Cairo-Bold.woff");
+    const regularTtf = join(fontsDir, "Cairo-Regular.ttf");
+    const boldTtf = join(fontsDir, "Cairo-Bold.ttf");
     if (existsSync(regular)) {
         GlobalFonts.registerFromPath(regular, FONT_REGULAR);
     }
+    else if (existsSync(regularTtf)) {
+        GlobalFonts.registerFromPath(regularTtf, FONT_REGULAR);
+    }
     if (existsSync(bold)) {
         GlobalFonts.registerFromPath(bold, FONT_BOLD);
+    }
+    else if (existsSync(boldTtf)) {
+        GlobalFonts.registerFromPath(boldTtf, FONT_BOLD);
     }
     fontsRegistered = true;
 }

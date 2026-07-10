@@ -8,6 +8,7 @@ import {
 } from "../config/pending-ack-store.js";
 import { createPrintProvider } from "../providers/index.js";
 import type { ClaimResponse } from "../providers/types.js";
+import { publishStatusSnapshot } from "../services/status-service.js";
 
 export interface AgentLogger {
   info(message: string): void;
@@ -25,6 +26,11 @@ export class PrintAgent {
   private currentJobId: string | null = null;
   private pendingAckJobId: string | null = null;
   private shutdownRequested = false;
+  private lastHeartbeatAt: string | null = null;
+  private lastHeartbeatOk = false;
+  private lastError: string | null = null;
+  private lastPrintAt: string | null = null;
+  private lastPrintOk: boolean | null = null;
 
   constructor(
     private readonly config: AgentConfig,
@@ -60,9 +66,15 @@ export class PrintAgent {
       `بدء وكيل الطباعة — الوضع: ${this.config.printMode} — الفترة: ${this.config.pollIntervalMs}ms`
     );
 
+    await this.publishStatus();
+
     while (!this.shutdownRequested) {
       try {
         await api.heartbeat();
+        this.lastHeartbeatAt = new Date().toISOString();
+        this.lastHeartbeatOk = true;
+        this.lastError = null;
+
         const status = await provider.checkStatus();
         if (status !== "ready") {
           this.logger.error("الطابعة غير جاهزة");
@@ -79,14 +91,33 @@ export class PrintAgent {
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "خطأ غير معروف في وكيل الطباعة";
+        this.lastError = message;
+        this.lastHeartbeatOk = false;
         this.logger.error(message);
       }
 
+      await this.publishStatus();
       await sleep(this.config.pollIntervalMs);
     }
 
     this.running = false;
+    await this.publishStatus(false);
     this.logger.info("تم إيقاف وكيل الطباعة");
+  }
+
+  private async publishStatus(agentRunning = true): Promise<void> {
+    try {
+      await publishStatusSnapshot(this.config, {
+        agentRunning,
+        lastHeartbeatAt: this.lastHeartbeatAt,
+        lastHeartbeatOk: this.lastHeartbeatOk,
+        lastError: this.lastError,
+        lastPrintAt: this.lastPrintAt,
+        lastPrintOk: this.lastPrintOk,
+      });
+    } catch {
+      // ignore status publish errors
+    }
   }
 
   private async retryPendingAck(api: PrintAgentApiClient): Promise<void> {
@@ -138,6 +169,9 @@ export class PrintAgent {
     }
 
     if (printError) {
+      this.lastPrintAt = new Date().toISOString();
+      this.lastPrintOk = false;
+      this.lastError = printError;
       try {
         await api.markFail(claim.job_id, printError);
       } catch (failError) {
@@ -155,6 +189,9 @@ export class PrintAgent {
         await markSuccessWithRetry(api, claim.job_id, this.logger);
         await clearPendingAck(claim.job_id);
         this.pendingAckJobId = null;
+        this.lastPrintAt = new Date().toISOString();
+        this.lastPrintOk = true;
+        this.lastError = null;
         this.logger.info(`تمت الطباعة بنجاح — ${claim.receipt.order_number}`);
       } catch (error) {
         const message =

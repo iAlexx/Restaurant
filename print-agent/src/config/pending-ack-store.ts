@@ -1,10 +1,11 @@
+import { join } from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
-import { getConfigDir } from "./config.js";
+import { ensureConfigDir, getConfigDir } from "../paths.js";
 
 const PENDING_ACKS_FILE = "pending-acks.json";
 
 function pendingAcksPath(): string {
-  return `${getConfigDir()}\\${PENDING_ACKS_FILE}`;
+  return join(getConfigDir(), PENDING_ACKS_FILE);
 }
 
 async function readPendingAcks(): Promise<string[]> {
@@ -20,6 +21,7 @@ async function readPendingAcks(): Promise<string[]> {
 
 async function writePendingAcks(jobIds: string[]): Promise<void> {
   const unique = [...new Set(jobIds)];
+  await ensureConfigDir();
   await writeFile(pendingAcksPath(), JSON.stringify(unique, null, 2), "utf8");
 }
 

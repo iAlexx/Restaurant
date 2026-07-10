@@ -11,11 +11,19 @@ export declare class PrintAgent {
     private running;
     private printing;
     private currentJobId;
+    private pendingAckJobId;
     private shutdownRequested;
+    private lastHeartbeatAt;
+    private lastHeartbeatOk;
+    private lastError;
+    private lastPrintAt;
+    private lastPrintOk;
     constructor(config: AgentConfig, token: string, logger?: AgentLogger);
     requestShutdown(): void;
     isRunning(): boolean;
     start(): Promise<void>;
+    private publishStatus;
+    private retryPendingAck;
     private processJob;
 }
 export declare function runSinglePrintAttempt(config: AgentConfig, token: string, claim: ClaimResponse): Promise<"success" | "failed">;

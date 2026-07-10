@@ -8,10 +8,15 @@
     "node": ">=20"
   },
   "bin": {
-    "restaurant-print": "./dist/cli.js"
+    "restaurant-print": "./dist/cli.js",
+    "RestaurantPrintAgent": "./dist/runtime/agent-main.js"
   },
   "scripts": {
     "build": "tsc",
+    "download-fonts": "node scripts/download-fonts.mjs",
+    "build:exe": "node scripts/build-exe.mjs",
+    "package:portable": "node scripts/package-portable.mjs",
+    "build:release": "npm run download-fonts && npm run build && npm run build:exe && npm run package:portable",
     "start": "node dist/cli.js start",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -22,7 +27,23 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.21",
+    "@yao-pkg/pkg": "^6.5.1",
+    "archiver": "^7.0.1",
     "typescript": "^5.8.3",
     "vitest": "^3.1.4"
+  },
+  "pkg": {
+    "scripts": [
+      "dist/**/*.js"
+    ],
+    "assets": [
+      "assets/**/*",
+      "node_modules/@napi-rs/canvas/**/*",
+      "node_modules/@napi-rs/canvas-win32-x64-msvc/**/*"
+    ],
+    "targets": [
+      "node26.4.0-win-x64"
+    ],
+    "outputPath": "release"
   }
 }

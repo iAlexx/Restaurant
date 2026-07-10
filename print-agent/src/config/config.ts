@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { getConfigDir, getConfigPath } from "../paths.js";
+
+export { getConfigDir, getConfigPath };
 
 export const printModeSchema = z.enum(["windows", "lan"]);
 
@@ -26,15 +29,6 @@ export const DEFAULT_CONFIG: AgentConfig = {
   lanPort: 9100,
   receiptWidthPx: 576,
 };
-
-export function getConfigDir(): string {
-  const home = process.env.USERPROFILE ?? process.env.HOME ?? ".";
-  return `${home}\\.restaurant-print`;
-}
-
-export function getConfigPath(): string {
-  return `${getConfigDir()}\\config.json`;
-}
 
 export function validateConfig(input: unknown): AgentConfig {
   return agentConfigSchema.parse(input);

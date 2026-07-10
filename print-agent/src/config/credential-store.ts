@@ -1,15 +1,15 @@
 import { execFile } from "node:child_process";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname } from "node:path";
+import { readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { promisify } from "node:util";
-import { getConfigDir } from "./config.js";
+import { ensureConfigDir, getConfigDir, getConfigPath } from "../paths.js";
 
 const execFileAsync = promisify(execFile);
 
 const TOKEN_FILE = "device-token.dpapi";
 
 export function tokenFilePath(): string {
-  return `${getConfigDir()}\\${TOKEN_FILE}`;
+  return join(getConfigDir(), TOKEN_FILE);
 }
 
 function isWindows(): boolean {
@@ -86,7 +86,7 @@ export class DeviceTokenStore {
       throw new Error("رمز الجهاز فارغ — لن يتم حفظ أي ملف");
     }
 
-    await mkdir(dirname(this.filePath), { recursive: true });
+    await ensureConfigDir();
     const ciphertext = await this.cipher.encrypt(trimmed);
     await writeFile(this.filePath, ciphertext, "ascii");
   }
@@ -157,10 +157,10 @@ export async function hasDeviceToken(): Promise<boolean> {
 }
 
 export async function writePlainConfigFile(configJson: string): Promise<void> {
-  await mkdir(getConfigDir(), { recursive: true });
-  await writeFile(`${getConfigDir()}\\config.json`, configJson, "utf8");
+  await ensureConfigDir();
+  await writeFile(getConfigPath(), configJson, "utf8");
 }
 
 export async function readPlainConfigFile(): Promise<string> {
-  return readFile(`${getConfigDir()}\\config.json`, "utf8");
+  return readFile(getConfigPath(), "utf8");
 }
