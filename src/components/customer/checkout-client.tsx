@@ -13,6 +13,10 @@ import {
 } from "@/lib/checkout/success-navigation";
 import { ConfirmDialog } from "@/components/dashboard/confirm-dialog";
 import { OrderSummaryCard } from "@/components/customer/order-summary-card";
+import {
+  RestaurantClosedCheckoutNotice,
+} from "@/components/customer/restaurant-open-status";
+import { CUSTOMER_ORDER_CLOSED_MESSAGE } from "@/lib/hours/restaurant-status";
 import { customerContainerClassName } from "@/components/customer/customer-menu-shell";
 import {
   buttonPrimaryClassName,
@@ -71,6 +75,8 @@ export function CheckoutClient({
   }, [hydrated, cart.lines.length, isRedirectingToSuccess, router, emptyCartHref]);
 
   const currency = menu.settings.currency_label;
+  const openStatus = menu.openStatus;
+  const ordersBlocked = !openStatus.isAcceptingCustomerOrders;
   const productMap = useMemo(
     () => new Map(menu.products.map((p) => [p.id, p])),
     [menu.products]
@@ -117,6 +123,10 @@ export function CheckoutClient({
 
   async function submitOrder() {
     setError(null);
+    if (ordersBlocked) {
+      setError(CUSTOMER_ORDER_CLOSED_MESSAGE);
+      return;
+    }
     setSubmitting(true);
 
     const items = cart.lines.map((line) => ({
@@ -243,6 +253,7 @@ export function CheckoutClient({
 
   return (
     <form onSubmit={handleSubmit} className="pb-32 lg:pb-8">
+      <RestaurantClosedCheckoutNotice status={openStatus} />
       {error ? (
         <p
           className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
@@ -373,10 +384,16 @@ export function CheckoutClient({
 
             <button
               type="submit"
-              disabled={submitting || cart.lines.length === 0 || belowMinimum}
+              disabled={
+                submitting || cart.lines.length === 0 || belowMinimum || ordersBlocked
+              }
               className={`${buttonPrimaryClassName()} mt-5 hidden w-full rounded-2xl py-4 text-base font-bold lg:block`}
             >
-              {submitting ? "جاري الإرسال..." : "تأكيد الطلب"}
+              {ordersBlocked
+                ? "المطعم مغلق — لا يمكن الإرسال"
+                : submitting
+                  ? "جاري الإرسال..."
+                  : "تأكيد الطلب"}
             </button>
           </section>
         </div>
@@ -394,10 +411,16 @@ export function CheckoutClient({
           </div>
           <button
             type="submit"
-            disabled={submitting || cart.lines.length === 0 || belowMinimum}
+            disabled={
+              submitting || cart.lines.length === 0 || belowMinimum || ordersBlocked
+            }
             className={`${buttonPrimaryClassName()} min-h-[48px] shrink-0 rounded-2xl px-6 py-3 text-base font-bold`}
           >
-            {submitting ? "جاري الإرسال..." : "تأكيد الطلب"}
+            {ordersBlocked
+              ? "مغلق"
+              : submitting
+                ? "..."
+                : "تأكيد الطلب"}
           </button>
         </div>
       </div>

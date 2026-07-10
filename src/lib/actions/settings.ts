@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdminSession } from "@/lib/auth/session";
+import { weeklyHoursFromForm, normalizeWeeklyOpeningHours } from "@/lib/hours/schedule";
+import { DEFAULT_WEEKLY_OPENING_HOURS } from "@/lib/hours/types";
 import { createClient } from "@/lib/supabase/server";
 import { safeDeleteReplacedMenuImage } from "@/lib/storage/menu-bucket";
 import { generateSecureToken, hashToken } from "@/lib/tokens";
@@ -22,7 +24,13 @@ export async function getRestaurantSettings(): Promise<RestaurantSettings> {
     .single();
 
   if (error || !data) throw new Error("تعذر تحميل الإعدادات");
-  return data as RestaurantSettings;
+  const settings = data as RestaurantSettings;
+  return {
+    ...settings,
+    weekly_opening_hours: normalizeWeeklyOpeningHours(
+      settings.weekly_opening_hours ?? DEFAULT_WEEKLY_OPENING_HOURS
+    ),
+  };
 }
 
 export async function updateRestaurantSettings(
@@ -38,6 +46,20 @@ export async function updateRestaurantSettings(
     address: formData.get("address") || null,
     currency_label: formData.get("currency_label"),
     opening_hours: formData.get("opening_hours") || null,
+    weekly_opening_hours: weeklyHoursFromForm(formData),
+    is_temporarily_closed:
+      formData.get("is_temporarily_closed") === "on" ||
+      formData.get("is_temporarily_closed") === "true",
+    temporary_closure_message:
+      formData.get("temporary_closure_message") || null,
+    manual_hours_override:
+      formData.get("manual_hours_override_clear") === "on" ||
+      formData.get("manual_hours_override_clear") === "true"
+        ? null
+        : formData.get("manual_hours_override") === "open" ||
+            formData.get("manual_hours_override") === "closed"
+          ? (formData.get("manual_hours_override") as "open" | "closed")
+          : null,
     delivery_enabled:
       formData.get("delivery_enabled") === "on" ||
       formData.get("delivery_enabled") === "true",
@@ -75,8 +97,12 @@ export async function updateRestaurantSettings(
   const previousHeroUrl = (existingSettings as { hero_image_url: string | null })
     .hero_image_url;
 
+  const { manual_hours_override_clear: _ignored, ...settingsFields } = parsed.data;
+  void _ignored;
+
   const updatePayload = {
-    ...parsed.data,
+    ...settingsFields,
+    weekly_opening_hours: normalizeWeeklyOpeningHours(settingsFields.weekly_opening_hours),
     ...(logoUrl ? { logo_url: logoUrl } : {}),
     ...(heroUrl ? { hero_image_url: heroUrl } : {}),
     updated_at: new Date().toISOString(),

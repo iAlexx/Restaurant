@@ -14,6 +14,7 @@ import {
   getCategoryById,
 } from "@/lib/menu/category-filter";
 import { EmptyState } from "@/components/dashboard/form-ui";
+import { RestaurantOpenStatus } from "@/components/customer/restaurant-open-status";
 import { useCart } from "@/contexts/cart-context";
 
 export function MenuView({
@@ -69,6 +70,11 @@ export function MenuView({
 
   return (
     <>
+      <RestaurantOpenStatus
+        status={menu.openStatus}
+        variant="banner"
+        className="mb-5"
+      />
       <div className={bottomPadding}>
         {selectedCategoryId === null ? (
           <CategoryCardGrid

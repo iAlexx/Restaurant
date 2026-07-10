@@ -18,6 +18,7 @@ import {
   labelClassName,
 } from "@/components/dashboard/form-ui";
 import { ConfirmDialog } from "@/components/dashboard/confirm-dialog";
+import { OpeningHoursSettings } from "@/components/dashboard/opening-hours-settings";
 import type { RestaurantSettings } from "@/types/database";
 import { formatPrice } from "@/lib/money";
 import { useTransition } from "react";
@@ -114,17 +115,7 @@ export function SettingsForm({ settings }: { settings: RestaurantSettings }) {
         <textarea id="address" name="address" rows={2} defaultValue={settings.address ?? ""} className={inputClassName()} />
       </div>
 
-      <div>
-        <label className={labelClassName()} htmlFor="opening_hours">ساعات العمل</label>
-        <textarea
-          id="opening_hours"
-          name="opening_hours"
-          rows={2}
-          defaultValue={settings.opening_hours ?? ""}
-          className={inputClassName()}
-          placeholder="مثال: 10:00 - 23:00"
-        />
-      </div>
+      <OpeningHoursSettings settings={settings} />
 
       <div className="grid gap-4 md:grid-cols-2">
         <div>

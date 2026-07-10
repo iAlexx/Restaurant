@@ -32,6 +32,11 @@ export interface RestaurantSettings {
   address: string | null;
   currency_label: string;
   opening_hours: string | null;
+  weekly_opening_hours: import("@/lib/hours/types").WeeklyOpeningHours;
+  is_temporarily_closed: boolean;
+  temporary_closure_message: string | null;
+  manual_hours_override: import("@/lib/hours/types").ManualHoursOverride | null;
+  manual_hours_override_until: string | null;
   delivery_enabled: boolean;
   pickup_enabled: boolean;
   default_delivery_fee: number;

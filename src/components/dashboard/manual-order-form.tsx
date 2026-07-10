@@ -12,6 +12,7 @@ import {
   inputClassName,
   labelClassName,
 } from "@/components/dashboard/form-ui";
+import { RestaurantOpenStatus } from "@/components/customer/restaurant-open-status";
 
 interface TableOption {
   id: string;
@@ -123,6 +124,18 @@ export function ManualOrderForm({
 
       <FormAlert message={state.error} type="error" />
       <FormAlert message={state.success} type="success" />
+
+      {!menu.openStatus.isOpen ? (
+        <div className="rounded-xl border border-amber-300/80 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <p className="font-bold">تنبيه: المطعم مغلق للعملاء حالياً</p>
+          <p className="mt-1">
+            يمكنك متابعة إنشاء الطلب اليدوي — لن يُمنع إرساله من النظام.
+          </p>
+          <div className="mt-3">
+            <RestaurantOpenStatus status={menu.openStatus} variant="compact" />
+          </div>
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-3 gap-2 rounded-xl bg-brand-cream p-1">
         {(

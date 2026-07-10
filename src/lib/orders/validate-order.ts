@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CreateOrderInput } from "@/lib/validations/order";
+import { assertRestaurantAcceptsCustomerOrders } from "@/lib/hours/order-guard";
 import {
   computeOrderTotals,
   getInitialOrderStatus,
@@ -52,6 +53,8 @@ export async function validateAndBuildTrustedPayload(
   supabase: SupabaseClient,
   input: CreateOrderInput
 ): Promise<ValidatedOrderContext> {
+  await assertRestaurantAcceptsCustomerOrders(supabase);
+
   const { data: settings, error: settingsError } = await supabase
     .from("restaurant_settings")
     .select(

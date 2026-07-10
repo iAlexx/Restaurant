@@ -8,6 +8,7 @@ import { MenuView } from "@/components/customer/menu-view";
 import { CartView } from "@/components/customer/cart-view";
 import { CheckoutClient } from "@/components/customer/checkout-client";
 import { TableContextStrip } from "@/components/customer/table-context-strip";
+import { RestaurantOpenStatus } from "@/components/customer/restaurant-open-status";
 import { CustomerPageShell } from "@/components/customer/customer-menu-shell";
 import { EmptyState } from "@/components/dashboard/form-ui";
 import type { PublicMenu } from "@/lib/menu/public-menu";
@@ -25,10 +26,13 @@ function TypePicker({ menu }: { menu: PublicMenu }) {
         <CustomerHeader settings={menu.settings} showCart={false} itemCount={0} />
       }
       pageTitle="طلب خارجي"
-      pageSubtitle={
-        menu.settings.opening_hours ?? "اختر نوع الطلب للمتابعة"
-      }
+      pageSubtitle="اختر نوع الطلب للمتابعة"
     >
+      <RestaurantOpenStatus
+        status={menu.openStatus}
+        variant="banner"
+        className="mb-5"
+      />
       {canDeliver || canPickup ? (
         <p className="mb-4 text-center text-base font-bold text-brand-chocolate">
           اختر نوع الطلب

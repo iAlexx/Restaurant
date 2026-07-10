@@ -1,5 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { sortCategoriesStable } from "@/lib/menu/category-filter";
+import { computeRestaurantOpenStatus } from "@/lib/hours/restaurant-status";
+import { normalizeWeeklyOpeningHours } from "@/lib/hours/schedule";
+import type { OpeningHoursSettings, RestaurantOpenStatus } from "@/lib/hours/types";
 import type { AddOn, Category, Product } from "@/types/database";
 
 export interface PublicRestaurantSettings {
@@ -10,11 +13,15 @@ export interface PublicRestaurantSettings {
   phone: string | null;
   address: string | null;
   currency_label: string;
-  opening_hours: string | null;
   delivery_enabled: boolean;
   pickup_enabled: boolean;
   default_delivery_fee: number;
   min_delivery_order: number;
+  weekly_opening_hours: import("@/lib/hours/types").WeeklyOpeningHours;
+  is_temporarily_closed: boolean;
+  temporary_closure_message: string | null;
+  manual_hours_override: import("@/lib/hours/types").ManualHoursOverride | null;
+  manual_hours_override_until: string | null;
 }
 
 export interface PublicMenuProduct extends Product {
@@ -23,6 +30,7 @@ export interface PublicMenuProduct extends Product {
 
 export interface PublicMenu {
   settings: PublicRestaurantSettings;
+  openStatus: RestaurantOpenStatus;
   categories: Category[];
   products: PublicMenuProduct[];
   addOns: AddOn[];
@@ -52,6 +60,16 @@ export async function fetchPublicMenu(): Promise<PublicMenu> {
     throw new Error("تعذر تحميل إعدادات المطعم");
   }
 
+  const rawSettings = settingsRes.data as PublicRestaurantSettings;
+  const settings: PublicRestaurantSettings = {
+    ...rawSettings,
+    weekly_opening_hours: normalizeWeeklyOpeningHours(
+      rawSettings.weekly_opening_hours
+    ),
+  };
+
+  const openStatus = computeRestaurantOpenStatus(settings);
+
   const addOnMap = new Map<string, string[]>();
   for (const link of linksRes.data ?? []) {
     const row = link as { product_id: string; add_on_id: string };
@@ -72,7 +90,8 @@ export async function fetchPublicMenu(): Promise<PublicMenu> {
     }));
 
   return {
-    settings: settingsRes.data as PublicRestaurantSettings,
+    settings,
+    openStatus,
     categories: sortCategoriesStable((categoriesRes.data ?? []) as Category[]),
     products,
     addOns: (addOnsRes.data ?? []) as AddOn[],
@@ -111,4 +130,20 @@ export async function fetchActiveTables(): Promise<
 
   if (error) return [];
   return (data ?? []) as Pick<PublicTable, "id" | "label" | "public_token">[];
+}
+
+export async function fetchPublicOpenStatus(): Promise<RestaurantOpenStatus> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("restaurant_settings_public")
+    .select(
+      "weekly_opening_hours, is_temporarily_closed, temporary_closure_message, manual_hours_override, manual_hours_override_until"
+    )
+    .single();
+
+  if (error || !data) {
+    return computeRestaurantOpenStatus(undefined);
+  }
+
+  return computeRestaurantOpenStatus(data as OpeningHoursSettings);
 }

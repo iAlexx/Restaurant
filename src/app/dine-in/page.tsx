@@ -23,7 +23,11 @@ export default async function UnifiedDineInPage({ searchParams }: PageProps) {
 
   return (
     <RestaurantSplashGate logoUrl={menu.settings.logo_url}>
-      <TableSelectionScreen settings={menu.settings} tables={tables} />
+      <TableSelectionScreen
+        settings={menu.settings}
+        openStatus={menu.openStatus}
+        tables={tables}
+      />
     </RestaurantSplashGate>
   );
 }

@@ -11,6 +11,8 @@ import {
 import { ConfirmDialog } from "@/components/dashboard/confirm-dialog";
 import { CustomerHeader } from "@/components/customer/customer-header";
 import { CustomerPageShell } from "@/components/customer/customer-menu-shell";
+import { RestaurantOpenStatus } from "@/components/customer/restaurant-open-status";
+import type { RestaurantOpenStatus as OpenStatus } from "@/lib/hours/types";
 import type { CartState } from "@/types/cart";
 
 interface PublicTableOption {
@@ -38,9 +40,11 @@ function clearTableCart(publicToken: string): void {
 
 export function TableSelectionScreen({
   settings,
+  openStatus,
   tables,
 }: {
   settings: PublicRestaurantSettings;
+  openStatus: OpenStatus;
   tables: PublicTableOption[];
 }) {
   const router = useRouter();
@@ -94,6 +98,7 @@ export function TableSelectionScreen({
       pageTitle="اختر طاولتك"
       pageSubtitle="حدّد رقم طاولتك للمتابعة إلى القائمة"
     >
+      <RestaurantOpenStatus status={openStatus} variant="banner" className="mb-5" />
       {tables.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-brand-gold/50 bg-brand-surface px-6 py-16 text-center shadow-sm">
           <p className="text-lg font-extrabold text-brand-chocolate">
