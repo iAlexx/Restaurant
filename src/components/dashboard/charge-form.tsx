@@ -18,7 +18,6 @@ import {
   inputClassName,
   labelClassName,
 } from "@/components/dashboard/form-ui";
-import { formatPrice } from "@/lib/money";
 
 const initial: ActionResult = {};
 
@@ -192,11 +191,4 @@ export function ChargeForm({ charge }: { charge?: RestaurantCharge }) {
       </button>
     </form>
   );
-}
-
-export function chargeValueLabel(charge: RestaurantCharge, currency: string) {
-  if (charge.calculation_type === "PERCENTAGE") {
-    return `${basisPointsToPercentLabel(charge.value)}%`;
-  }
-  return formatPrice(charge.value, currency);
 }

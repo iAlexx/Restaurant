@@ -1,16 +1,14 @@
 import { requireAdminPage } from "@/lib/auth/admin-page";
 import { listChargesForAdmin } from "@/lib/actions/charges";
-import { ChargeForm, chargeValueLabel } from "@/components/dashboard/charge-form";
+import { ChargeForm } from "@/components/dashboard/charge-form";
 import { ChargeRowActions } from "@/components/dashboard/charge-row-actions";
 import { Badge, EmptyState, PageHeader } from "@/components/dashboard/form-ui";
 import { formatChargeDisplayLabel } from "@/lib/charges/calculate";
-
-const APPLIES_LABELS = {
-  ALL: "جميع الطلبات",
-  DINE_IN: "داخل المطعم",
-  DELIVERY: "توصيل",
-  PICKUP: "استلام",
-} as const;
+import {
+  chargeAppliesToLabel,
+  chargeTypeLabel,
+  chargeValueLabel,
+} from "@/lib/charges/format";
 
 export default async function ChargesPage() {
   await requireAdminPage();
@@ -51,15 +49,15 @@ export default async function ChargesPage() {
                       {charge.name_ar}
                     </td>
                     <td className="px-4 py-3 text-brand-muted">
-                      {charge.calculation_type === "PERCENTAGE"
-                        ? "نسبة مئوية"
-                        : "مبلغ ثابت"}
+                      {chargeTypeLabel(charge.calculation_type)}
                     </td>
                     <td className="px-4 py-3 tabular-nums text-brand-chocolate">
                       {chargeValueLabel(charge, "ل.س")}
                     </td>
                     <td className="px-4 py-3">
-                      <Badge tone="gold">{APPLIES_LABELS[charge.applies_to]}</Badge>
+                      <Badge tone="gold">
+                        {chargeAppliesToLabel(charge.applies_to)}
+                      </Badge>
                     </td>
                     <td className="px-4 py-3">
                       <Badge tone={charge.is_active ? "green" : "muted"}>
