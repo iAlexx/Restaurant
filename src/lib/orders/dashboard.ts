@@ -59,6 +59,9 @@ export interface OrderExportRow {
   order_number: string;
   order_type: OrderType;
   status: OrderStatus;
+  subtotal: number;
+  delivery_fee: number;
+  charges_total: number;
   total: number;
   created_at: string;
 }

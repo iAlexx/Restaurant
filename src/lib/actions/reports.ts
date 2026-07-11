@@ -22,7 +22,7 @@ async function fetchTodayOrdersForStaff() {
   const { data, error } = await supabase
     .from("orders")
     .select(
-      "order_number, order_type, status, total, created_at"
+      "id, order_number, order_type, status, subtotal, delivery_fee, total, created_at"
     )
     .gte("created_at", start)
     .lte("created_at", end)
@@ -36,7 +36,14 @@ async function fetchTodayOrdersForStaff() {
     date,
     orders: (data ?? []) as Pick<
       Order,
-      "order_type" | "status" | "total" | "order_number" | "created_at"
+      | "id"
+      | "order_type"
+      | "status"
+      | "subtotal"
+      | "delivery_fee"
+      | "total"
+      | "order_number"
+      | "created_at"
     >[],
   };
 }
@@ -80,10 +87,32 @@ export async function getOperationalSummaryForStaff() {
 export async function getTodayOrdersExportForStaff(): Promise<OrderExportRow[]> {
   await requireStaffSession();
   const { orders } = await fetchTodayOrdersForStaff();
+  if (orders.length === 0) return [];
+
+  const supabase = await createClient();
+  const orderIds = orders.map((order) => order.id);
+  const { data: chargeRows } = await supabase
+    .from("order_charges")
+    .select("order_id, calculated_amount")
+    .in("order_id", orderIds);
+
+  const chargesByOrderId = new Map<string, number>();
+  for (const row of chargeRows ?? []) {
+    const record = row as { order_id: string; calculated_amount: number };
+    const current = chargesByOrderId.get(record.order_id) ?? 0;
+    chargesByOrderId.set(
+      record.order_id,
+      current + record.calculated_amount
+    );
+  }
+
   return orders.map((order) => ({
     order_number: order.order_number,
     order_type: order.order_type,
     status: order.status,
+    subtotal: order.subtotal,
+    delivery_fee: order.delivery_fee,
+    charges_total: chargesByOrderId.get(order.id) ?? 0,
     total: order.total,
     created_at: order.created_at,
   }));

@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart, estimateCartTotal } from "@/contexts/cart-context";
+import {
+  toChargeDisplayLines,
+} from "@/lib/charges/calculate";
+import { buildOrderChargeTotals } from "@/lib/charges/resolve";
 import type { PublicMenu } from "@/lib/menu/public-menu";
 import type { CreateOrderInput } from "@/lib/validations/order";
 import { formatPrice } from "@/lib/money";
@@ -89,7 +93,15 @@ export function CheckoutClient({
   const subtotal = estimateCartTotal(cart.lines, menu.products, menu.addOns);
   const deliveryFee =
     orderType === "DELIVERY" ? menu.settings.default_delivery_fee : 0;
-  const total = subtotal + deliveryFee;
+  const orderTotals = useMemo(
+    () => buildOrderChargeTotals(subtotal, deliveryFee, orderType, menu.charges),
+    [subtotal, deliveryFee, orderType, menu.charges]
+  );
+  const chargeLines = useMemo(
+    () => toChargeDisplayLines(orderTotals.charges),
+    [orderTotals.charges]
+  );
+  const total = orderTotals.total;
 
   const minDelivery = menu.settings.min_delivery_order;
   const belowMinimum =
@@ -365,6 +377,7 @@ export function CheckoutClient({
               lines={summaryLines}
               subtotal={subtotal}
               deliveryFee={deliveryFee}
+              chargeLines={chargeLines}
               total={total}
               orderType={orderType}
               tableLabel={tableLabel}

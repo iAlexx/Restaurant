@@ -1,3 +1,4 @@
+import { addOnLineTotal, computeExpectedLineTotal } from "./pricing.js";
 /** ASCII digits and common numeric punctuation only — no bidi marks. */
 const ASCII_NUMERIC = /^[\d,.\-+:/ ]*$/;
 const ARABIC_INDIC = /[\u0660-\u0669\u06F0-\u06F9]/;
@@ -78,19 +79,32 @@ export function formatReceiptText(receipt) {
     }
     lines.push(divider);
     for (const item of receipt.items) {
-        const money = formatMoneyLTR(item.line_total, receipt.currency_label);
-        lines.push(`${item.name} x${formatQuantityLTR(item.quantity)}  ${formatMoneyDisplay(money)}`);
+        lines.push(item.name);
+        const unitMoney = formatMoneyLTR(item.unit_price, receipt.currency_label);
+        lines.push(`${formatQuantityLTR(item.quantity)} × ${formatMoneyDisplay(unitMoney)}`);
         for (const addOn of item.add_ons) {
-            lines.push(`  + ${addOn.name} (${formatPrice(addOn.price, receipt.currency_label)})`);
+            const addTotal = addOnLineTotal(addOn.price, item.quantity);
+            lines.push(`  + ${addOn.name} × ${formatQuantityLTR(item.quantity)}`);
+            lines.push(`  + ${formatMoneyDisplay(formatMoneyLTR(addTotal, receipt.currency_label))}`);
+        }
+        if (item.add_ons.length > 0) {
+            lines.push(`  مجموع الصنف: ${formatMoneyDisplay(formatMoneyLTR(item.line_total, receipt.currency_label))}`);
+        }
+        else {
+            lines.push(`  ${formatMoneyDisplay(formatMoneyLTR(item.line_total, receipt.currency_label))}`);
         }
         if (item.notes) {
             lines.push(`  ملاحظة: ${item.notes}`);
         }
+        lines.push("");
     }
     lines.push(divider);
     lines.push(`المجموع الفرعي: ${formatMoneyDisplay(formatMoneyLTR(receipt.subtotal, receipt.currency_label))}`);
     if (receipt.delivery_fee > 0) {
-        lines.push(`رسوم التوصيل: ${formatMoneyDisplay(formatMoneyLTR(receipt.delivery_fee, receipt.currency_label))}`);
+        lines.push(`أجرة التوصيل: ${formatMoneyDisplay(formatMoneyLTR(receipt.delivery_fee, receipt.currency_label))}`);
+    }
+    for (const charge of receipt.charges) {
+        lines.push(`${charge.label}: ${formatMoneyDisplay(formatMoneyLTR(charge.amount, receipt.currency_label))}`);
     }
     lines.push(`الإجمالي: ${formatMoneyDisplay(formatMoneyLTR(receipt.total, receipt.currency_label))}`);
     lines.push(divider);
@@ -102,6 +116,20 @@ export function formatReceiptText(receipt) {
     return lines.join("\n");
 }
 export function buildTestReceipt() {
+    const unitPrice = 12334;
+    const quantity = 2;
+    const addOns = [
+        { name: "Extra cheese", price: 500 },
+        { name: "Sauce", price: 250 },
+    ];
+    const lineTotal = computeExpectedLineTotal(unitPrice, quantity, addOns.map((a) => a.price));
+    const subtotal = lineTotal;
+    const deliveryFee = 2000;
+    const charges = [
+        { label: "إعمار 10%", amount: 2617, sort_order: 0 },
+        { label: "رسوم تغليف", amount: 500, sort_order: 1 },
+    ];
+    const total = subtotal + deliveryFee + charges.reduce((s, c) => s + c.amount, 0);
     return {
         job_id: "00000000-0000-4000-8000-000000000001",
         is_reprint: false,
@@ -110,28 +138,29 @@ export function buildTestReceipt() {
         receipt_footer: "شكراً لزيارتكم",
         currency_label: "ل.س",
         order_number: "100726-010",
-        order_type: "DINE_IN",
-        order_type_label: "داخل المطعم",
-        table_label: "طاولة 1",
-        customer_name: null,
-        customer_phone: null,
-        customer_address: null,
+        order_type: "DELIVERY",
+        order_type_label: "توصيل",
+        table_label: null,
+        customer_name: "أحمد",
+        customer_phone: "0999123456",
+        customer_address: "دمشق - المزة",
         location_url: null,
         pickup_time: null,
         notes: null,
         items: [
             {
-                name: "برجر",
-                quantity: 2,
-                unit_price: 1233,
-                line_total: 2466,
+                name: "برجر كلاسيك",
+                quantity,
+                unit_price: unitPrice,
+                line_total: lineTotal,
                 notes: null,
-                add_ons: [],
+                add_ons: addOns,
             },
         ],
-        subtotal: 2466,
-        delivery_fee: 9868,
-        total: 12334,
+        subtotal,
+        delivery_fee: deliveryFee,
+        charges,
+        total,
         created_at: new Date().toISOString(),
     };
 }

@@ -1,4 +1,5 @@
 import type { CreateOrderInput } from "@/lib/validations/order";
+import type { ResolvedChargeSnapshot } from "@/lib/charges/types";
 
 export interface ResolvedAddOnSnapshot {
   add_on_id: string;
@@ -19,6 +20,8 @@ export interface ResolvedLineSnapshot {
 export interface ResolvedOrderTotals {
   subtotal: number;
   delivery_fee: number;
+  charges: ResolvedChargeSnapshot[];
+  charges_total: number;
   total: number;
   lines: ResolvedLineSnapshot[];
 }
@@ -34,11 +37,25 @@ export function computeLineTotal(
 
 export function computeOrderTotals(
   lines: ResolvedLineSnapshot[],
-  deliveryFee: number
-): Pick<ResolvedOrderTotals, "subtotal" | "delivery_fee" | "total"> {
+  deliveryFee: number,
+  charges: ResolvedChargeSnapshot[] = []
+): Pick<
+  ResolvedOrderTotals,
+  "subtotal" | "delivery_fee" | "charges" | "charges_total" | "total"
+> {
   const subtotal = lines.reduce((sum, line) => sum + line.line_total, 0);
-  const total = subtotal + deliveryFee;
-  return { subtotal, delivery_fee: deliveryFee, total };
+  const charges_total = charges.reduce(
+    (sum, charge) => sum + charge.calculated_amount,
+    0
+  );
+  const total = subtotal + deliveryFee + charges_total;
+  return {
+    subtotal,
+    delivery_fee: deliveryFee,
+    charges,
+    charges_total,
+    total,
+  };
 }
 
 export function getInitialOrderStatus(

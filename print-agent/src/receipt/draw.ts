@@ -40,6 +40,26 @@ export interface ReceiptDrawer {
     contentWidth: number,
     indent?: number
   ): void;
+  drawItemName(
+    name: string,
+    size: number,
+    bold: boolean,
+    contentWidth: number,
+    indent?: number
+  ): void;
+  drawQtyUnitRow(quantity: string, unitMoney: MoneyLTR, size: number, bold: boolean, indent?: number): void;
+  drawAddOnNameRow(label: string, size: number, indent?: number): void;
+  drawAddOnMoneyRow(money: MoneyLTR, size: number, indent?: number): void;
+  drawItemTotalRow(label: string, money: MoneyLTR, size: number, bold: boolean, indent?: number): void;
+  drawCompactItemRow(
+    name: string,
+    quantity: string,
+    unitMoney: MoneyLTR,
+    lineMoney: MoneyLTR,
+    size: number,
+    bold: boolean,
+    contentWidth: number
+  ): void;
   advanceLine(size: number): void;
 }
 
@@ -197,6 +217,100 @@ export function createReceiptDrawer(options: DrawerOptions): ReceiptDrawer {
     return lines;
   }
 
+  function drawItemName(
+    name: string,
+    size: number,
+    bold: boolean,
+    contentWidth: number,
+    indent = 0
+  ): void {
+    const lines = wrapArabicRight(name, size, bold, contentWidth, indent);
+    for (const line of lines) {
+      drawRtlLabel(line, size, bold, indent);
+    }
+  }
+
+  function drawQtyUnitRow(
+    quantity: string,
+    unitMoney: MoneyLTR,
+    size: number,
+    bold: boolean,
+    indent = 0
+  ): void {
+    const h = lineHeight(size);
+    if (draw) {
+      const valueText = `${quantity} × ${unitMoney.amount}`;
+      let x = leftX + indent;
+      x += drawLtrValue(valueText, size, bold, x);
+      ctx.font = arabicFont(size, bold);
+      ctx.direction = "ltr";
+      ctx.textAlign = "left";
+      ctx.fillText(` ${unitMoney.currency}`, x, getY());
+    }
+    setY(getY() + h);
+  }
+
+  function drawAddOnNameRow(label: string, size: number, indent = 0): void {
+    const h = lineHeight(size);
+    if (draw) {
+      const plusWidth = drawLtrValue("+", size, false, leftX + indent);
+      ctx.font = arabicFont(size, false);
+      ctx.direction = "rtl";
+      ctx.textAlign = "right";
+      ctx.fillText(label, rightX, getY());
+      void plusWidth;
+    }
+    setY(getY() + h);
+  }
+
+  function drawAddOnMoneyRow(money: MoneyLTR, size: number, indent = 0): void {
+    const h = lineHeight(size);
+    if (draw) {
+      let x = leftX + indent;
+      x += drawLtrValue(`+${money.amount}`, size, false, x);
+      ctx.font = arabicFont(size, false);
+      ctx.direction = "ltr";
+      ctx.textAlign = "left";
+      ctx.fillText(` ${money.currency}`, x, getY());
+    }
+    setY(getY() + h);
+  }
+
+  function drawItemTotalRow(
+    label: string,
+    money: MoneyLTR,
+    size: number,
+    bold: boolean,
+    indent = 0
+  ): void {
+    drawMoneyRow(label, money, size, bold, indent);
+  }
+
+  function drawCompactItemRow(
+    name: string,
+    quantity: string,
+    unitMoney: MoneyLTR,
+    lineMoney: MoneyLTR,
+    size: number,
+    bold: boolean,
+    contentWidth: number
+  ): void {
+    drawItemName(name, size, bold, contentWidth);
+    const h = lineHeight(size);
+    if (draw) {
+      let x = leftX;
+      x += drawLtrValue(`${quantity} × ${unitMoney.amount}`, size, bold, x);
+      ctx.font = arabicFont(size, bold);
+      ctx.direction = "ltr";
+      ctx.textAlign = "left";
+      ctx.fillText(` ${unitMoney.currency}`, x, getY());
+
+      const totalWidth = measureMoney(lineMoney, size, bold);
+      drawMoney(lineMoney, size, bold, rightX - totalWidth);
+    }
+    setY(getY() + h);
+  }
+
   function drawItemRow(
     name: string,
     quantity: string,
@@ -250,6 +364,12 @@ export function createReceiptDrawer(options: DrawerOptions): ReceiptDrawer {
     drawRow,
     drawMoneyRow,
     drawItemRow,
+    drawItemName,
+    drawQtyUnitRow,
+    drawAddOnNameRow,
+    drawAddOnMoneyRow,
+    drawItemTotalRow,
+    drawCompactItemRow,
     advanceLine,
   };
 }

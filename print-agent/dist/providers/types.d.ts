@@ -1,4 +1,17 @@
 import { z } from "zod";
+export declare const receiptChargeSchema: z.ZodObject<{
+    label: z.ZodString;
+    amount: z.ZodNumber;
+    sort_order: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    label: string;
+    amount: number;
+    sort_order: number;
+}, {
+    label: string;
+    amount: number;
+    sort_order: number;
+}>;
 export declare const receiptItemSchema: z.ZodObject<{
     name: z.ZodString;
     quantity: z.ZodNumber;
@@ -92,6 +105,19 @@ export declare const receiptPayloadSchema: z.ZodObject<{
     }>, "many">;
     subtotal: z.ZodNumber;
     delivery_fee: z.ZodNumber;
+    charges: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        label: z.ZodString;
+        amount: z.ZodNumber;
+        sort_order: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        label: string;
+        amount: number;
+        sort_order: number;
+    }, {
+        label: string;
+        amount: number;
+        sort_order: number;
+    }>, "many">>;
     total: z.ZodNumber;
     created_at: z.ZodString;
 }, "strip", z.ZodTypeAny, {
@@ -124,6 +150,11 @@ export declare const receiptPayloadSchema: z.ZodObject<{
     }[];
     subtotal: number;
     delivery_fee: number;
+    charges: {
+        label: string;
+        amount: number;
+        sort_order: number;
+    }[];
     total: number;
     created_at: string;
 }, {
@@ -158,6 +189,11 @@ export declare const receiptPayloadSchema: z.ZodObject<{
     delivery_fee: number;
     total: number;
     created_at: string;
+    charges?: {
+        label: string;
+        amount: number;
+        sort_order: number;
+    }[] | undefined;
 }>;
 export type ReceiptPayload = z.infer<typeof receiptPayloadSchema>;
 export declare const claimResponseSchema: z.ZodObject<{
@@ -220,6 +256,19 @@ export declare const claimResponseSchema: z.ZodObject<{
         }>, "many">;
         subtotal: z.ZodNumber;
         delivery_fee: z.ZodNumber;
+        charges: z.ZodDefault<z.ZodArray<z.ZodObject<{
+            label: z.ZodString;
+            amount: z.ZodNumber;
+            sort_order: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            label: string;
+            amount: number;
+            sort_order: number;
+        }, {
+            label: string;
+            amount: number;
+            sort_order: number;
+        }>, "many">>;
         total: z.ZodNumber;
         created_at: z.ZodString;
     }, "strip", z.ZodTypeAny, {
@@ -252,6 +301,11 @@ export declare const claimResponseSchema: z.ZodObject<{
         }[];
         subtotal: number;
         delivery_fee: number;
+        charges: {
+            label: string;
+            amount: number;
+            sort_order: number;
+        }[];
         total: number;
         created_at: string;
     }, {
@@ -286,6 +340,11 @@ export declare const claimResponseSchema: z.ZodObject<{
         delivery_fee: number;
         total: number;
         created_at: string;
+        charges?: {
+            label: string;
+            amount: number;
+            sort_order: number;
+        }[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     job_id: string;
@@ -321,6 +380,11 @@ export declare const claimResponseSchema: z.ZodObject<{
         }[];
         subtotal: number;
         delivery_fee: number;
+        charges: {
+            label: string;
+            amount: number;
+            sort_order: number;
+        }[];
         total: number;
         created_at: string;
     };
@@ -360,6 +424,11 @@ export declare const claimResponseSchema: z.ZodObject<{
         delivery_fee: number;
         total: number;
         created_at: string;
+        charges?: {
+            label: string;
+            amount: number;
+            sort_order: number;
+        }[] | undefined;
     };
 }>;
 export type ClaimResponse = z.infer<typeof claimResponseSchema>;

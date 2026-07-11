@@ -29,6 +29,7 @@ class AtomicOrderHarness {
   private ordersByToken = new Map<string, StoredOrder>();
   private orderItems: { order_id: string; id: string }[] = [];
   private orderItemAddOns: { order_item_id: string }[] = [];
+  private orderCharges: { order_id: string; charge_id: string | null }[] = [];
   private printJobs: { order_id: string }[] = [];
   private seq = 0;
   private mutex: Promise<void> = Promise.resolve();
@@ -38,6 +39,7 @@ class AtomicOrderHarness {
     this.ordersByToken.clear();
     this.orderItems = [];
     this.orderItemAddOns = [];
+    this.orderCharges = [];
     this.printJobs = [];
     this.seq = 0;
     this.mutex = Promise.resolve();
@@ -80,6 +82,8 @@ class AtomicOrderHarness {
 
       const pendingItems: { order_id: string; id: string }[] = [];
       const pendingAddOns: { order_item_id: string }[] = [];
+      const pendingCharges: { order_id: string; charge_id: string | null }[] =
+        [];
       let pendingPrintJob: { order_id: string } | null = null;
 
       try {
@@ -99,6 +103,13 @@ class AtomicOrderHarness {
           }
         }
 
+        for (const charge of payload.charges ?? []) {
+          pendingCharges.push({
+            order_id: pendingOrder.id,
+            charge_id: charge.charge_id,
+          });
+        }
+
         if (options?.failAt === "print_job") {
           throw new Error("simulated print job insert failure");
         }
@@ -109,6 +120,7 @@ class AtomicOrderHarness {
         this.ordersByToken.set(payload.submit_token, pendingOrder);
         this.orderItems.push(...pendingItems);
         this.orderItemAddOns.push(...pendingAddOns);
+        this.orderCharges.push(...pendingCharges);
         if (pendingPrintJob) {
           this.printJobs.push(pendingPrintJob);
         }
@@ -134,6 +146,7 @@ class AtomicOrderHarness {
       orders: this.orders.size,
       items: this.orderItems.length,
       addOns: this.orderItemAddOns.length,
+      charges: this.orderCharges.length,
       printJobs: this.printJobs.length,
     };
   }
@@ -167,6 +180,7 @@ const samplePayload = (): TrustedOrderPayload => ({
   subtotal: 2000,
   delivery_fee: 0,
   total: 2000,
+  charges: [],
   items: [
     {
       product_id: "00000000-0000-4000-8000-000000000001",
@@ -218,6 +232,23 @@ describe("create_customer_order SQL migration", () => {
   });
 });
 
+describe("create_customer_order charges migration", () => {
+  const sql = readFileSync(
+    join(
+      process.cwd(),
+      "supabase/migrations/20260711140100_order_rpc_charges.sql"
+    ),
+    "utf8"
+  );
+
+  it("persists order_charges snapshots in the RPC", () => {
+    expect(sql).toContain("INSERT INTO public.order_charges");
+    expect(sql).toContain("name_snapshot");
+    expect(sql).toContain("calculated_amount");
+    expect(sql).toContain("sort_order_snapshot");
+  });
+});
+
 describe("atomic order transaction harness", () => {
   const harness = new AtomicOrderHarness();
 
@@ -233,8 +264,28 @@ describe("atomic order transaction harness", () => {
       orders: 1,
       items: 1,
       addOns: 1,
+      charges: 0,
       printJobs: 1,
     });
+  });
+
+  it("persists charge snapshots atomically with the order", async () => {
+    const payload = samplePayload();
+    payload.charges = [
+      {
+        charge_id: "00000000-0000-4000-8000-000000000020",
+        name_snapshot: "إعمار",
+        calculation_type_snapshot: "PERCENTAGE",
+        value_snapshot: 1000,
+        calculated_amount: 200,
+        sort_order_snapshot: 0,
+      },
+    ];
+    payload.total = 2200;
+
+    await harness.createCustomerOrder(payload);
+
+    expect(harness.counts().charges).toBe(1);
   });
 
   it("rolls back the order when an item insert fails", async () => {
@@ -246,6 +297,7 @@ describe("atomic order transaction harness", () => {
       orders: 0,
       items: 0,
       addOns: 0,
+      charges: 0,
       printJobs: 0,
     });
   });
@@ -259,6 +311,7 @@ describe("atomic order transaction harness", () => {
       orders: 0,
       items: 0,
       addOns: 0,
+      charges: 0,
       printJobs: 0,
     });
   });
@@ -272,6 +325,7 @@ describe("atomic order transaction harness", () => {
       orders: 0,
       items: 0,
       addOns: 0,
+      charges: 0,
       printJobs: 0,
     });
   });

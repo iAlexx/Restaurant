@@ -3,9 +3,11 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  buildTestReceipt,
   formatMoneyLTR,
   formatOrderNumberLTR,
   formatQuantityLTR,
+  formatReceiptText,
   toAsciiDigits,
 } from "./format.js";
 import {
@@ -40,6 +42,16 @@ describe("receipt format", () => {
   it("formats quantity without bidi marks", () => {
     expect(formatQuantityLTR(2)).toBe("2");
     expect(formatQuantityLTR(2)).not.toMatch(/[\u200E\u200F\u2066-\u2069]/);
+  });
+
+  it("prints charge rows from snapshots before final total", () => {
+    const text = formatReceiptText(buildTestReceipt());
+    expect(text).toContain("إعمار 10%");
+    expect(text).toContain("2,617");
+    expect(text).toContain("رسوم تغليف");
+    expect(text).toContain("500");
+    expect(text).toContain("31,285");
+    expect(text.indexOf("إعمار 10%")).toBeLessThan(text.indexOf("الإجمالي"));
   });
 });
 

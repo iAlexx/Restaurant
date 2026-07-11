@@ -2,6 +2,7 @@ import { createCanvas } from "@napi-rs/canvas";
 import { createReceiptDrawer, wrapArabicBlock } from "./draw.js";
 import { formatMoneyLTR, formatOrderNumberLTR, formatQuantityLTR, } from "./format.js";
 import { registerReceiptFonts, FONT_ARABIC } from "./fonts.js";
+import { addOnLineTotal, verifyReceiptPayload } from "./pricing.js";
 function makeTheme(width) {
     const k = width / 576;
     return {
@@ -12,8 +13,8 @@ function makeTheme(width) {
         sizeTitle: Math.round(26 * k),
         sizeNormal: Math.round(26 * k),
         sizeSmall: Math.round(22 * k),
-        sizeTotal: Math.round(38 * k),
-        lineGap: Math.round(10 * k),
+        sizeTotal: Math.round(34 * k),
+        lineGap: Math.round(8 * k),
     };
 }
 function fontString(size, bold) {
@@ -54,19 +55,21 @@ function layout(ctx, theme, receipt, draw) {
         y += h + theme.lineGap;
     }
     function separator() {
-        const h = Math.round(6 * k);
+        const padY = Math.round(4 * k);
+        y += padY;
+        const h = Math.round(4 * k);
         if (draw) {
             ctx.save();
             ctx.strokeStyle = "#000000";
-            ctx.lineWidth = Math.max(1, Math.round(2 * k));
-            ctx.setLineDash([Math.round(7 * k), Math.round(5 * k)]);
+            ctx.lineWidth = Math.max(1, Math.round(1.5 * k));
+            ctx.setLineDash([Math.round(6 * k), Math.round(4 * k)]);
             ctx.beginPath();
             ctx.moveTo(pad, y + h / 2);
             ctx.lineTo(width - pad, y + h / 2);
             ctx.stroke();
             ctx.restore();
         }
-        y += h + theme.lineGap;
+        y += h + padY + theme.lineGap;
     }
     function spacer(px) {
         y += Math.round(px * k);
@@ -113,45 +116,51 @@ function layout(ctx, theme, receipt, draw) {
     }
     separator();
     for (const item of receipt.items) {
-        drawer.drawItemRow(item.name, formatQuantityLTR(item.quantity), formatMoneyLTR(item.line_total, receipt.currency_label), theme.sizeNormal, false, contentWidth);
-        for (const addOn of item.add_ons) {
-            const addMoney = formatMoneyLTR(addOn.price, receipt.currency_label);
-            const prefix = `+ ${addOn.name}`;
-            const h = lineHeight(theme.sizeSmall);
-            if (draw) {
-                ctx.font = fontString(theme.sizeSmall, false);
-                ctx.direction = "rtl";
-                ctx.textAlign = "right";
-                ctx.fillText(prefix, rightX - Math.round(20 * k), y);
-                let x = leftX;
-                x += drawer.drawLtrValue(`+${addMoney.amount}`, theme.sizeSmall, false, x);
-                ctx.font = fontString(theme.sizeSmall, false);
-                ctx.direction = "ltr";
-                ctx.textAlign = "left";
-                ctx.fillText(` ${addMoney.currency}`, x, y);
+        const qty = formatQuantityLTR(item.quantity);
+        const unitMoney = formatMoneyLTR(item.unit_price, receipt.currency_label);
+        const lineMoney = formatMoneyLTR(item.line_total, receipt.currency_label);
+        const addOnIndent = Math.round(16 * k);
+        if (item.add_ons.length === 0) {
+            drawer.drawCompactItemRow(item.name, qty, unitMoney, lineMoney, theme.sizeNormal, true, contentWidth);
+        }
+        else {
+            drawer.drawItemName(item.name, theme.sizeNormal, true, contentWidth);
+            drawer.drawQtyUnitRow(qty, unitMoney, theme.sizeSmall, false);
+            for (const addOn of item.add_ons) {
+                const addOnTotal = addOnLineTotal(addOn.price, item.quantity);
+                const addQty = formatQuantityLTR(item.quantity);
+                drawer.drawAddOnNameRow(`${addOn.name} × ${addQty}`, theme.sizeSmall, addOnIndent);
+                drawer.drawAddOnMoneyRow(formatMoneyLTR(addOnTotal, receipt.currency_label), theme.sizeSmall, addOnIndent + Math.round(8 * k));
             }
-            y += h;
+            drawer.drawItemTotalRow("مجموع الصنف", lineMoney, theme.sizeNormal, true, addOnIndent);
         }
         if (item.notes) {
-            wrapArabicBlock(drawer, "» ", item.notes, theme.sizeSmall, false, contentWidth - Math.round(20 * k), Math.round(20 * k));
+            wrapArabicBlock(drawer, "» ", item.notes, theme.sizeSmall, false, contentWidth - addOnIndent, addOnIndent);
         }
-        spacer(6);
+        spacer(8);
     }
     separator();
     drawer.drawMoneyRow("المجموع الفرعي", formatMoneyLTR(receipt.subtotal, receipt.currency_label), theme.sizeNormal, false);
     if (receipt.delivery_fee > 0) {
-        drawer.drawMoneyRow("رسوم التوصيل", formatMoneyLTR(receipt.delivery_fee, receipt.currency_label), theme.sizeNormal, false);
+        drawer.drawMoneyRow("أجرة التوصيل", formatMoneyLTR(receipt.delivery_fee, receipt.currency_label), theme.sizeNormal, false);
     }
-    spacer(4);
+    for (const charge of receipt.charges) {
+        drawer.drawMoneyRow(charge.label, formatMoneyLTR(charge.amount, receipt.currency_label), theme.sizeNormal, false);
+    }
+    spacer(8);
     drawer.drawMoneyRow("الإجمالي", formatMoneyLTR(receipt.total, receipt.currency_label), theme.sizeTotal, true);
     separator();
     if (receipt.receipt_footer) {
         drawCenter(receipt.receipt_footer, theme.sizeSmall, false);
     }
-    spacer(24);
+    spacer(48);
     return Math.ceil(y);
 }
 export function renderReceiptPng(receipt, widthPx) {
+    const pricingErrors = verifyReceiptPayload(receipt);
+    if (pricingErrors.length > 0) {
+        throw new Error(`Receipt pricing mismatch: ${pricingErrors.join("; ")}`);
+    }
     const theme = makeTheme(widthPx);
     const measureCanvas = createCanvas(widthPx, 10);
     const measureCtx = measureCanvas.getContext("2d");

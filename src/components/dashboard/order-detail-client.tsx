@@ -7,7 +7,8 @@ import {
   reprintOrderAction,
   updateOrderStatusAction,
 } from "@/lib/actions/orders";
-import type { Order, OrderItem, OrderItemAddOn, PrintJob } from "@/types/database";
+import type { Order, OrderCharge, OrderItem, OrderItemAddOn, PrintJob } from "@/types/database";
+import { formatChargeDisplayLabel } from "@/lib/charges/calculate";
 import {
   getAllowedNextStatuses,
   isTerminalStatus,
@@ -36,6 +37,7 @@ interface OrderDetailData {
   order: Order;
   items: OrderItem[];
   addOns: OrderItemAddOn[];
+  orderCharges: OrderCharge[];
   printJobs: PrintJob[];
   currency_label: string;
   created_by_display_name: string | null;
@@ -319,10 +321,22 @@ export function OrderDetailClient({
           </div>
           {order.delivery_fee > 0 && (
             <div className="flex justify-between">
-              <dt className="text-brand-muted">رسوم التوصيل</dt>
+              <dt className="text-brand-muted">أجرة التوصيل</dt>
               <dd>{formatPrice(order.delivery_fee, currency_label)}</dd>
             </div>
           )}
+          {data.orderCharges.map((charge) => (
+            <div key={charge.id} className="flex justify-between">
+              <dt className="text-brand-muted">
+                {formatChargeDisplayLabel(
+                  charge.name_snapshot,
+                  charge.calculation_type_snapshot,
+                  charge.value_snapshot
+                )}
+              </dt>
+              <dd>{formatPrice(charge.calculated_amount, currency_label)}</dd>
+            </div>
+          ))}
           <div className="flex justify-between text-base font-bold">
             <dt>الإجمالي</dt>
             <dd className="tabular-nums">

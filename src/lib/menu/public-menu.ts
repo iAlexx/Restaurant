@@ -3,6 +3,7 @@ import { sortCategoriesStable } from "@/lib/menu/category-filter";
 import { computeRestaurantOpenStatus } from "@/lib/hours/restaurant-status";
 import { normalizeWeeklyOpeningHours } from "@/lib/hours/schedule";
 import type { OpeningHoursSettings, RestaurantOpenStatus } from "@/lib/hours/types";
+import type { PublicCharge } from "@/lib/charges/types";
 import type { AddOn, Category, Product } from "@/types/database";
 
 export interface PublicRestaurantSettings {
@@ -31,6 +32,7 @@ export interface PublicMenuProduct extends Product {
 export interface PublicMenu {
   settings: PublicRestaurantSettings;
   openStatus: RestaurantOpenStatus;
+  charges: PublicCharge[];
   categories: Category[];
   products: PublicMenuProduct[];
   addOns: AddOn[];
@@ -39,7 +41,7 @@ export interface PublicMenu {
 export async function fetchPublicMenu(): Promise<PublicMenu> {
   const supabase = await createClient();
 
-  const [settingsRes, categoriesRes, productsRes, addOnsRes, linksRes] =
+  const [settingsRes, categoriesRes, productsRes, addOnsRes, linksRes, chargesRes] =
     await Promise.all([
       supabase.from("restaurant_settings_public").select("*").single(),
       supabase
@@ -54,6 +56,11 @@ export async function fetchPublicMenu(): Promise<PublicMenu> {
         .order("sort_order", { ascending: true }),
       supabase.from("add_ons").select("*").eq("is_available", true),
       supabase.from("product_add_ons").select("product_id, add_on_id"),
+      supabase
+        .from("restaurant_charges")
+        .select("id, name_ar, calculation_type, value, applies_to, sort_order")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true }),
     ]);
 
   if (settingsRes.error || !settingsRes.data) {
@@ -92,6 +99,7 @@ export async function fetchPublicMenu(): Promise<PublicMenu> {
   return {
     settings,
     openStatus,
+    charges: (chargesRes.data ?? []) as PublicCharge[],
     categories: sortCategoriesStable((categoriesRes.data ?? []) as Category[]),
     products,
     addOns: (addOnsRes.data ?? []) as AddOn[],

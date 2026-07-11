@@ -19,6 +19,7 @@ export interface OrderSummaryCardProps {
   lines: OrderSummaryLine[];
   subtotal: number;
   deliveryFee?: number;
+  chargeLines?: { label: string; amount: number }[];
   total: number;
   orderNumber?: string;
   orderType?: OrderType;
@@ -43,6 +44,7 @@ export function OrderSummaryCard({
   lines,
   subtotal,
   deliveryFee = 0,
+  chargeLines = [],
   total,
   orderNumber,
   orderType,
@@ -175,12 +177,23 @@ export function OrderSummaryCard({
         </div>
         {deliveryFee > 0 ? (
           <div className="flex justify-between gap-3 text-sm sm:text-base">
-            <dt className="text-brand-muted">رسوم التوصيل</dt>
+            <dt className="text-brand-muted">أجرة التوصيل</dt>
             <dd className="font-semibold tabular-nums text-brand-chocolate">
               {formatPrice(deliveryFee, currencyLabel)}
             </dd>
           </div>
         ) : null}
+        {chargeLines.map((charge) => (
+          <div
+            key={charge.label}
+            className="flex justify-between gap-3 text-sm sm:text-base"
+          >
+            <dt className="text-brand-muted">{charge.label}</dt>
+            <dd className="font-semibold tabular-nums text-brand-chocolate">
+              {formatPrice(charge.amount, currencyLabel)}
+            </dd>
+          </div>
+        ))}
         <div className="border-t border-brand-gold/50 pt-3">
           <div className="flex justify-between gap-3">
             <dt className="text-lg font-extrabold text-brand-chocolate">

@@ -19,6 +19,9 @@ export function buildTodayOrdersCsv(rows: OrderExportRow[]): string {
     "رقم الطلب",
     "نوع الطلب",
     "الحالة",
+    "المجموع الفرعي",
+    "أجرة التوصيل",
+    "إجمالي الرسوم",
     "الإجمالي",
     "وقت الإنشاء",
   ];
@@ -28,6 +31,9 @@ export function buildTodayOrdersCsv(rows: OrderExportRow[]): string {
       row.order_number,
       ORDER_TYPE_LABELS[row.order_type],
       ORDER_STATUS_LABELS[row.status],
+      String(row.subtotal),
+      String(row.delivery_fee),
+      String(row.charges_total),
       String(row.total),
       formatRestaurantDateTime(row.created_at),
     ]

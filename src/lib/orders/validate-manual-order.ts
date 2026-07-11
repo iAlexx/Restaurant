@@ -1,9 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ManualOrderInput } from "@/lib/validations/manual-order";
 import {
-  computeOrderTotals,
   type ResolvedLineSnapshot,
 } from "@/lib/orders/calculations";
+import {
+  buildOrderChargeTotals,
+  fetchActiveRestaurantCharges,
+} from "@/lib/charges/resolve";
 import {
   buildTrustedOrderPayload,
   type TrustedOrderPayload,
@@ -174,16 +177,24 @@ export async function validateAndBuildManualPayload(
   const deliveryFee =
     input.order_type === "DELIVERY" ? input.delivery_fee : 0;
 
-  const totals = computeOrderTotals(lines, deliveryFee);
+  const itemSubtotal = lines.reduce((sum, line) => sum + line.line_total, 0);
 
   if (
     input.order_type === "DELIVERY" &&
-    totals.subtotal < restaurant.min_delivery_order
+    itemSubtotal < restaurant.min_delivery_order
   ) {
     throw new OrderValidationError(
       `الحد الأدنى للتوصيل هو ${restaurant.min_delivery_order} ${restaurant.currency_label}`
     );
   }
+
+  const activeCharges = await fetchActiveRestaurantCharges(supabase);
+  const totals = buildOrderChargeTotals(
+    itemSubtotal,
+    deliveryFee,
+    input.order_type,
+    activeCharges
+  );
 
   const status = getManualOrderStatus(input.order_type);
 
@@ -204,6 +215,7 @@ export async function validateAndBuildManualPayload(
     lines,
     subtotal: totals.subtotal,
     deliveryFee: totals.delivery_fee,
+    charges: totals.charges,
     total: totals.total,
     createdBy,
   });

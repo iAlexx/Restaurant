@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ORDER_TYPE_LABELS } from "@/lib/orders/status-transitions";
+import { formatChargeDisplayLabel } from "@/lib/charges/calculate";
 import {
   receiptPayloadSchema,
   type ReceiptPayload,
@@ -54,7 +55,7 @@ export async function buildReceiptPayloadFromSnapshots(
 ): Promise<ReceiptPayload> {
   const { jobId, orderId, isReprint } = params;
 
-  const [orderRes, itemsRes, settingsRes] = await Promise.all([
+  const [orderRes, itemsRes, settingsRes, chargesRes] = await Promise.all([
     supabase.from("orders").select("*").eq("id", orderId).single(),
     supabase
       .from("order_items")
@@ -66,6 +67,13 @@ export async function buildReceiptPayloadFromSnapshots(
       .select("name, receipt_header, receipt_footer, currency_label")
       .eq("id", 1)
       .single(),
+    supabase
+      .from("order_charges")
+      .select(
+        "name_snapshot, calculation_type_snapshot, value_snapshot, calculated_amount, sort_order_snapshot"
+      )
+      .eq("order_id", orderId)
+      .order("sort_order_snapshot", { ascending: true }),
   ]);
 
   if (orderRes.error || !orderRes.data) {
@@ -124,6 +132,21 @@ export async function buildReceiptPayloadFromSnapshots(
     })),
     subtotal: order.subtotal,
     delivery_fee: order.delivery_fee,
+    charges: ((chargesRes.data ?? []) as Array<{
+      name_snapshot: string;
+      calculation_type_snapshot: "PERCENTAGE" | "FIXED";
+      value_snapshot: number;
+      calculated_amount: number;
+      sort_order_snapshot: number;
+    }>).map((charge) => ({
+      label: formatChargeDisplayLabel(
+        charge.name_snapshot,
+        charge.calculation_type_snapshot,
+        charge.value_snapshot
+      ),
+      amount: charge.calculated_amount,
+      sort_order: charge.sort_order_snapshot,
+    })),
     total: order.total,
     created_at: order.created_at,
   };

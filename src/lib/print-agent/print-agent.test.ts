@@ -149,6 +149,15 @@ describe("atomic claim", () => {
           }),
         };
       }
+      if (table === "order_charges") {
+        return {
+          select: () => ({
+            eq: () => ({
+              order: async () => ({ data: [], error: null }),
+            }),
+          }),
+        };
+      }
       return { select: () => ({}) };
     });
 
@@ -218,6 +227,18 @@ describe("reprint marker in receipt payload", () => {
     });
 
     fromMock.mockImplementation((table: string) => {
+      if (table === "print_jobs") {
+        return {
+          update: () => ({
+            eq: () => ({
+              eq: () => ({
+                eq: vi.fn().mockResolvedValue({ error: null }),
+              }),
+            }),
+          }),
+        };
+      }
+
       const chain = {
         select: () => chain,
         eq: () => chain,
@@ -248,17 +269,20 @@ describe("reprint marker in receipt payload", () => {
                 },
           error: null,
         }),
-        order: () => ({
-          data: [
-            {
-              id: "item-1",
-              product_name_snapshot: "بيتزا",
-              unit_price_snapshot: 2000,
-              quantity: 1,
-              line_total: 2000,
-              notes: null,
-            },
-          ],
+        order: async () => ({
+          data:
+            table === "order_items"
+              ? [
+                  {
+                    id: "item-1",
+                    product_name_snapshot: "بيتزا",
+                    unit_price_snapshot: 2000,
+                    quantity: 1,
+                    line_total: 2000,
+                    notes: null,
+                  },
+                ]
+              : [],
           error: null,
         }),
         in: async () => ({ data: [], error: null }),

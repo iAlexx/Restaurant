@@ -19,10 +19,14 @@ describe("computeLineTotal", () => {
   it("includes add-on prices in line total", () => {
     expect(computeLineTotal(1000, 2, [200, 100])).toBe(2600);
   });
+
+  it("matches receipt sample arithmetic", () => {
+    expect(computeLineTotal(12334, 2, [500, 250])).toBe(26168);
+  });
 });
 
 describe("computeOrderTotals", () => {
-  it("adds delivery fee to subtotal", () => {
+  it("adds delivery fee and charges to subtotal", () => {
     const result = computeOrderTotals(
       [
         {
@@ -35,11 +39,22 @@ describe("computeOrderTotals", () => {
           add_ons: [],
         },
       ],
-      500
+      500,
+      [
+        {
+          charge_id: "c1",
+          name_snapshot: "إعمار",
+          calculation_type_snapshot: "PERCENTAGE",
+          value_snapshot: 1000,
+          calculated_amount: 200,
+          sort_order_snapshot: 0,
+        },
+      ]
     );
     expect(result.subtotal).toBe(2000);
     expect(result.delivery_fee).toBe(500);
-    expect(result.total).toBe(2500);
+    expect(result.charges_total).toBe(200);
+    expect(result.total).toBe(2700);
   });
 });
 

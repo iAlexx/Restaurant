@@ -5,6 +5,7 @@ const ADMIN_ONLY_PREFIXES = [
   "/dashboard/products",
   "/dashboard/add-ons",
   "/dashboard/tables",
+  "/dashboard/charges",
   "/dashboard/settings",
 ];
 

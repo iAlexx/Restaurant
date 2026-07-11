@@ -7,6 +7,10 @@ import { createManualOrderAction } from "@/lib/actions/orders";
 import type { PublicMenu } from "@/lib/menu/public-menu";
 import { formatPrice } from "@/lib/money";
 import {
+  toChargeDisplayLines,
+} from "@/lib/charges/calculate";
+import { buildOrderChargeTotals } from "@/lib/charges/resolve";
+import {
   FormAlert,
   buttonPrimaryClassName,
   inputClassName,
@@ -85,6 +89,23 @@ export function ManualOrderForm({
     }, 0);
     return sum + (product.price + addOnTotal) * line.quantity;
   }, 0);
+
+  const deliveryFeePreview =
+    orderType === "DELIVERY" ? menu.settings.default_delivery_fee : 0;
+  const orderTotals = useMemo(
+    () =>
+      buildOrderChargeTotals(
+        cartSubtotal,
+        deliveryFeePreview,
+        orderType,
+        menu.charges
+      ),
+    [cartSubtotal, deliveryFeePreview, orderType, menu.charges]
+  );
+  const chargeLines = useMemo(
+    () => toChargeDisplayLines(orderTotals.charges),
+    [orderTotals.charges]
+  );
 
   function addLine() {
     if (!selectedProduct) return;
@@ -438,12 +459,39 @@ export function ManualOrderForm({
               })}
             </ul>
           )}
-          <div className="mt-3 flex items-center justify-between border-t border-brand-border pt-3">
-            <span className="text-sm text-brand-muted">المجموع التقريبي</span>
-            <span className="text-lg font-bold tabular-nums text-brand-chocolate">
-              {formatPrice(cartSubtotal, menu.settings.currency_label)}
-            </span>
-          </div>
+          <dl className="mt-3 space-y-1 border-t border-brand-border pt-3 text-sm">
+            <div className="flex items-center justify-between">
+              <dt className="text-brand-muted">المجموع الفرعي</dt>
+              <dd className="font-medium tabular-nums text-brand-chocolate">
+                {formatPrice(cartSubtotal, menu.settings.currency_label)}
+              </dd>
+            </div>
+            {deliveryFeePreview > 0 ? (
+              <div className="flex items-center justify-between">
+                <dt className="text-brand-muted">أجرة التوصيل</dt>
+                <dd className="font-medium tabular-nums text-brand-chocolate">
+                  {formatPrice(deliveryFeePreview, menu.settings.currency_label)}
+                </dd>
+              </div>
+            ) : null}
+            {chargeLines.map((charge) => (
+              <div key={charge.label} className="flex items-center justify-between">
+                <dt className="text-brand-muted">{charge.label}</dt>
+                <dd className="font-medium tabular-nums text-brand-chocolate">
+                  {formatPrice(charge.amount, menu.settings.currency_label)}
+                </dd>
+              </div>
+            ))}
+            <div className="flex items-center justify-between border-t border-brand-border pt-2">
+              <dt className="font-bold text-brand-chocolate">الإجمالي التقريبي</dt>
+              <dd className="text-lg font-bold tabular-nums text-brand-orange">
+                {formatPrice(orderTotals.total, menu.settings.currency_label)}
+              </dd>
+            </div>
+          </dl>
+          <p className="mt-2 text-xs text-brand-muted">
+            تُطبّق الرسوم النشطة تلقائياً — السعر النهائي يُحسب على الخادم عند الإنشاء.
+          </p>
         </section>
 
         <button

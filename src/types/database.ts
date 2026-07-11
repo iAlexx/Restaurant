@@ -128,6 +128,30 @@ export interface Order {
   updated_at: string;
 }
 
+export interface RestaurantCharge {
+  id: string;
+  name_ar: string;
+  calculation_type: "PERCENTAGE" | "FIXED";
+  value: number;
+  is_active: boolean;
+  applies_to: "ALL" | OrderType;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrderCharge {
+  id: string;
+  order_id: string;
+  charge_id: string | null;
+  name_snapshot: string;
+  calculation_type_snapshot: "PERCENTAGE" | "FIXED";
+  value_snapshot: number;
+  calculated_amount: number;
+  sort_order_snapshot: number;
+  created_at: string;
+}
+
 export interface OrderItem {
   id: string;
   order_id: string;

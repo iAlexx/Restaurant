@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+export const receiptChargeSchema = z.object({
+  label: z.string(),
+  amount: z.number().int().min(0),
+  sort_order: z.number().int().min(0),
+});
+
 export const receiptItemSchema = z.object({
   name: z.string(),
   quantity: z.number().int().positive(),
@@ -34,6 +40,7 @@ export const receiptPayloadSchema = z.object({
   items: z.array(receiptItemSchema).min(1),
   subtotal: z.number().int().min(0),
   delivery_fee: z.number().int().min(0),
+  charges: z.array(receiptChargeSchema).default([]),
   total: z.number().int().min(0),
   created_at: z.string(),
 });

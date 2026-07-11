@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { createCanvas } from "@napi-rs/canvas";
 import { describe, expect, it } from "vitest";
 import { buildTestReceipt } from "./format.js";
+import { computeExpectedLineTotal } from "./pricing.js";
 import { FONT_NUMERIC, registerReceiptFonts, renderFontDiagnosticPng } from "./fonts.js";
 import { renderReceiptPng } from "./render.js";
 
@@ -47,7 +48,18 @@ describe("renderReceiptPng", () => {
     receipt.customer_address =
       "دمشق - المزة - شارع طويل جداً مع نص عربي إضافي للتأكد من عدم القص";
     receipt.notes = "بدون بصل، صلصة إضافية على الجانب";
-    receipt.items[0].add_ons = [{ name: "جبنة إضافية", price: 300 }];
+    receipt.items[0].add_ons.push({ name: "جبنة إضافية", price: 300 });
+    receipt.items[0].line_total = computeExpectedLineTotal(
+      receipt.items[0].unit_price,
+      receipt.items[0].quantity,
+      receipt.items[0].add_ons.map((a) => a.price)
+    );
+    receipt.subtotal = receipt.items[0].line_total;
+    receipt.charges = [
+      { label: "جبنة إضافية", amount: 600, sort_order: 0 },
+    ];
+    receipt.total =
+      receipt.subtotal + receipt.delivery_fee + receipt.charges[0].amount;
     const png = renderReceiptPng(receipt, 576);
     expect(png.length).toBeGreaterThan(1000);
   });
@@ -59,17 +71,23 @@ describe("renderReceiptPng", () => {
     expect(probeNumericGlyphWidth("2")).toBeGreaterThan(5);
   });
 
-  it("writes receipt and font diagnostic samples for visual inspection", () => {
-    const receiptPng = renderReceiptPng(buildTestReceipt(), 576);
-    const diagnosticPng = renderFontDiagnosticPng();
+  it("writes 576px receipt sample for visual inspection", () => {
+    const receipt = buildTestReceipt();
+    expect(receipt.items[0].line_total).toBe(26168);
+    expect(receipt.total).toBe(31285);
 
-    writeFileSync("receipt-sample-test.png", receiptPng);
+    const receiptPng = renderReceiptPng(receipt, 576);
+    const diagnosticPng = renderFontDiagnosticPng();
+    const samplePath = join(releaseDir, "receipt-sample-576.png");
+
+    writeFileSync("receipt-sample-576.png", receiptPng);
     writeFileSync("receipt-font-diagnostic.png", diagnosticPng);
     mkdirSync(releaseDir, { recursive: true });
-    writeFileSync(join(releaseDir, "receipt-sample-test.png"), receiptPng);
+    writeFileSync(samplePath, receiptPng);
     writeFileSync(join(releaseDir, "receipt-font-diagnostic.png"), diagnosticPng);
 
     expect(receiptPng.length).toBeGreaterThan(0);
     expect(diagnosticPng.length).toBeGreaterThan(0);
+    expect(receipt.order_number).toBe("100726-010");
   });
 });

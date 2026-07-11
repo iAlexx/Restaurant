@@ -2,6 +2,15 @@ import { z } from "zod";
 import type { CreateOrderInput } from "@/lib/validations/order";
 import type { ResolvedLineSnapshot } from "@/lib/orders/calculations";
 
+const trustedChargeSchema = z.object({
+  charge_id: z.string().uuid().nullable(),
+  name_snapshot: z.string().min(1),
+  calculation_type_snapshot: z.enum(["PERCENTAGE", "FIXED"]),
+  value_snapshot: z.number().int().min(0),
+  calculated_amount: z.number().int().min(0),
+  sort_order_snapshot: z.number().int().min(0),
+});
+
 const trustedAddOnSchema = z.object({
   add_on_id: z.string().uuid(),
   name_snapshot: z.string().min(1),
@@ -43,6 +52,7 @@ export const trustedOrderPayloadSchema = z.object({
   total: z.number().int().min(0),
   created_by: z.string().uuid().nullable().optional(),
   items: z.array(trustedItemSchema).min(1),
+  charges: z.array(trustedChargeSchema).default([]),
 });
 
 export type TrustedOrderPayload = z.infer<typeof trustedOrderPayloadSchema>;
@@ -75,6 +85,7 @@ export function buildTrustedOrderPayload(params: {
   lines: ResolvedLineSnapshot[];
   subtotal: number;
   deliveryFee: number;
+  charges?: import("@/lib/charges/types").ResolvedChargeSnapshot[];
   total: number;
   createdBy?: string | null;
 }): TrustedOrderPayload {
@@ -93,6 +104,7 @@ export function buildTrustedOrderPayload(params: {
     lines,
     subtotal,
     deliveryFee,
+    charges = [],
     total,
     createdBy = null,
   } = params;
@@ -113,6 +125,14 @@ export function buildTrustedOrderPayload(params: {
     delivery_fee: deliveryFee,
     total,
     created_by: createdBy,
+    charges: charges.map((charge) => ({
+      charge_id: charge.charge_id,
+      name_snapshot: charge.name_snapshot,
+      calculation_type_snapshot: charge.calculation_type_snapshot,
+      value_snapshot: charge.value_snapshot,
+      calculated_amount: charge.calculated_amount,
+      sort_order_snapshot: charge.sort_order_snapshot,
+    })),
     items: lines.map((line) => ({
       product_id: line.product_id,
       product_name_snapshot: line.product_name_snapshot,
@@ -140,9 +160,10 @@ export function buildTrustedOrderPayloadFromCustomerInput(params: {
   lines: ResolvedLineSnapshot[];
   subtotal: number;
   deliveryFee: number;
+  charges?: import("@/lib/charges/types").ResolvedChargeSnapshot[];
   total: number;
 }): TrustedOrderPayload {
-  const { input, status, tableId, tableLabelSnapshot, lines, subtotal, deliveryFee, total } =
+  const { input, status, tableId, tableLabelSnapshot, lines, subtotal, deliveryFee, charges = [], total } =
     params;
 
   return buildTrustedOrderPayload({
@@ -162,6 +183,7 @@ export function buildTrustedOrderPayloadFromCustomerInput(params: {
     lines,
     subtotal,
     deliveryFee,
+    charges,
     total,
   });
 }

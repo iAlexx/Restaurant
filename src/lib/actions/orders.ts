@@ -110,6 +110,12 @@ export async function getOrderDetailForStaff(orderId: string) {
     .eq("order_id", orderId)
     .order("created_at", { ascending: false });
 
+  const { data: orderCharges } = await supabase
+    .from("order_charges")
+    .select("*")
+    .eq("order_id", orderId)
+    .order("sort_order_snapshot", { ascending: true });
+
   const { data: settings } = await supabase
     .from("restaurant_settings")
     .select("currency_label")
@@ -135,6 +141,7 @@ export async function getOrderDetailForStaff(orderId: string) {
     order: typedOrder,
     items: (items ?? []) as OrderItem[],
     addOns: (addOns ?? []) as OrderItemAddOn[],
+    orderCharges: (orderCharges ?? []) as import("@/types/database").OrderCharge[],
     printJobs: (printJobs ?? []) as PrintJob[],
     currency_label: (settings as { currency_label: string } | null)?.currency_label ?? "ل.س",
     created_by_display_name,
